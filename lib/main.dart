@@ -3,8 +3,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'package:voyixi/screens/onboarding_screen.dart';
-import 'package:voyixi/screens/login_screen.dart';
 import 'package:voyixi/screens/home_screen.dart';
+import 'package:voyixi/screens/login_screen.dart';
+import 'package:voyixi/screens/register_screen.dart';
+import 'package:voyixi/screens/forgot_password_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -31,7 +34,9 @@ class MyApp extends StatelessWidget {
       routes: {
         "/onboarding": (context) => const OnboardingScreen(),
         "/login": (context) => const LoginScreen(),
-        "/home": (context) => const HomeScreen(), 
+        "/home": (context) => const HomeScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
       },
     );
   }
