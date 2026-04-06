@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -407,22 +411,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Firebase auth entegrasyonu
-      // await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      //   email: _emailCtrl.text.trim(),
-      //   password: _passwordCtrl.text,
-      // );
-      // Kullanıcı profilini güncelle (display name)
-      // await FirebaseAuth.instance.currentUser?.updateDisplayName(
-      //   _nameCtrl.text.trim(),
-      // );
-      // if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      // 1-Firebase Auth'da kullanıcı oluştur
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text,
+      );
 
-      await Future.delayed(const Duration(seconds: 2)); // geçici simülasyon
+      // 2-Auth profilini güncelle (displayName)
+      await credential.user?.updateDisplayName(_nameCtrl.text.trim());
+
+      // 3️⃣ Firestore'da kullanıcı dökümanı oluştur
+      // credential.user!.uid → Auth'un her kullanıcıya verdiği unique ID
+      // Bu ID hem Auth'da hem Firestore'da aynı → ikisini birbirine bağlar
+
+      // uid ile o kullanıcının dökümanını çek
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(credential.user!.uid)
+          .set({
+        'name': _nameCtrl.text.trim(),
+        'email': _emailCtrl.text.trim(),
+        'country': '',           // Profil edit ekranında doldurulacak
+        'photoUrl': '',          // Profil fotoğrafı Storage'a yüklenince güncellenecek
+        'totalKm': 0,            // Seyahat ettikçe artacak
+        'cityCount': 0,          // Ziyaret edilen şehir sayısı
+        'museumCount': 0,        // Ziyaret edilen müze sayısı
+        'countryCount': 0,       // Ziyaret edilen ülke sayısı
+        'createdAt': FieldValue.serverTimestamp(), // Firebase sunucu saatiyle kayıt zamanı
+      });
+
+       if (mounted) Navigator.pushReplacementNamed(context, '/home');
+
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
