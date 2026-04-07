@@ -58,17 +58,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 60),
-
-                        // Email
                         _buildTextField(
                           label: 'Email',
                           icon: Icons.person_outline,
                           controller: _emailController,
                         ),
-
                         const SizedBox(height: 20),
-
-                        // Password
                         _buildTextField(
                           label: 'Password',
                           icon: Icons.lock_outline,
@@ -132,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
   Widget _buildActionRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -155,8 +149,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
-
-  // 🔥 EMAIL LOGIN
   Widget _buildLoginButton() {
     return SizedBox(
       width: double.infinity,
@@ -173,7 +165,6 @@ class _LoginScreenState extends State<LoginScreen> {
             _showMessage("Please accept the terms");
             return;
           }
-
           var user = await authService.signIn(
             _emailController.text.trim(),
             _passwordController.text.trim(),
@@ -181,10 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (user != null) {
             try {
-              // Email login'da da user dokümanını güncelleyelim.
               await UserService().saveUser(user);
             } catch (e) {
-              // ignore: avoid_print
               print(e);
               _showMessage("Firestore kullanıcı kaydı başarısız.");
               return;
@@ -205,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // 🔥 GOOGLE LOGIN
+  // google login
   Widget _buildGoogleButton() {
     return SizedBox(
       width: double.infinity,
@@ -218,7 +207,6 @@ class _LoginScreenState extends State<LoginScreen> {
             try {
               await UserService().saveUser(user);
             } catch (e) {
-              // ignore: avoid_print
               print(e);
               _showMessage("Firestore kullanıcı kaydı başarısız.");
               return;

@@ -115,7 +115,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-  // 🔥 REGISTER LOGIC
+  // register mantığı
   Widget _buildRegisterButton() {
     return SizedBox(
       width: double.infinity,
@@ -139,13 +139,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _passwordController.text.trim(),
           );
           if (user != null) {
-            // extra info update (name surname) -> sonra Firestore'a kaydet
             try {
               await user.updateDisplayName(
                 "${_nameController.text} ${_surnameController.text}",
               );
-              await user.reload(); // displayName'ı güncellenmiş haliyle çek
-              // 🔥 Firestore'a kaydet
+              await user.reload(); 
+              // fierstore kaydı
               await UserService().saveUser(user);
             } catch (e) {
               print(e);

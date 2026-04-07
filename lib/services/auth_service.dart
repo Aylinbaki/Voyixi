@@ -5,7 +5,7 @@ class AuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // EMAIL SIGN UP
+  // email signup
   Future<User?> signUp(String email, String password) async {
     try {
       UserCredential user = await _auth.createUserWithEmailAndPassword(
@@ -19,7 +19,7 @@ class AuthService {
     }
   }
 
-  // EMAIL LOGIN
+  // email login
   Future<User?> signIn(String email, String password) async {
     try {
       UserCredential user = await _auth.signInWithEmailAndPassword(
@@ -33,7 +33,7 @@ class AuthService {
     }
   }
 
-  // GOOGLE SIGN IN
+  // google giriş
   Future<User?> signInWithGoogle() async {
     try {
       await GoogleSignIn().signOut();
@@ -60,7 +60,7 @@ class AuthService {
     }
   }
 
-  // LOGOUT
+  // çıkış
   Future<void> signOut() async {
     await _auth.signOut();
     await GoogleSignIn().signOut();
