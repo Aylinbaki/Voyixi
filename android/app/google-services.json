@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "1068368481104",
+    "project_id": "voyixi",
+    "storage_bucket": "voyixi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1068368481104:android:564c1b524bd124788f7a55",
+        "android_client_info": {
+          "package_name": "com.example.voyixi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1068368481104-kdqvau6a9gs82a50963k9h5gm2te1bo3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.voyixi",
+            "certificate_hash": "ce97347a3149a65efdfb222fb27cbf5d1637199c"
+          }
+        },
+        {
+          "client_id": "1068368481104-q45glcg86p5mdkj3jj1ac9u0tsjh2p42.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.voyixi",
+            "certificate_hash": "5edd4b10380c9d92f161640a28fea301e05cf129"
+          }
+        },
+        {
+          "client_id": "1068368481104-kc0ps09ak7jnioq9q4t6fd04q6k6gu3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_w9ldYkRLB3SIcciWY0hS4TcYGtxDtI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1068368481104-kc0ps09ak7jnioq9q4t6fd04q6k6gu3r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1068368481104-o09nicnqo4k03f81lr8lqk6mmumukjvt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.voyixi"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1068368481104:android:59ac7fe0bbeffd598f7a55",
+        "android_client_info": {
+          "package_name": "com.voyixi.voyixi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1068368481104-kc0ps09ak7jnioq9q4t6fd04q6k6gu3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_w9ldYkRLB3SIcciWY0hS4TcYGtxDtI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1068368481104-kc0ps09ak7jnioq9q4t6fd04q6k6gu3r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1068368481104-o09nicnqo4k03f81lr8lqk6mmumukjvt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.voyixi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

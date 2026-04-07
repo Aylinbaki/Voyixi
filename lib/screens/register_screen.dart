@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-
+import '../services/auth_service.dart';
+import '../services/user_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -23,6 +21,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   static const _muted       = Color(0x99FFFFFF);
   static const _hint        = Color(0x55FFFFFF);
   static const _errorRed    = Color(0xFFE24B4A);
+
+  // AuthService → sadece kimlik doğrulama (Auth)
+  // UserService → sadece veri yönetimi (Firestore)
+  final _authService = AuthService();
+  final _userService = UserService();
 
   // ── State ─────────────────────────────────────────────────────────────────
 
@@ -415,32 +418,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       // 1-Firebase Auth'da kullanıcı oluştur
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text,
+      final credential = await _authService.signUp(
+        _emailCtrl.text.trim(),
+        _passwordCtrl.text,
       );
 
       // 2-Auth profilini güncelle (displayName)
-      await credential.user?.updateDisplayName(_nameCtrl.text.trim());
+      await _authService.updateDisplayName(_nameCtrl.text.trim());
 
-      // 3️⃣ Firestore'da kullanıcı dökümanı oluştur
-      // credential.user!.uid → Auth'un her kullanıcıya verdiği unique ID
-      // Bu ID hem Auth'da hem Firestore'da aynı → ikisini birbirine bağlar
-
-      // uid ile o kullanıcının dökümanını çek
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(credential.user!.uid)
-          .set({
-        'name': _nameCtrl.text.trim(),
-        'email': _emailCtrl.text.trim(),
-        'country': '',           // Profil edit ekranında doldurulacak
-        'photoUrl': '',          // Profil fotoğrafı Storage'a yüklenince güncellenecek
-        'totalKm': 0,            // Seyahat ettikçe artacak
-        'cityCount': 0,          // Ziyaret edilen şehir sayısı
-        'museumCount': 0,        // Ziyaret edilen müze sayısı
-        'countryCount': 0,       // Ziyaret edilen ülke sayısı
-        'createdAt': FieldValue.serverTimestamp(), // Firebase sunucu saatiyle kayıt zamanı
+      // 3- Firestore'a kullanıcı dökümanı yaz
+      // Firestore işlemi → UserService sorumluluğu
+      // credential.user!.uid → Auth ve Firestore'u aynı ID ile bağla
+      await _userService.createUserDocument(
+          uid: credential.user!.uid,
+          name: _nameCtrl.text.trim(),
+          email: _emailCtrl.text.trim(),
       });
 
        if (mounted) Navigator.pushReplacementNamed(context, '/home');
