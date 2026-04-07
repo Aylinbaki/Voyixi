@@ -336,7 +336,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await FirebaseAuth.instance.sendPasswordResetEmail(
           email: _emailCtrl.text.trim(),
       );
-      await Future.delayed(const Duration(seconds: 2)); // geçici simülasyon
 
       if (mounted) setState(() => _emailSent = true); //mounted -> memory leak önler
     } catch (e) {

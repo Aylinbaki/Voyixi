@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -411,18 +413,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Firebase auth entegrasyonu
-      // await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      //   email: _emailCtrl.text.trim(),
-      //   password: _passwordCtrl.text,
-      // );
+       await FirebaseAuth.instance.createUserWithEmailAndPassword(
+         email: _emailCtrl.text.trim(),
+         password: _passwordCtrl.text,
+       );
       // Kullanıcı profilini güncelle (display name)
-      // await FirebaseAuth.instance.currentUser?.updateDisplayName(
-      //   _nameCtrl.text.trim(),
-      // );
-      // if (mounted) Navigator.pushReplacementNamed(context, '/home');
+       await FirebaseAuth.instance.currentUser?.updateDisplayName(
+         _nameCtrl.text.trim(),
+       );
+       if (mounted) Navigator.pushReplacementNamed(context, '/home');
 
-      await Future.delayed(const Duration(seconds: 2)); // geçici simülasyon
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
