@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import '../services/auth_service.dart';
-import '../services/user_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,11 +19,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   static const _muted       = Color(0x99FFFFFF);
   static const _hint        = Color(0x55FFFFFF);
   static const _errorRed    = Color(0xFFE24B4A);
-
-  // AuthService → sadece kimlik doğrulama (Auth)
-  // UserService → sadece veri yönetimi (Firestore)
-  final _authService = AuthService();
-  final _userService = UserService();
 
   // ── State ─────────────────────────────────────────────────────────────────
 
@@ -414,29 +407,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
 
     try {
-      // 1-Firebase Auth'da kullanıcı oluştur
-      final credential = await _authService.signUp(
-        _emailCtrl.text.trim(),
-        _passwordCtrl.text,
-      );
+      // TODO: Firebase auth entegrasyonu
+      // await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      //   email: _emailCtrl.text.trim(),
+      //   password: _passwordCtrl.text,
+      // );
+      // Kullanıcı profilini güncelle (display name)
+      // await FirebaseAuth.instance.currentUser?.updateDisplayName(
+      //   _nameCtrl.text.trim(),
+      // );
+      // if (mounted) Navigator.pushReplacementNamed(context, '/home');
 
-      // 2-Auth profilini güncelle (displayName)
-      await _authService.updateDisplayName(_nameCtrl.text.trim());
-
-      // 3- Firestore'a kullanıcı dökümanı yaz
-      // Firestore işlemi → UserService sorumluluğu
-      // credential.user!.uid → Auth ve Firestore'u aynı ID ile bağla
-      await _userService.createUserDocument(
-          uid: credential.user!.uid,
-          name: _nameCtrl.text.trim(),
-          email: _emailCtrl.text.trim(),
-      });
-
-       if (mounted) Navigator.pushReplacementNamed(context, '/home');
-
+      await Future.delayed(const Duration(seconds: 2)); // geçici simülasyon
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

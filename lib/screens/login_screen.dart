@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import '../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,9 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   static const _white       = Color(0xFFFFFFFF);
   static const _muted       = Color(0x99FFFFFF);
   static const _errorRed    = Color(0xFFE24B4A);
-
-  // Screen kendi AuthService instance'ını oluşturur.
-  final _authService = AuthService();
 
   // ── State ─────────────────────────────────────────────────────────────────
   final _formKey            = GlobalKey<FormState>();
@@ -284,16 +281,18 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ── LOGIN İŞLEMİ ──────────────────────────────────────────────────────────
-  // _authService.signIn() çağrılıyor → AuthService → Firebase.
+  // NEDEN try/catch/finally:
+  // Firebase hata fırlatır → catch ile yakala, SnackBar göster.
+  // finally her durumda loading'i kapat.
+  // mounted kontrolü: async biterken widget silinmiş olabilir → crash önlenir.
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      await _authService.signIn(
-        _emailCtrl.text.trim(),
-        _passwordCtrl.text.trim(),
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text.trim(),
       );
-
       if (mounted) Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       if (!mounted) return;
