@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -21,6 +21,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   static const _hint        = Color(0x55FFFFFF);
   static const _errorRed    = Color(0xFFE24B4A);
   static const _successGreen= Color(0xFF43A047);
+
+  final _authService = AuthService();
 
   // ── State ─────────────────────────────────────────────────────────────────
   final _formKey    = GlobalKey<FormState>();
@@ -333,9 +335,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-          email: _emailCtrl.text.trim(),
-      );
+      await _authService.sendPasswordResetEmail(_emailCtrl.text.trim());
+
       if (mounted) setState(() => _emailSent = true); //mounted -> memory leak önler
     } catch (e) {
       if (!mounted) return;
