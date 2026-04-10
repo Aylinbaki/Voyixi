@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,10 +12,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedNavIndex = 0;
-
-  // Firebase kullanıcı bilgileri
   User? get _currentUser => FirebaseAuth.instance.currentUser;
-
   String get _userName {
     final user = _currentUser;
     if (user == null) return 'Gezgin';
@@ -23,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return user.email?.split('@').first ?? 'Gezgin';
   }
-
   String? get _userPhotoUrl => _currentUser?.photoURL;
 
   final List<Map<String, dynamic>> _popularTours = [
@@ -84,15 +81,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      // 1. ADIM: Scaffold arka planını şeffaf yapıyoruz ki alttaki gradyan görünsün
       backgroundColor: Colors.transparent, 
-      
-      // 2. ADIM: İçeriğin alt barın arkasından geçebilmesi için bunu ekliyoruz
       extendBody: true, 
-
       body: Stack(
         children: [
-          // 3. ADIM: Tüm ekranı kaplayan gradyan arka plan
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -109,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // 4. ADIM: Kaydırılabilir içerik
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -128,7 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // 5. ADIM: Alt Navigasyon Barı (Sabit durması için Stack içinde en üstte)
           Positioned(
             bottom: 0,
             left: 0,
@@ -139,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  // ── HEADER ─────────────────────────────────────────────────────────────────
+  // header
   Widget _buildHeader(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
     return Container(
@@ -167,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Profil + bildirim
+            // Profil
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -205,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
+                  
                     Icons.notifications_outlined,
                     color: Colors.white,
                     size: 22,
@@ -223,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Arama
+            // Arama - Burayı düzenlicem
             Row(
               children: [
                 Expanded(
@@ -302,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── POPÜLER TURLAR ─────────────────────────────────────────────────────────
+  // populer tur
   Widget _buildPopularTours() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,7 +340,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
   Widget _buildTourCard(Map<String, dynamic> tour) {
     return Container(
       width: 128,
@@ -384,7 +374,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Gün etiketi — sağ üst
             Positioned(
               top: 10,
               right: 10,
@@ -404,7 +393,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Şehir + ülke — sol alt
             Positioned(
               bottom: 12,
               left: 10,
@@ -437,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── TUR PLANLARIM ──────────────────────────────────────────────────────────
+  // tur planları
   Widget _buildTourPlans() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,7 +546,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── CİVARINI KEŞFETİ ───────────────────────────────────────────────────────
+  // civarı keşfet
   Widget _buildNearbySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -692,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── ALT NAVİGASYON BARI ────────────────────────────────────────────────────
+  // navigasyon bar
   Widget _buildBottomNavBar() {
     // Gerçek sıralama: 0=Home, 1=Rotalar, [FAB], 2=Favoriler, 3=Ayarlar
     const leftItems = [
@@ -709,7 +697,17 @@ class _HomeScreenState extends State<HomeScreen> {
       return Expanded(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => setState(() => _selectedNavIndex = navIndex),
+          onTap: () {
+            if (navIndex == 3) {
+             // Ayarlar — Settings sayfasına git
+             Navigator.push(
+               context,
+               MaterialPageRoute(builder: (_) => const SettingsScreen()),
+               );
+              return;
+            }
+          setState(() => _selectedNavIndex = navIndex);
+          },
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -769,12 +767,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   navItem(rightItems[1], 3),
                 ],
               ),
-              // FAB — barın tam ortasına konumlandırılmış, yarısı üstte
+              // orta
               Positioned(
                 top: -26,
                 child: GestureDetector(
                   onTap: () {
-                    // Yeni tur planla sayfasına git
+                    // eklencek
                   },
                   child: Container(
                     width: 58,
@@ -806,8 +804,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-// ── VARSAYILAN AVATAR ─────────────────────────────────────────────────────────
 class _DefaultAvatarIcon extends StatelessWidget {
   const _DefaultAvatarIcon();
 
