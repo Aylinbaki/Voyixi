@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
+import '../services/user_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool  _hidePassword       = true;
   bool  _rememberMe         = false;
   bool  _isLoading          = false;
+  bool _googleLoading       = false;
+
+  final _auth        = AuthService();
+  final _userService = UserService();
 
   @override
   void dispose() {
@@ -62,6 +67,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   _rememberForgotRow(),
                   const SizedBox(height: 26),
                   _loginBtn(),
+                  const SizedBox(height: 20),
+                  _orDivider(),
+                  const SizedBox(height: 20),
+                  _googleBtn(),
                   const SizedBox(height: 36),
                   _signUpRow(),
                   const SizedBox(height: 40),
@@ -127,7 +136,10 @@ class _LoginScreenState extends State<LoginScreen> {
       textInputAction: TextInputAction.next,
       autocorrect: false,
       style: const TextStyle(color: _white, fontSize: 14),
-      decoration: _decoration(hint: 'Email address', icon: Icons.mail_outline_rounded),
+      decoration: _decoration(
+          hint: 'Email address',
+          icon: Icons.mail_outline_rounded
+      ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return 'Email is required';
         if (!RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[\w]{2,4}$').hasMatch(v.trim())) {
@@ -258,6 +270,59 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ── OR Divider ────────────────────────────────────────────────────────────
+  // Expanded bu genişliği otomatik hesaplar → sabit değer girmek gerekmez.
+  Widget _orDivider() {
+    return Row(
+      children: [
+        Expanded(child: Container(height: 0.5, color: _fieldBorder)),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            'OR',
+            style: TextStyle(color: _muted, fontSize: 11, letterSpacing: 1.5),
+          ),
+        ),
+        Expanded(child: Container(height: 0.5, color: _fieldBorder)),
+      ],
+    );
+  }
+
+  // ── Google Butonu ─────────────────────────────────────────────────────────
+  Widget _googleBtn() {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: _googleLoading ? null : _loginWithGoogle,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: _fieldBorder, width: 0.8),
+          backgroundColor: _fieldBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: _googleLoading
+            ? const SizedBox(
+          width: 22, height: 22,
+          child: CircularProgressIndicator(color: _white, strokeWidth: 2.5),
+        )
+            : Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // assets/images/google_logo.png dosyasını projeye eklemeyi unutma
+            Image.asset('assets/images/google_logo.png', width: 20, height: 20),
+            const SizedBox(width: 10),
+            const Text(
+              'Continue with Google',
+              style: TextStyle(
+                color: _white, fontSize: 14, fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── SIGN UP SATIRI ────────────────────────────────────────────────────────
   Widget _signUpRow() {
     return RichText(
@@ -280,31 +345,74 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+
   // ── LOGIN İŞLEMİ ──────────────────────────────────────────────────────────
-  // NEDEN try/catch/finally:
-  // Firebase hata fırlatır → catch ile yakala, SnackBar göster.
-  // finally her durumda loading'i kapat.
+  // Mevcut AuthService hataları içinde yakalayıp null döndürüyor.
+  // Bu yüzden null → hata mesajı göster mantığını kullanıyoruz.
   // mounted kontrolü: async biterken widget silinmiş olabilir → crash önlenir.
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
+
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text.trim(),
+      final user = await _auth.signIn(
+        _emailCtrl.text.trim(),
+        _passwordCtrl.text.trim(),
       );
-      if (mounted) Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString(), style: const TextStyle(color: _white)),
+
+      if (user != null) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showError('Invalid email or password. Please try again.');
+      }
+    } catch (e) {
+      if (mounted) _showError('An error occurred. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ── Google Login İşlemi ───────────────────────────────────────────────────
+  Future<void> _loginWithGoogle() async {
+    setState(() => _googleLoading = true);
+
+    try {
+      final user = await _auth.signInWithGoogle();
+
+      if (!mounted) return;
+
+      if (user != null) {
+        // NEDEN saveUser burada çağrılıyor?
+        // Google ile giriş yapan kullanıcının Firestore'da kaydı olmayabilir.
+        // saveUser → merge: true ile güvenle kaydeder.
+        // Daha önce kayıtlıysa üzerine yazmaz, eksikleri tamamlar.
+        await _userService.saveUser(user);
+
+        if (mounted) Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        _showError('Google sign-in cancelled or failed. Please try again.');
+      }
+    } catch (e) {
+      if (mounted) _showError('Google sign-in failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
+    }
+  }
+
+  // ── Hata SnackBar ─────────────────────────────────────────────────────────
+  // NEDEN ayrı metod?
+  // Email ve Google login aynı SnackBar stilini kullanır → DRY prensibi.
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: _white)),
         backgroundColor: _errorRed,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
-      ));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+      ),
+    );
   }
 }
