@@ -308,7 +308,6 @@ class _LoginScreenState extends State<LoginScreen> {
             : Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // assets/images/google_logo.png dosyasını projeye eklemeyi unutma
             Image.asset('assets/images/google_logo.png', width: 20, height: 20),
             const SizedBox(width: 10),
             const Text(
@@ -348,7 +347,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // ── LOGIN İŞLEMİ ──────────────────────────────────────────────────────────
   // Mevcut AuthService hataları içinde yakalayıp null döndürüyor.
-  // Bu yüzden null → hata mesajı göster mantığını kullanıyoruz.
   // mounted kontrolü: async biterken widget silinmiş olabilir → crash önlenir.
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
