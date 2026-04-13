@@ -22,13 +22,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   static const _errorRed    = Color(0xFFE24B4A);
   static const _successGreen= Color(0xFF43A047);
 
-  final _authService = AuthService();
-
   // ── State ─────────────────────────────────────────────────────────────────
   final _formKey    = GlobalKey<FormState>();
   final _emailCtrl  = TextEditingController();
   bool  _isLoading  = false;
   bool  _emailSent  = false;
+
+  final _auth = AuthService();
 
   @override
   void dispose() {
@@ -327,15 +327,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   // ── RESET LINK İŞLEMİ ────────────────────────────────────────────────────
+  // Firebase bağımlılığını UI'dan izole ediyoruz.
   // NEDEN setState(() => _emailSent = true):
-  //   Firebase email gönderince hata fırlatmaz, sadece işlemi tamamlar.
   //   Başarılı olunca _emailSent = true yaparak başarı ekranını gösteriyoruz.
   Future<void> _sendResetLink() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
     try {
-      await _authService.sendPasswordResetEmail(_emailCtrl.text.trim());
+      await _auth.sendPasswordResetEmail(_emailCtrl.text.trim());
 
       if (mounted) setState(() => _emailSent = true); //mounted -> memory leak önler
     } catch (e) {
