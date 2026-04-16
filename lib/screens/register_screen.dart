@@ -11,7 +11,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // ── Renkler ───────────────────────────────────────────────────────────────
   static const _bgColor     = Color(0xFF0A1628);
   static const _primaryBlue = Color(0xFF1E88E5);
   static const _accentBlue  = Color(0xFF42A5F5);
@@ -21,8 +20,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   static const _muted       = Color(0x99FFFFFF);
   static const _hint        = Color(0x55FFFFFF);
   static const _errorRed    = Color(0xFFE24B4A);
-
-  // ── State ─────────────────────────────────────────────────────────────────
 
   final _formKey             = GlobalKey<FormState>();
   final _nameCtrl            = TextEditingController();
@@ -43,7 +40,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(

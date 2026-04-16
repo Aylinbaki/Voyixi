@@ -127,8 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
-
-  // ── FORM ALANLARI ─────────────────────────────────────────────────────────
   Widget _emailField() {
     return TextFormField(
       controller: _emailCtrl,
@@ -177,7 +175,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── DECORATION HELPER ─────────────────────────────────────────────────────
   InputDecoration _decoration({
     required String hint,
     required IconData icon,
@@ -205,7 +202,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── REMEMBER & FORGOT ─────────────────────────────────────────────────────
   Widget _rememberForgotRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -241,7 +237,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── LOGIN BUTONU ──────────────────────────────────────────────────────────
   Widget _loginBtn() {
     return SizedBox(
       width: double.infinity,
@@ -270,8 +265,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── OR Divider ────────────────────────────────────────────────────────────
-  // Expanded bu genişliği otomatik hesaplar → sabit değer girmek gerekmez.
   Widget _orDivider() {
     return Row(
       children: [
@@ -288,7 +281,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── Google Butonu ─────────────────────────────────────────────────────────
   Widget _googleBtn() {
     return SizedBox(
       width: double.infinity,
@@ -321,8 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-  // ── SIGN UP SATIRI ────────────────────────────────────────────────────────
+  
   Widget _signUpRow() {
     return RichText(
       text: TextSpan(
@@ -344,10 +335,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-
-  // ── LOGIN İŞLEMİ ──────────────────────────────────────────────────────────
-  // Mevcut AuthService hataları içinde yakalayıp null döndürüyor.
-  // mounted kontrolü: async biterken widget silinmiş olabilir → crash önlenir.
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
@@ -372,7 +359,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ── Google Login İşlemi ───────────────────────────────────────────────────
   Future<void> _loginWithGoogle() async {
     setState(() => _googleLoading = true);
 
@@ -382,10 +368,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (user != null) {
-        // NEDEN saveUser burada çağrılıyor?
-        // Google ile giriş yapan kullanıcının Firestore'da kaydı olmayabilir.
-        // saveUser → merge: true ile güvenle kaydeder.
-        // Daha önce kayıtlıysa üzerine yazmaz, eksikleri tamamlar.
         await _userService.saveUser(user);
 
         if (mounted) Navigator.pushReplacementNamed(context, '/home');
@@ -399,9 +381,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ── Hata SnackBar ─────────────────────────────────────────────────────────
-  // NEDEN ayrı metod?
-  // Email ve Google login aynı SnackBar stilini kullanır → DRY prensibi.
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
