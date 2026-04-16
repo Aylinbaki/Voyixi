@@ -25,7 +25,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _cameraPerm = false;
   bool _notifPerm = true;
 
-  // Hangi bölme açıksa onu belirtcek
   String _openSection = ''; 
   int _rating = 0;
   String _language = 'Türkçe';
@@ -56,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 212, 235, 235),
+      backgroundColor: const Color.fromARGB(255, 225, 239, 239),
       appBar: AppBar(
         backgroundColor: _bg,
         elevation: 0,
@@ -71,18 +70,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
-          // Profil 
           _profileCard(),
           const SizedBox(height: 22),
-          // HESAP
           _sectionTitle('Hesap'),
           _card([
             _tile(Icons.person_outline_rounded, 'Hesabım', onTap: () {}),
             _tile(Icons.description_outlined, 'Gizlilik ve Koşullar', onTap: () {}, isLast: true),
           ]),
           const SizedBox(height: 16),
-
-          // TERCİHLER
           _sectionTitle('Tercihler'),
           _card([
             _tile(Icons.language_rounded, 'Dil',
@@ -96,7 +91,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]),
           const SizedBox(height: 16),
 
-          // İZİNLER
           _sectionTitle('İzinler'),
           _card([
             _accordionHeader(Icons.shield_outlined, 'İzinler', 'permissions'),
@@ -111,7 +105,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ]),
           const SizedBox(height: 16),
-          // UYGULAMA
           _sectionTitle('Uygulama'),
           _card([
             _tile(Icons.tour_outlined, 'Rehber Uygulaması', onTap: () {}),
@@ -120,23 +113,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 isLast: true),
           ]),
           const SizedBox(height: 16),
-          // DESTEK
           _sectionTitle('Destek'),
           _card([
-            // Değerlendirme
             _accordionHeader(Icons.star_outline_rounded, 'Bizi Değerlendirin', 'rating'),
             if (_openSection == 'rating') _ratingContent(),
             const Divider(height: 1, indent: 66, color: _divider),
-            // Bize Ulaşın
             _accordionHeader(Icons.mail_outline_rounded, 'Bize Ulaşın', 'contact'),
             if (_openSection == 'contact') _contactContent(),
             const Divider(height: 1, indent: 66, color: _divider),
-            // Sorun Bildir
             _accordionHeader(Icons.flag_outlined, 'Sorun Bildir', 'report'),
             if (_openSection == 'report') _reportContent(),
           ]),
           const SizedBox(height: 28),
-          // Çıkış
           _logoutButton(),
           const SizedBox(height: 12),
           const Center(
@@ -148,7 +136,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-  // ── Profil kartı ────────────────────────────────────────────────────────
   Widget _profileCard() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -181,7 +168,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ──  yardımcılar 
   Widget _sectionTitle(String t) => Padding(
         padding: const EdgeInsets.only(left: 4, bottom: 8),
         child: Text(t.toUpperCase(),
@@ -377,7 +363,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
 
-  // ── Çıkış 
   Widget _logoutButton() {
     return OutlinedButton.icon(
       onPressed: () => showDialog(
@@ -413,7 +398,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-  // ── Dil seçme
   void _showLanguagePicker() {
     final langs = ['Türkçe', 'English', 'Deutsch', 'Français', 'Español'];
     showModalBottomSheet(

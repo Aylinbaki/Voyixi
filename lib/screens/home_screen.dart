@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'settings_screen.dart';
+import '../features/trip_planner/trip_planner_entry.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return user.email?.split('@').first ?? 'Gezgin';
   }
+
   String? get _userPhotoUrl => _currentUser?.photoURL;
 
   final List<Map<String, dynamic>> _popularTours = [
@@ -28,19 +30,22 @@ class _HomeScreenState extends State<HomeScreen> {
       'city': 'Paris',
       'country': 'Fransa',
       'days': '5 Gün',
-      'image': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=500',
+      'image':
+          'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=500',
     },
     {
       'city': 'Moskova',
       'country': 'Rusya',
       'days': '4 Gün',
-      'image': 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=500',
+      'image':
+          'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=500',
     },
     {
       'city': 'İstanbul',
       'country': 'Türkiye',
       'days': '3 Gün',
-      'image': 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=500',
+      'image':
+          'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=500',
     },
   ];
 
@@ -48,7 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'title': 'New York',
       'days': '6 Gün',
-      'image': 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600',
+      'image':
+          'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600',
     },
   ];
 
@@ -56,33 +62,37 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'name': 'Sultan Ahmet',
       'distance': '1.2 km',
-      'image': 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400',
+      'image':
+          'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400',
     },
     {
       'name': 'Kapalıçarşı',
       'distance': '700 m',
-      'image': 'https://images.unsplash.com/photo-1662633272401-9703bff75f3b?q=80&w=687',
+      'image':
+          'https://images.unsplash.com/photo-1662633272401-9703bff75f3b?q=80&w=687',
     },
     {
       'name': 'Topkapı Sarayı',
       'distance': '2.3 km',
-      'image': 'https://images.unsplash.com/photo-1696711156435-5872e329edd4?q=80&w=687',
+      'image':
+          'https://images.unsplash.com/photo-1696711156435-5872e329edd4?q=80&w=687',
     },
     {
       'name': 'Galata Kulesi',
       'distance': '3.1 km',
-      'image': 'https://images.unsplash.com/photo-1695239510462-a63b0a0c0089?q=80&w=687',
+      'image':
+          'https://images.unsplash.com/photo-1695239510462-a63b0a0c0089?q=80&w=687',
     },
   ];
 
-@override
+  @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.transparent, 
-      extendBody: true, 
+      backgroundColor: Colors.transparent,
+      extendBody: true,
       body: Stack(
         children: [
           Container(
@@ -92,11 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color.fromARGB(255, 146, 194, 246), // Çok koyu lacivert
-                  Color.fromARGB(255, 105, 188, 221), // Geçiş rengi
-                  Color(0xFF00838F), // Senin o sevdiğin turkuaz dokunuşu
-                ],
+                colors: [Color.fromARGB(255, 13, 163, 163), Color.fromARGB(255, 184, 240, 240)],
               ),
             ),
           ),
@@ -119,24 +125,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomNavBar(),
-          ),
+          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNavBar()),
         ],
       ),
     );
   }
+
   // header
-  Widget _buildHeader(BuildContext context) {
-    final topPad = MediaQuery.of(context).padding.top;
-    return Container(
+ Widget _buildHeader(BuildContext context) {
+  final topPad = MediaQuery.of(context).padding.top;
+  
+  return ShaderMask(
+    shaderCallback: (rect) {
+      return const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        // Siyah (Opaque) olan yerler görünür, Transparent olan yerler erir.
+        colors: [Colors.black, Colors.transparent],
+        // Resmin %70'ine kadar net kalsın, son %30'luk dilimde erisin.
+        stops: [0.7, 1.0], 
+      ).createShader(rect);
+    },
+    blendMode: BlendMode.dstIn,
+    child: Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(
-            'https://images.unsplash.com/photo-1641284357918-ac72db6b7574?q=80&w=1170&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1764702946401-337324daa1e0?q=80&w=1170&auto=format&fit=crop',
           ),
           fit: BoxFit.cover,
         ),
@@ -157,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Profil
+            // Profil ve Ayarlar Butonu
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -178,27 +193,33 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const Text(
                           'Tekrar hoş geldin',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ],
                     ),
                   ],
                 ),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                  
-                    Icons.notifications_outlined,
-                    color: Colors.white,
-                    size: 22,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                 ),
               ],
@@ -214,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Arama - Burayı düzenlicem
+            // Arama Çubuğu ve Filtre
             Row(
               children: [
                 Expanded(
@@ -269,9 +290,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildAvatar() {
     return Container(
       width: 44,
@@ -340,6 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
   Widget _buildTourCard(Map<String, dynamic> tour) {
     return Container(
       width: 128,
@@ -362,8 +384,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Image.network(
               tour['image'] as String,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  Container(color: Colors.grey[300]),
+              errorBuilder: (_, __, ___) => Container(color: Colors.grey[300]),
             ),
             Container(
               decoration: BoxDecoration(
@@ -411,10 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 2),
                   Text(
                     tour['country'] as String,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                 ],
               ),
@@ -442,10 +460,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         const SizedBox(height: 14),
-        ..._tourPlans.map((plan) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _buildTourPlanCard(plan),
-            )),
+        ..._tourPlans.map(
+          (plan) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _buildTourPlanCard(plan),
+          ),
+        ),
       ],
     );
   }
@@ -508,7 +528,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 5),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4CAF50),
                           borderRadius: BorderRadius.circular(20),
@@ -561,7 +583,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
-                  color:Colors.white,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(width: 8),
@@ -618,18 +640,14 @@ class _HomeScreenState extends State<HomeScreen> {
             Image.network(
               place['image'] as String,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  Container(color: Colors.grey[300]),
+              errorBuilder: (_, __, ___) => Container(color: Colors.grey[300]),
             ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.70),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.70)],
                 ),
               ),
             ),
@@ -680,16 +698,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // navigasyon bar
   Widget _buildBottomNavBar() {
-    // Gerçek sıralama: 0=Home, 1=Rotalar, [FAB], 2=Favoriler, 3=Ayarlar
+    // Gerçek sıralama: 0=Home, 1=Rotalar, [FAB], 2=Favoriler, 3=Profil
     const leftItems = [
       {'icon': Icons.home_rounded, 'label': 'Ana Sayfa'},
       {'icon': Icons.map_outlined, 'label': 'Rotalar'},
     ];
     const rightItems = [
       {'icon': Icons.favorite_border, 'label': 'Favoriler'},
-      {'icon': Icons.settings_outlined, 'label': 'Ayarlar'},
+      {'icon': Icons.person_outline, 'label': 'Profil'},
     ];
 
     Widget navItem(Map item, int navIndex) {
@@ -698,15 +715,24 @@ class _HomeScreenState extends State<HomeScreen> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            if (navIndex == 3) {
-             // Ayarlar — Settings sayfasına git
-             Navigator.push(
-               context,
-               MaterialPageRoute(builder: (_) => const SettingsScreen()),
-               );
-              return;
+            if(navIndex==0){
+              // home
             }
-          setState(() => _selectedNavIndex = navIndex);
+            else if(navIndex==1){
+              // rotalar
+            }
+            else if(navIndex==2){
+              //favoriler
+            }
+            else if (navIndex == 3) {
+              // Profile olcak
+              //Navigator.push(
+               // context,
+               // MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              //);
+             // return;
+            }
+            setState(() => _selectedNavIndex = navIndex);
           },
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -723,8 +749,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 item['label'] as String,
                 style: TextStyle(
                   fontSize: 10,
-                  fontWeight:
-                      isSelected ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                   color: isSelected
                       ? const Color(0xFF4CAF50)
                       : const Color(0xFFBDBDBD),
@@ -738,8 +763,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF133671).withOpacity(0.8),
-        
+        color: Color.fromARGB(255, 94, 139, 216).withOpacity(0.8),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.10),
@@ -756,7 +780,6 @@ class _HomeScreenState extends State<HomeScreen> {
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
-              // Sol ve sağ nav itemlar
               Row(
                 children: [
                   navItem(leftItems[0], 0),
@@ -767,12 +790,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   navItem(rightItems[1], 3),
                 ],
               ),
-              // orta
               Positioned(
                 top: -26,
                 child: GestureDetector(
                   onTap: () {
-                    // eklencek
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TripPlannerEntry(),
+                      ),
+                    );
                   },
                   child: Container(
                     width: 58,
@@ -804,9 +831,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 class _DefaultAvatarIcon extends StatelessWidget {
   const _DefaultAvatarIcon();
-
   @override
   Widget build(BuildContext context) {
     return Container(

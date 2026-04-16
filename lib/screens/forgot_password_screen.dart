@@ -21,8 +21,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   static const _hint        = Color(0x55FFFFFF);
   static const _errorRed    = Color(0xFFE24B4A);
   static const _successGreen= Color(0xFF43A047);
-
-  // ── State ─────────────────────────────────────────────────────────────────
   final _formKey    = GlobalKey<FormState>();
   final _emailCtrl  = TextEditingController();
   bool  _isLoading  = false;
@@ -35,8 +33,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     _emailCtrl.dispose();
     super.dispose();
   }
-
-  // ── BUILD ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,8 +59,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
-
-  // ── LOGO ──────────────────────────────────────────────────────────────────
   Widget _logo() {
     return Column(
       children: [
@@ -93,8 +87,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _divider() => Container(height: 0.5, color: _fieldBorder);
-
-  // ── FORM GÖRÜNÜMÜ ─────────────────────────────────────────────────────────
   Widget _formView() {
     return Form(
       key: _formKey,
@@ -142,8 +134,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
-
-  // ── BAŞARI GÖRÜNÜMÜ ───────────────────────────────────────────────────────
   Widget _successView() {
     return Column(
       children: [
@@ -186,7 +176,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: TextStyle(color: _muted, fontSize: 12),
         ),
         const SizedBox(height: 32),
-        // Tekrar gönder butonu
+        // Tekrar gönderme
         SizedBox(
           width: double.infinity,
           height: 52,
@@ -215,8 +205,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ],
     );
   }
-
-  // ── EMAIL ALANI ───────────────────────────────────────────────────────────
   Widget _emailField() {
     return TextFormField(
       controller: _emailCtrl,
@@ -239,7 +227,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // ── DECORATION HELPER ─────────────────────────────────────────────────────
   InputDecoration _decoration({
     required String hint,
     required IconData icon,
@@ -265,7 +252,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // ── SEND BUTONU ───────────────────────────────────────────────────────────
   Widget _sendBtn() {
     return SizedBox(
       width: double.infinity,
@@ -302,7 +288,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // ── GERİ DÖN SATIRI ───────────────────────────────────────────────────────
   Widget _backToLoginRow() {
     return RichText(
       text: TextSpan(
