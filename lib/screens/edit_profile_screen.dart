@@ -98,10 +98,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () {
-                  // İleride buraya user.updateDisplayName eklenecek
-                  Navigator.pop(context);
+                onPressed: () async {
+                  try {
+                    // 1. Firebase üzerindeki displayName'i TextField'daki veriyle güncelle
+                    await user?.updateDisplayName(_nameController.text);
+                    // 2. Güncel veriyi yerel kullanıcı objesine çekmek için reload et
+                    await user?.reload();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Profil başarıyla güncellendi!"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                    // 3. Profil sayfasına geri dön
+                    Navigator.pop(context);
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Hata oluştu: $e")),
+                      );
+                    }
+                  }
                 },
+
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF133671),
                   shape: RoundedRectangleBorder(

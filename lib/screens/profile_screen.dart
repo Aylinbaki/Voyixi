@@ -185,7 +185,15 @@ void _showAddNoteSheet() {
       backgroundColor: const Color(0xFFE0F7FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
+        elevation: 0, title: const Text(
+          "Profil",
+          style: TextStyle(
+            color: Color(0xFF133671),
+            fontWeight: FontWeight.bold,
+            fontSize: 30,
+          ),
+        ),
+        centerTitle: true,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
         actions: [IconButton(onPressed: () {
           Navigator.push(
@@ -225,17 +233,29 @@ void _showAddNoteSheet() {
           ),
         ),
         const SizedBox(height: 10),
-        // Firebase'den isim alıyor, yoksa "Gezgin" yazıyor
         Text(
-          user?.displayName ?? "Gezgin Voyixi",
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF133671)),
+          // 1. Önce displayName kontrolü
+          (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
+              ? user!.displayName!
+          // 2. İsim yoksa Email parçala
+              : (user?.email != null && user!.email!.isNotEmpty)
+              ? user!.email!.split('@').first
+          // 3. Hiçbiri yoksa "Voyixi"
+              : "Voyixi",
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF133671),
+          ),
         ),
-        Row(
+        const SizedBox(height: 8),
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.location_on, size: 14, color: Colors.grey),
-            const SizedBox(width: 4),
-            Text("Türkiye", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            Icon(Icons.location_on, size: 14, color: Colors.grey),
+            SizedBox(width: 4),
+            Text("Türkiye", style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
           ],
         ),
       ],
