@@ -17,11 +17,18 @@ class _HomeScreenState extends State<HomeScreen> {
   User? get _currentUser => FirebaseAuth.instance.currentUser;
   String get _userName {
     final user = _currentUser;
-    if (user == null) return 'Gezgin';
-    if (user.displayName != null && user.displayName!.isNotEmpty) {
+
+    if (user == null) return 'Voyixi';
+    // 1. Önce İsim (displayName) kontrolü
+    if (user.displayName != null && user.displayName!.trim().isNotEmpty) {
       return user.displayName!;
     }
-    return user.email?.split('@').first ?? 'Gezgin';
+    // 2. İsim yoksa Email parçala
+    if (user.email != null && user.email!.isNotEmpty) {
+      return user.email!.split('@').first;
+    }
+    // 3. Hiçbiri yoksa (Fallback)
+    return 'Voyixi';
   }
 
   String? get _userPhotoUrl => _currentUser?.photoURL;

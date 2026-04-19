@@ -185,7 +185,15 @@ void _showAddNoteSheet() {
       backgroundColor: const Color(0xFFE0F7FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
+        elevation: 0, title: const Text(
+          "Profil",
+          style: TextStyle(
+            color: Color(0xFF133671),
+            fontWeight: FontWeight.bold,
+            fontSize: 30,
+          ),
+        ),
+        centerTitle: true,
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
         actions: [IconButton(onPressed: () {
           Navigator.push(
@@ -225,17 +233,29 @@ void _showAddNoteSheet() {
           ),
         ),
         const SizedBox(height: 10),
-        // Firebase'den isim alıyor, yoksa "Gezgin" yazıyor
         Text(
-          user?.displayName ?? "Gezgin Voyixi",
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF133671)),
+          // 1. Önce displayName kontrolü
+          (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
+              ? user!.displayName!
+          // 2. İsim yoksa Email parçala
+              : (user?.email != null && user!.email!.isNotEmpty)
+              ? user!.email!.split('@').first
+          // 3. Hiçbiri yoksa "Voyixi"
+              : "Voyixi",
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF133671),
+          ),
         ),
-        Row(
+        const SizedBox(height: 8),
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.location_on, size: 14, color: Colors.grey),
-            const SizedBox(width: 4),
-            Text("Türkiye", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            Icon(Icons.location_on, size: 14, color: Colors.grey),
+            SizedBox(width: 4),
+            Text("Türkiye", style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
           ],
         ),
       ],
@@ -345,33 +365,71 @@ void _showAddNoteSheet() {
             itemCount: _myNotes.length,
             itemBuilder: (context, index) {
               final note = _myNotes[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                      child: _buildNoteImage(note['image'], note['isLocal'] ?? false),                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(note['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text(note['date']!, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Text(note['note']!, style: const TextStyle(color: Colors.black87)),
-                        ],
+
+              // --- KAYDIRARAK SİLME ---
+              return Dismissible(
+                key: UniqueKey(), // Her eleman için benzersiz anahtar
+                direction: DismissDirection.endToStart, // Sağdan sola kaydırınca siler
+                background: Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  child: const Icon(Icons.delete, color: Colors.white, size: 30),
+                ),
+                onDismissed: (direction) {
+                  // Listeden silme işlemi
+                  setState(() {
+                    _myNotes.removeAt(index);
+                  });
+                  // Kullanıcıya bildirim göster
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("${note['title']} silindi"),
+                      action: SnackBarAction(
+                        label: "Geri Al",
+                        onPressed: () {
+                          // Silinen notu geri getirmek istersen:
+                          setState(() {
+                            _myNotes.insert(index, note);
+                          });
+                        },
                       ),
                     ),
-                  ],
+                  );
+                },
+                child: Card(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                        child: _buildNoteImage(note['image'], note['isLocal'] ?? false),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(note['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(note['date']!, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Text(note['note']!, style: const TextStyle(color: Colors.black87)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
