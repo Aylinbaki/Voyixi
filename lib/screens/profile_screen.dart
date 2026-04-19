@@ -365,33 +365,71 @@ void _showAddNoteSheet() {
             itemCount: _myNotes.length,
             itemBuilder: (context, index) {
               final note = _myNotes[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                      child: _buildNoteImage(note['image'], note['isLocal'] ?? false),                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(note['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text(note['date']!, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Text(note['note']!, style: const TextStyle(color: Colors.black87)),
-                        ],
+
+              // --- KAYDIRARAK SİLME ---
+              return Dismissible(
+                key: UniqueKey(), // Her eleman için benzersiz anahtar
+                direction: DismissDirection.endToStart, // Sağdan sola kaydırınca siler
+                background: Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  child: const Icon(Icons.delete, color: Colors.white, size: 30),
+                ),
+                onDismissed: (direction) {
+                  // Listeden silme işlemi
+                  setState(() {
+                    _myNotes.removeAt(index);
+                  });
+                  // Kullanıcıya bildirim göster
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("${note['title']} silindi"),
+                      action: SnackBarAction(
+                        label: "Geri Al",
+                        onPressed: () {
+                          // Silinen notu geri getirmek istersen:
+                          setState(() {
+                            _myNotes.insert(index, note);
+                          });
+                        },
                       ),
                     ),
-                  ],
+                  );
+                },
+                child: Card(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                        child: _buildNoteImage(note['image'], note['isLocal'] ?? false),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(note['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(note['date']!, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Text(note['note']!, style: const TextStyle(color: Colors.black87)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
