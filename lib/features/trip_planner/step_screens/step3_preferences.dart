@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/trip_plan_model.dart';
-import '../services/trip_plan_service.dart';
 import '../widgets/step_shell.dart';
+import '../../trip_result/trip_result_screen.dart';
 
 const _prefItems = [
   ('🏛️', 'Tarih ve Kültür'),
@@ -45,23 +45,20 @@ class _Step3PreferencesState extends State<Step3Preferences> {
   }
 
   Future<void> _generate() async {
-    setState(() => _loading = true);
-    try {
-      final result = await TripPlanService().generatePlan(widget.plan);
-      if (mounted) {
-        // TODO: result ile plan detay sayfasını ayarlıcz
-        // Navigator.push(context, MaterialPageRoute(
-        //   builder: (_) => TripResultScreen(result: result, plan: widget.plan)));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Plan hazırlandı! 🎉  $result'),
-              backgroundColor: const Color(0xFF00BFA5),
-              behavior: SnackBarBehavior.floating),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  setState(() => _loading = true);
+  try {
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TripResultScreen(plan: widget.plan),
+        ),
+      );
     }
+  } finally {
+    if (mounted) setState(() => _loading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {

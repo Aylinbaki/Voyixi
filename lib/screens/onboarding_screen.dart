@@ -6,7 +6,7 @@ class OnboardingScreen extends StatefulWidget {
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
-}
+} 
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
@@ -48,21 +48,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ],
           ),
-          // Text logo — sol üst
+          // Text logo
           SafeArea(
             child: Align(
-              alignment: Alignment.topLeft,
+              alignment:Alignment.topLeft,
               child: Padding(
-                padding: const EdgeInsets.only(top: 12, left: 16),
+                padding: const EdgeInsets.only(top:12,left:16),
                 child: Image.asset(
                   "assets/images/text_logo.png",
-                  height: 125,
-                  fit: BoxFit.contain,
+                  height:125,
+                  fit:BoxFit.contain,
                 ),
               ),
             ),
           ),
-          // Skip — sağ üst
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,
@@ -77,14 +76,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-          // Alt kısım: buton, sign in metni, noktalar (yazıların üzerine gelmeyecek şekilde)
+          // Alt kısım
           SafeArea(
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Continue butonu — mavi, ilk sayfada "Explore World", diğerlerinde "Continue >"
+                  // Continue butonu 
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: SizedBox(
@@ -120,7 +119,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Already have account? Sign in. — altı çizgili, tıklanabilir
+                  // Already have account?
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacementNamed(context, "/login");
@@ -139,7 +138,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // 4 yuvarlak nokta — sayfanın en altında
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: SmoothPageIndicator(
@@ -164,12 +162,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 }
-
 class OnboardPage extends StatelessWidget {
   final String image;
   final String title;
   final String subtitle;
-
   const OnboardPage({
     super.key,
     required this.image,
