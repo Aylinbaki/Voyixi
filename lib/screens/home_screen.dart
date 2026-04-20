@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'settings_screen.dart';
+import 'profile_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,11 +17,18 @@ class _HomeScreenState extends State<HomeScreen> {
   User? get _currentUser => FirebaseAuth.instance.currentUser;
   String get _userName {
     final user = _currentUser;
-    if (user == null) return 'Gezgin';
-    if (user.displayName != null && user.displayName!.isNotEmpty) {
+
+    if (user == null) return 'Voyixi';
+    // 1. Önce İsim (displayName) kontrolü
+    if (user.displayName != null && user.displayName!.trim().isNotEmpty) {
       return user.displayName!;
     }
-    return user.email?.split('@').first ?? 'Gezgin';
+    // 2. İsim yoksa Email parçala
+    if (user.email != null && user.email!.isNotEmpty) {
+      return user.email!.split('@').first;
+    }
+    // 3. Hiçbiri yoksa (Fallback)
+    return 'Voyixi';
   }
 
   String? get _userPhotoUrl => _currentUser?.photoURL;
@@ -725,11 +733,11 @@ class _HomeScreenState extends State<HomeScreen> {
             }
             else if (navIndex == 3) {
               // Profile olcak
-              //Navigator.push(
-               // context,
-               // MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              //);
-             // return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+              return;
             }
             setState(() => _selectedNavIndex = navIndex);
           },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'edit_profile_screen.dart';
 
 const _teal = Color(0xFF00BFA5);
 const _tealDark = Color(0xFF00897B);
@@ -161,7 +162,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.edit_outlined, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+              );
+            },
           ),
         ],
       ),
