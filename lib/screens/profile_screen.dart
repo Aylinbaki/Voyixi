@@ -1,10 +1,29 @@
-import 'dart:io'; // Dosya işlemleri için gerekli
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // flutter pub add intl yapmış olmalısın
+import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
+import 'edit_profile_screen.dart';
+
+class _T {
+  static const gradientStart = Color(0xFF0DA3A3);
+  static const gradientEnd   = Color(0xFFB8F0F0);
+  // Accent – yeşil CTA (home'daki 4CAF50)
+  static const accent  = Color(0xFF4CAF50);
+  static const accent2 = Color(0xFF81C784); // soft green
+  // Nav bar tonu
+  static const navBar = Color(0xFF5E8BD8);
+  // Glass panel
+  static const glassWhite = Colors.white;
+  // Metin
+  static const textPrimary   = Colors.white;
+  static const textSecondary = Colors.white70;
+  static const textDark      = Color(0xFF1A3A3A); // kart içi koyu metin
+}
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,444 +32,932 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   bool isSavedTripsSelected = true;
   final user = FirebaseAuth.instance.currentUser;
   final ImagePicker _picker = ImagePicker();
 
-  // Notları tutacak liste
+  late AnimationController _fadeCtrl;
+  late Animation<double> _fade;
+
+  // ── Notlar listesi ──────────────────────────
   final List<Map<String, dynamic>> _myNotes = [
     {
       'title': 'Galata Kulesi',
       'note': 'Sabah erkenden kalkıp Galata Kulesine gittik, muhteşemdi...',
       'date': '15.04.2026',
-      'image': 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
-      'isLocal': false, // Ağdan mı yoksa cihazdan mı geldiğini anlamak için
+      'image':
+      'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+      'isLocal': false,
     }
   ];
 
-  // Yeni not ekleme & resim seçme
-void _showAddNoteSheet() {
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController noteController = TextEditingController();
-  XFile? selectedImage; // Seçilen resmi tutacak değişken
+  @override
+  void initState() {
+    super.initState();
+    _fadeCtrl =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _fade = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _fadeCtrl.forward();
+  }
 
-  String formattedDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
+  @override
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-    ),
-    builder: (context) => StatefulBuilder( // Modal içindeki resmi anlık göstermek için
-      builder: (context, setModalState) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
+  // ── Kullanıcı adı ───────────────────────────
+  String get _userName {
+    if (user?.displayName != null && user!.displayName!.trim().isNotEmpty) {
+      return user!.displayName!;
+    }
+    if (user?.email != null && user!.email!.isNotEmpty) {
+      return user!.email!.split('@').first;
+    }
+    return 'Voyixi';
+  }
+
+  // ── Not ekleme bottom sheet ──────────────────
+  void _showAddNoteSheet() {
+    final titleCtrl = TextEditingController();
+    final noteCtrl  = TextEditingController();
+    XFile? selectedImage;
+    final formattedDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModal) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
+                color: Colors.white.withOpacity(0.92),
+                borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+                left: 22,
+                right: 22,
+                top: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Yeni Anı Ekle',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: _T.gradientStart,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Fotoğraf seçici
+                  GestureDetector(
+                    onTap: () async {
+                      final img =
+                      await _picker.pickImage(source: ImageSource.gallery);
+                      if (img != null) setModal(() => selectedImage = img);
+                    },
+                    child: Container(
+                      height: 140,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: _T.gradientEnd.withOpacity(0.35),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: _T.gradientStart.withOpacity(0.35)),
+                      ),
+                      child: selectedImage == null
+                          ? const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo_outlined,
+                              color: _T.gradientStart, size: 36),
+                          SizedBox(height: 8),
+                          Text('Fotoğraf Ekle',
+                              style:
+                              TextStyle(color: _T.gradientStart)),
+                        ],
+                      )
+                          : ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.file(File(selectedImage!.path),
+                            fit: BoxFit.cover),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Başlık
+                  _sheetField(titleCtrl, 'Başlık (Örn: Ayasofya Gezisi)'),
+                  const SizedBox(height: 10),
+
+                  // Not
+                  _sheetField(noteCtrl, 'Neler yaşadın?', maxLines: 3),
+                  const SizedBox(height: 12),
+
+                  // Tarih
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today_outlined,
+                          size: 15, color: _T.gradientStart),
+                      const SizedBox(width: 6),
+                      Text('Tarih: $formattedDate',
+                          style: const TextStyle(
+                              color: _T.gradientStart, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Kaydet butonu
+                  GestureDetector(
+                    onTap: () {
+                      if (titleCtrl.text.isNotEmpty) {
+                        setState(() {
+                          _myNotes.add({
+                            'title': titleCtrl.text,
+                            'note': noteCtrl.text,
+                            'date': formattedDate,
+                            'image': selectedImage?.path ?? '',
+                            'isLocal': selectedImage != null,
+                          });
+                        });
+                        Navigator.pop(ctx);
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [_T.accent, Color(0xFF2E7D32)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _T.accent.withOpacity(0.38),
+                            blurRadius: 14,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'Notu Kaydet',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "Yeni Anı Ekle",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF133671),
-              ),
-            ),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: () async {
-                final XFile? image =
-                await _picker.pickImage(source: ImageSource.gallery);
-                if (image != null) {
-                  setModalState(() => selectedImage = image);
-                }
-              },
-              child: Container(
-                height: 150,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: selectedImage == null
-                    ? const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo, color: Colors.grey, size: 40),
-                    SizedBox(height: 8),
-                    Text("Fotoğraf Ekle",
-                        style: TextStyle(color: Colors.grey)),
-                  ],
-                )
-                    : ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(File(selectedImage!.path),
-                      fit: BoxFit.cover),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                hintText: "Başlık (Örn: Ayasofya Gezisi)",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: noteController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: "Neler yaşadın?",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text("Tarih: $formattedDate",
-                    style: const TextStyle(color: Colors.grey)),
-              ],
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (titleController.text.isNotEmpty) {
-                  setState(() {
-                    _myNotes.add({
-                      'title': titleController.text,
-                      'note': noteController.text,
-                      'date': formattedDate,
-                      'image': selectedImage?.path ?? 'https://via.placeholder.com/600',  // Şimdilik placeholder
-                      'isLocal': selectedImage != null,
-                    });
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF133671),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text("Notu Kaydet",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 30),
-          ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-// Notlar listesinde resmi düzgün göstermek için yardımcı fonksiyon
-  Widget _buildNoteImage(String imagePath, bool isLocal) {
-   if (isLocal) {
-      return Image.file(File(imagePath), height: 150, width: double.infinity, fit: BoxFit.cover);
-   }
-   return Image.network(imagePath, height: 150, width: double.infinity, fit: BoxFit.cover);
+  Widget _sheetField(TextEditingController ctrl, String hint,
+      {int maxLines = 1}) {
+    return TextField(
+      controller: ctrl,
+      maxLines: maxLines,
+      style: const TextStyle(color: _T.textDark),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey[500]),
+        filled: true,
+        fillColor: Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  // ── Resim widget'ı ───────────────────────────
+  Widget _buildNoteImage(String path, bool isLocal) {
+    return isLocal
+        ? Image.file(File(path),
+        height: 150, width: double.infinity, fit: BoxFit.cover)
+        : Image.network(path,
+        height: 150, width: double.infinity, fit: BoxFit.cover);
   }
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+    // Nav bar yüksekliği + bottom safe area
+    final bottomInset  = MediaQuery.of(context).padding.bottom;
+    const actionBarH   = 54.0 + 16 + 16;
+    const navBarH      = 64.0;
+    final scrollBottom = navBarH + bottomInset + actionBarH;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE0F7FA),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0, title: const Text(
-          "Profil",
-          style: TextStyle(
-            color: Color(0xFF133671),
-            fontWeight: FontWeight.bold,
-            fontSize: 30,
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
-        actions: [IconButton(onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
-          );
-        },
-            icon: const Icon(Icons.settings, color: Colors.black))],
-      ),
-      body: Column(
+      backgroundColor: Colors.transparent,
+      body: Stack(
         children: [
-          _buildUserInfo(),
-          const SizedBox(height: 20),
-          _buildStatGrid(),
-          const SizedBox(height: 25),
-          _buildToggleButtons(),
-          const SizedBox(height: 10),
-          Expanded(
-            child: isSavedTripsSelected ? _buildSavedTripsList() : _buildNotesSection(),
+          // ── 1. Gradient arkaplan ─────────────────
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color.fromARGB(255, 13, 163, 163), Color.fromARGB(255, 184, 240, 240)],
+              ),
+            ),
+          ),
+
+          // ── 2. Kaydırılabilir içerik ─────────────
+          FadeTransition(
+            opacity: _fade,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // Sabit header'ın kapladığı alanı scroll'dan koru
+                SliverToBoxAdapter(child: _buildScrollableUserInfo(context)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    child: _buildStatRow(),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 22)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildToggle(),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                isSavedTripsSelected
+                    ? _buildSavedTripsSliver()
+                    : _buildNotesSliver(),
+                // Alttaki sabit buton + nav bar için boşluk
+                SliverToBoxAdapter(child: SizedBox(height: scrollBottom + 8)),
+              ],
+            ),
+          ),
+
+          // ── 3. SABİT HEADER (Profil yazısı + back/settings) ──
+          Positioned(top: 0, left: 0, right: 0, child: _buildFixedAppBar(context),
+          ),
+
+          // ── 4. SABİT ACTION BUTTON (nav bar'ın hemen üstü) ──
+          Positioned(bottom: navBarH + bottomInset, left: 0, right: 0, child: _buildFixedActionButton(),
+          ),
+
+          // ── 5. Nav bar ───────────────────────────
+          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNavBar(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildUserInfo() {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 45,
-          backgroundColor: Colors.white,
-          child: CircleAvatar(
-            radius: 42,
-            backgroundImage: NetworkImage(user?.photoURL ?? 'https://via.placeholder.com/150'),
+  // ── SABİT APPBAR ─────────────────────────────
+  Widget _buildFixedAppBar(BuildContext context) {
+    final topPad = MediaQuery.of(context).padding.top;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          color: _T.gradientStart.withOpacity(0.30),
+          padding: EdgeInsets.fromLTRB(20, topPad + 10, 20, 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _circleBtn(
+                Icons.arrow_back_ios_new_rounded,
+                    () => Navigator.pop(context),
+              ),
+              const Text(
+                'Profil',
+                style: TextStyle(
+                  color: _T.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+              _circleBtn(
+                Icons.settings_outlined,
+                    () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 10),
-        Text(
-          // 1. Önce displayName kontrolü
-          (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
-              ? user!.displayName!
-          // 2. İsim yoksa Email parçala
-              : (user?.email != null && user!.email!.isNotEmpty)
-              ? user!.email!.split('@').first
-          // 3. Hiçbiri yoksa "Voyixi"
-              : "Voyixi",
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF133671),
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.location_on, size: 14, color: Colors.grey),
-            SizedBox(width: 4),
-            Text("Türkiye", style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
+      ),
+    );
+  }
+
+  // ── SABİT ACTION BUTTON ───────────────────────
+  // Nav bar'ın hemen üstüne yapışık, içerik altında kaybolmaz
+  Widget _buildFixedActionButton() {
+    final label  = isSavedTripsSelected ? 'Yeni Rota Ekle'        : 'Not Ekle';
+    final icon   = isSavedTripsSelected ? Icons.add_location_alt_rounded : Icons.note_add_outlined;
+    final onTap  = isSavedTripsSelected
+        ? () => Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (r) => false,
+    )
+        : _showAddNoteSheet;
+
+    return Container(
+      // Hafif blur + gradient overlay — butonun içerikten ayrıştığı hissedilsin
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _T.gradientEnd.withOpacity(0.0),
+            _T.gradientEnd.withOpacity(0.85),
           ],
         ),
-      ],
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      child: _actionButton(label: label, icon: icon, onPressed: onTap),
     );
   }
 
-  Widget _buildStatGrid() {
+  // ── KAYDIRILAN kullanıcı bilgisi (avatar, isim, yer) ─
+  // Sabit AppBar'ın altında görünür, kaydırılabilir.
+  Widget _buildScrollableUserInfo(BuildContext context) {
+    final topPad = MediaQuery.of(context).padding.top;
+    // AppBar yüksekliği kadar padding bırak (topPad + 10 + içerik + 12)
+    final appBarH = topPad + 10 + 44.0 + 12; // 44 = buton yüksekliği + padding
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildStatBox("4", "City", Icons.location_on_outlined),
-          _buildStatBox("12", "Museum", Icons.account_balance_outlined),
-          _buildStatBox("847", "Total km", Icons.near_me_outlined),
-          _buildStatBox("1", "Country", Icons.map_outlined),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatBox(String value, String label, IconData icon) {
-    return Container(
-      width: 80,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF133671).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      padding: EdgeInsets.fromLTRB(20, appBarH + 20, 20, 20),
       child: Column(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF133671)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.black54)),
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.18),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: user?.photoURL != null ? Image.network(user!.photoURL!,
+                    fit: BoxFit.cover, errorBuilder: (_, __, ___) => _defaultAvatar(),
+                  )
+                      : _defaultAvatar(),
+                ),
+              ),
+              GestureDetector(
+                onTap: () async {await Navigator.push(
+                    context, MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  );
+                  // Geri dönünce ekranı yenile (displayName güncellenmiş olabilir)
+                  setState(() {});
+                },
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: _T.accent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.edit, color: Colors.white, size: 13),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _userName,
+            style: const TextStyle(
+              color: _T.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.location_on_outlined, size: 13, color: _T.textSecondary),
+              SizedBox(width: 3),
+              Text(
+                'Türkiye',
+                style: TextStyle(color: _T.textSecondary, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildToggleButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        height: 45,
-        decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), borderRadius: BorderRadius.circular(25)),
-        child: Row(
+  Widget _circleBtn(IconData icon, VoidCallback onTap) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.22),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: Colors.white, size: 19),
+    ),
+  );
+
+  Widget _defaultAvatar() => Container(
+    color: _T.gradientStart.withOpacity(0.4),
+    child: const Icon(Icons.person, color: Colors.white, size: 44),
+  );
+
+  // ── Stat Row ────────────────────────────────
+  Widget _buildStatRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _statBox('4', 'City', Icons.location_on_outlined),
+        _statBox('12', 'Museum', Icons.account_balance_outlined),
+        _statBox('847', 'Total km', Icons.near_me_outlined),
+        _statBox('1', 'Country', Icons.map_outlined),
+      ],
+    );
+  }
+
+  Widget _statBox(String value, String label, IconData icon) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          width: 80,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.22),
+            borderRadius: BorderRadius.circular(18),
+            border:
+            Border.all(color: Colors.white.withOpacity(0.35), width: 1),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 18, color: Colors.white),
+              const SizedBox(height: 5),
+              Text(value,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16)),
+              const SizedBox(height: 2),
+              Text(label,
+                  style: const TextStyle(fontSize: 10, color: _T.textSecondary)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Toggle ──────────────────────────────────
+  Widget _buildToggle() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.18),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              _toggleItem('Saved Trips', isSavedTripsSelected,
+                      () => setState(() => isSavedTripsSelected = true)),
+              _toggleItem('Notes', !isSavedTripsSelected,
+                      () => setState(() => isSavedTripsSelected = false)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _toggleItem(String title, bool selected, VoidCallback onTap) =>
+      Expanded(
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            margin: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: selected ? _T.accent : Colors.transparent,
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: selected
+                  ? [
+                BoxShadow(
+                    color: _T.accent.withOpacity(0.38),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3))
+              ]
+                  : [],
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              title,
+              style: TextStyle(
+                color: selected ? Colors.white : _T.textSecondary,
+                fontWeight:
+                selected ? FontWeight.bold : FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      );
+
+  // ── Saved Trips Sliver ───────────────────────
+  SliverList _buildSavedTripsSliver() {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _tripCard(
+            city: 'İstanbul Gezisi',
+            days: '3 Gün',
+            image:
+            'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _tripCard(
+      {required String city,
+        required String days,
+        required String image}) {
+    return Container(
+      height: 130,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.14),
+              blurRadius: 14,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            _buildToggleItem("Saved Trips", isSavedTripsSelected, () => setState(() => isSavedTripsSelected = true)),
-            _buildToggleItem("Notes", !isSavedTripsSelected, () => setState(() => isSavedTripsSelected = false)),
+            Image.network(image,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    Container(color: Colors.grey[300])),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.68)
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 14,
+              left: 16,
+              right: 16,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(city,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _T.accent,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(days,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700)),
+                      )
+                    ],
+                  ),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.north_east,
+                        color: Colors.white, size: 18),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildToggleItem(String title, bool isSelected, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
+  // ── Notes Sliver ─────────────────────────────
+  SliverList _buildNotesSliver() {
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        ...List.generate(_myNotes.length, (index) {
+          final note = _myNotes[index];
+          return Padding(
+            padding:
+            const EdgeInsets.only(left: 20, right: 20, bottom: 14),
+            child: Dismissible(
+              key: UniqueKey(),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                child: const Icon(Icons.delete_outline,
+                    color: Colors.white, size: 28),
+              ),
+              onDismissed: (_) {
+                setState(() => _myNotes.removeAt(index));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${note['title']} silindi'),
+                    backgroundColor: _T.gradientStart,
+                    action: SnackBarAction(
+                      label: 'Geri Al',
+                      textColor: _T.accent2,
+                      onPressed: () =>
+                          setState(() => _myNotes.insert(index, note)),
+                    ),
+                  ),
+                );
+              },
+              child: _noteCard(note),
+            ),
+          );
+        }),
+      ]),
+    );
+  }
+
+  Widget _noteCard(Map<String, dynamic> note) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
         child: Container(
-          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF133671) : Colors.transparent,
-            borderRadius: BorderRadius.circular(25),
+            color: Colors.white.withOpacity(0.88),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4))
+            ],
           ),
-          child: Text(title, style: TextStyle(color: isSelected ? Colors.white : Colors.black54, fontWeight: FontWeight.bold)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Resim — sadece path doluysa göster
+              if ((note['image'] as String).isNotEmpty)
+                ClipRRect(
+                  borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: _buildNoteImage(
+                      note['image'], note['isLocal'] ?? false),
+                ),
+              // Metin alanı
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(note['title']!,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: _T.textDark)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _T.gradientEnd.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(note['date']!,
+                              style: const TextStyle(
+                                  color: _T.gradientStart,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(note['note']!,
+                        style: TextStyle(
+                            color: Colors.grey[700], fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSavedTripsList() {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: 1,
-            itemBuilder: (context, index) => Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              child: const ListTile(
-                leading: Icon(Icons.map, color: Colors.blue),
-                title: Text("İstanbul Gezisi"),
-                subtitle: Text("3 Gün"),
-                trailing: Icon(Icons.arrow_forward_ios, size: 14),
-              ),
-            ),
+  // ── Action Button ────────────────────────────
+  Widget _actionButton(
+      {required String label,
+        required IconData icon,
+        required VoidCallback onPressed}) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 54,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [_T.accent, Color(0xFF2E7D32)],
           ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: _T.accent.withOpacity(0.38),
+                blurRadius: 14,
+                offset: const Offset(0, 5))
+          ],
         ),
-        _buildActionButton("Yeni Rota Ekle", Icons.add, () {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (route) => false,
-          );
-        }),
-      ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15)),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildNotesSection() {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _myNotes.length,
-            itemBuilder: (context, index) {
-              final note = _myNotes[index];
-
-              // --- KAYDIRARAK SİLME ---
-              return Dismissible(
-                key: UniqueKey(), // Her eleman için benzersiz anahtar
-                direction: DismissDirection.endToStart, // Sağdan sola kaydırınca siler
-                background: Container(
-                  margin: const EdgeInsets.only(bottom: 15),
+  // ── Bottom Nav Bar ─── home_screen ile birebir aynı ───
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 94, 139, 216).withOpacity(0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Row(
+                children: [
+                  _navItem(Icons.home_rounded, 'Ana Sayfa', false, () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                          (r) => false,
+                    );
+                  }),
+                  _navItem(Icons.map_outlined, 'Rotalar', false, () {}),
+                  const Expanded(child: SizedBox()), // FAB boşluğu
+                  _navItem(Icons.favorite_border, 'Favoriler', false, () {}),
+                  _navItem(Icons.person_outline, 'Profil', true, () {}),
+                ],
+              ),
+              // FAB — home_screen ile aynı
+              Positioned(
+                top: -26,
+                child: Container(
+                  width: 58,
+                  height: 58,
                   decoration: BoxDecoration(
-                    color: Colors.redAccent,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20),
-                  child: const Icon(Icons.delete, color: Colors.white, size: 30),
-                ),
-                onDismissed: (direction) {
-                  // Listeden silme işlemi
-                  setState(() {
-                    _myNotes.removeAt(index);
-                  });
-                  // Kullanıcıya bildirim göster
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("${note['title']} silindi"),
-                      action: SnackBarAction(
-                        label: "Geri Al",
-                        onPressed: () {
-                          // Silinen notu geri getirmek istersen:
-                          setState(() {
-                            _myNotes.insert(index, note);
-                          });
-                        },
-                      ),
-                    ),
-                  );
-                },
-                child: Card(
-                  margin: const EdgeInsets.only(bottom: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                        child: _buildNoteImage(note['image'], note['isLocal'] ?? false),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(note['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                Text(note['date']!, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Text(note['note']!, style: const TextStyle(color: Colors.black87)),
-                          ],
-                        ),
+                    color: const Color(0xFF4CAF50),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withOpacity(0.45),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
+                  child: const Icon(
+                    Icons.add_location_alt_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
                 ),
-              );
-            },
+              ),
+            ],
           ),
         ),
-        _buildActionButton("Not Ekle", Icons.note_add, _showAddNoteSheet),
-      ],
+      ),
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onPressed) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, color: Colors.white),
-        label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF133671),
-          minimumSize: const Size(double.infinity, 55),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+  Widget _navItem(
+      IconData icon, String label, bool selected, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 24,
+                color: selected ? _T.accent : const Color(0xFFBDBDBD)),
+            const SizedBox(height: 3),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                    color: selected
+                        ? _T.accent
+                        : const Color(0xFFBDBDBD))),
+          ],
         ),
       ),
     );
