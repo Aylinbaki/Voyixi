@@ -1,5 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+
+const _teal     = Color(0xFF00BFA5);
+const _tealDark = Color(0xFF00897B);
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -12,13 +17,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final user = FirebaseAuth.instance.currentUser;
   late TextEditingController _nameController;
   late TextEditingController _countryController;
+  XFile? _pickedImage; // seçilen fotoğrafı tutar
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    // Kullanıcının mevcut ismini TextField'a yazdırıyoruz
-    _nameController = TextEditingController(text: user?.displayName ?? "");
-    _countryController = TextEditingController(text: "Türkiye"); // Varsayılan olarak Türkiye
+    _nameController    = TextEditingController(text: user?.displayName ?? '');
+    _countryController = TextEditingController(text: 'Türkiye');
   }
 
   @override
@@ -31,32 +37,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 225, 239, 239),
       appBar: AppBar(
         title: const Text(
-            "Profili Düzenle",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
+          'Profili Düzenle',
+          style: TextStyle(color: Color(0xFF1A2E2E), fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 225, 239, 239),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _teal, size: 20),
+          onPressed: () => Navigator.maybePop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // Profil Fotoğrafı Düzenleme Alanı
+            // Avatar
             Center(
               child: Stack(
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: const Color(0xFF133671),
-                    child: CircleAvatar(
-                      radius: 57,
-                      backgroundImage: NetworkImage(
-                          user?.photoURL ?? 'https://via.placeholder.com/150'
+                    backgroundColor: _teal.withOpacity(0.15),
+                    child: ClipOval(
+                      child: _pickedImage != null
+                      // Galeriden seçilen yeni fotoğraf
+                          ? Image.file(
+                        File(_pickedImage!.path),
+                        width: 120, height: 120,
+                        fit: BoxFit.cover,
+                      )
+                          : user?.photoURL != null
+                      // Firebase'deki mevcut fotoğraf
+                          ? Image.network(
+                        user!.photoURL!,
+                        width: 120, height: 120,
+                        fit: BoxFit.cover,
+                      )
+                      // Hiç fotoğraf yok
+                          : Container(
+                        width: 120, height: 120,
+                        color: _teal.withOpacity(0.10),
+                        child: Icon(Icons.person, color: _teal, size: 52),
                       ),
                     ),
                   ),
@@ -64,78 +89,99 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     bottom: 0,
                     right: 0,
                     child: GestureDetector(
-                      onTap: () {
-                        // Fotoğraf seçme işlemi buraya gelecek
+                      onTap: () async { //kamera
+                        final img = await _picker.pickImage(
+                          source: ImageSource.gallery,
+                          imageQuality: 80, // dosya boyutunu küçültür
+                        );
+                        if (img != null) setState(() => _pickedImage = img);
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
-                          color: Color(0xFF4CAF50),
+                          color: _teal,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 20
-                        ),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 40),
-            // Giriş Alanları
-            _buildEditField("İsim Soyisim", _nameController),
-            const SizedBox(height: 20),
-            _buildEditField("E-posta", TextEditingController(text: user?.email ?? ""), enabled: false),
-            const SizedBox(height: 20),
-            _buildEditField("Ülke", _countryController),
+            const SizedBox(height: 36),
 
-            const SizedBox(height: 50),
-            // Güncelle Butonu
+            // Alan kartı — Settings'deki _card() stili
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: _teal.withOpacity(0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  _buildEditField('İsim Soyisim', _nameController),
+                  const SizedBox(height: 18),
+                  _buildEditField(
+                    'E-posta',
+                    TextEditingController(text: user?.email ?? ''),
+                    enabled: false,
+                  ),
+                  const SizedBox(height: 18),
+                  _buildEditField('Ülke', _countryController),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 36),
+
+            // Güncelle butonu — Settings'deki _actionButton stili
             SizedBox(
               width: double.infinity,
-              height: 55,
               child: ElevatedButton(
                 onPressed: () async {
                   try {
-                    // 1. Firebase üzerindeki displayName'i TextField'daki veriyle güncelle
                     await user?.updateDisplayName(_nameController.text);
-                    // 2. Güncel veriyi yerel kullanıcı objesine çekmek için reload et
                     await user?.reload();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Profil başarıyla güncellendi!"),
-                          backgroundColor: Colors.green,
+                          content: Text('Profil başarıyla güncellendi!'),
+                          backgroundColor: _teal,
+                          behavior: SnackBarBehavior.floating,
                         ),
                       );
+                      Navigator.pop(context);
                     }
-                    // 3. Profil sayfasına geri dön
-                    Navigator.pop(context);
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Hata oluştu: $e")),
+                        SnackBar(content: Text('Hata oluştu: $e')),
                       );
                     }
                   }
                 },
-
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF133671),
+                  backgroundColor: _teal,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  elevation: 2,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
                 child: const Text(
-                  "Güncelle",
+                  'Güncelle',
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -146,27 +192,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildEditField(String label, TextEditingController controller, {bool enabled = true}) {
+  Widget _buildEditField(
+      String label,
+      TextEditingController controller, {
+        bool enabled = true,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+            color: _tealDark,
+            letterSpacing: 1.1,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           enabled: enabled,
-          style: TextStyle(color: enabled ? Colors.black : Colors.grey),
+          style: TextStyle(
+            color: enabled ? const Color(0xFF1A2E2E) : Colors.grey,
+          ),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey[100],
+            fillColor: enabled ? Colors.grey[50] : Colors.grey[100],
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: _teal, width: 1.5),
+            ),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
       ],
