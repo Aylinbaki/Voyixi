@@ -60,4 +60,6 @@ android/.gradle/
 **/DerivedData/
 *.xcworkspace
 *.xcconfig
-*.lock
+*.lock.env
+local.properties
+.env
