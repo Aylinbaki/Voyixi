@@ -343,37 +343,45 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── SABİT APPBAR ─────────────────────────────
   Widget _buildFixedAppBar(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          color: _T.gradientStart.withOpacity(0.30),
-          padding: EdgeInsets.fromLTRB(20, topPad + 10, 20, 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _circleBtn(
-                Icons.arrow_back_ios_new_rounded,
-                    () => Navigator.pop(context),
+    return Container(
+      color: Colors.transparent,
+      padding: EdgeInsets.fromLTRB(20, topPad + 10, 20, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.22),
+                shape: BoxShape.circle,
               ),
-              const Text(
-                'Profil',
-                style: TextStyle(
-                  color: _T.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              _circleBtn(
-                Icons.settings_outlined,
-                    () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                ),
-              ),
-            ],
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 18),
+            ),
           ),
-        ),
+          const Text(
+            'Profil',
+            style: TextStyle(
+              color: Colors.white, fontSize: 20,
+              fontWeight: FontWeight.bold, letterSpacing: 1.2,
+            ),
+          ),
+          GestureDetector(
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.22),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.settings_outlined,
+                  color: Colors.white, size: 18),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -381,8 +389,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── SABİT ACTION BUTTON ───────────────────────
   // Nav bar'ın hemen üstüne yapışık, içerik altında kaybolmaz
   Widget _buildFixedActionButton() {
-    final label  = isSavedTripsSelected ? 'Yeni Rota Ekle'        : 'Not Ekle';
-    final icon   = isSavedTripsSelected ? Icons.add_location_alt_rounded : Icons.note_add_outlined;
+    final label  = isSavedTripsSelected ? 'Not Ekle'        : 'Not Ekle';
+    final icon   = isSavedTripsSelected ? Icons.note_add_outlined : Icons.note_add_outlined;
     final onTap  = isSavedTripsSelected
         ? () => Navigator.pushAndRemoveUntil(
       context,
@@ -571,9 +579,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           child: Row(
             children: [
-              _toggleItem('Saved Trips', isSavedTripsSelected,
+              _toggleItem('Biten Geziler', isSavedTripsSelected,
                       () => setState(() => isSavedTripsSelected = true)),
-              _toggleItem('Notes', !isSavedTripsSelected,
+              _toggleItem('Notlar', !isSavedTripsSelected,
                       () => setState(() => isSavedTripsSelected = false)),
             ],
           ),

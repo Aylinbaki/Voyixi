@@ -1,0 +1,416 @@
+// TO DO: saved trip yerine biten trip yazılacak
+//saved tripleri ana sayfadan al
+//filtreleme özelliği olsun
+
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'home_screen.dart';
+import 'profile_screen.dart';
+
+class _T {
+  static const gradientStart = Color(0xFF0DA3A3);
+  static const gradientEnd   = Color(0xFFB8F0F0);
+  static const accent        = Color(0xFF4CAF50);
+  static const navBar        = Color(0xFF5E8BD8);
+  static const textPrimary   = Colors.white;
+  static const textSecondary = Colors.white70;
+  static const textDark      = Color(0xFF1A3A3A);
+}
+
+class SavedTrip {
+  final String title;
+  final String dateRange;
+  final int    pointCount;
+  final String city;
+  final String imageUrl;
+  bool isFavorite;
+
+  SavedTrip({
+    required this.title,
+    required this.dateRange,
+    required this.pointCount,
+    required this.city,
+    required this.imageUrl,
+    this.isFavorite = true,
+  });
+}
+
+class SaveScreen extends StatefulWidget {
+  const SaveScreen({super.key});
+
+  @override
+  State<SaveScreen> createState() => _SaveScreenState();
+}
+
+class _SaveScreenState extends State<SaveScreen> {
+  final List<SavedTrip> _allTrips = [
+    SavedTrip(
+      title: 'İstanbul Tarihi Yarımada',
+      dateRange: '15-20 Mayıs 2026',
+      pointCount: 12,
+      city: 'İstanbul',
+      imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
+    ),
+    SavedTrip(
+      title: 'Kapadokya Turu',
+      dateRange: '1-5 Haziran 2026',
+      pointCount: 8,
+      city: 'Kapadokya',
+      imageUrl: 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800',
+    ),
+    SavedTrip(
+      title: 'İzmir Sahil Gezisi',
+      dateRange: '10-12 Temmuz 2026',
+      pointCount: 6,
+      city: 'İzmir',
+      imageUrl: 'https://images.unsplash.com/photo-1602867741746-6df80f40b3f6?w=800',
+    ),
+    SavedTrip(
+      title: 'Antalya Tatili',
+      dateRange: '20-27 Ağustos 2026',
+      pointCount: 10,
+      city: 'Antalya',
+      imageUrl: 'https://images.unsplash.com/photo-1580502304784-8985b7eb7260?w=800',
+    ),
+  ];
+
+  String _selectedCity = 'Tümü';
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  List<String> get _cityFilters {
+    final cities = _allTrips.map((t) => t.city).toSet().toList();
+    return ['Tümü', ...cities];
+  }
+
+  List<SavedTrip> get _filtered {
+    return _allTrips.where((t) {
+      final matchCity   = _selectedCity == 'Tümü' || t.city == _selectedCity;
+      final matchSearch = _searchQuery.isEmpty ||
+          t.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          t.city.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchCity && matchSearch;
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+    final topPad    = MediaQuery.of(context).padding.top;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // 1. Teal gradient arkaplan
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0DA3A3), Color(0xFF4DD0D0)],
+              ),
+            ),
+          ),
+
+          // 2. İçerik
+          Column(
+            children: [
+              SizedBox(height: topPad),
+              _buildAppBar(context),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildSearchBar(),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 38,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _cityFilters.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => _buildChip(_cityFilters[i]),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Expanded(
+                child: _filtered.isEmpty
+                    ? _buildEmpty()
+                    : ListView.separated(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 80 + bottomPad),
+                  itemCount: _filtered.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (_, i) => _buildTripCard(_filtered[i]),
+                ),
+              ),
+            ],
+          ),
+
+          // 3. Bottom Nav
+          Positioned(
+            bottom: 0, left: 0, right: 0,
+            child: _buildBottomNavBar(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.22),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 18),
+            ),
+          ),
+          const Text(
+            'FAVORİLER',
+            style: TextStyle(
+              color: Colors.white, fontSize: 20,
+              fontWeight: FontWeight.bold, letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(width: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.28),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white.withOpacity(0.40)),
+      ),
+      child: TextField(
+        controller: _searchCtrl,
+        onChanged: (v) => setState(() => _searchQuery = v),
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: 'Gezi ara...',
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.75)),
+          prefixIcon: Icon(Icons.search_rounded, color: Colors.white.withOpacity(0.80)),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? GestureDetector(
+            onTap: () { _searchCtrl.clear(); setState(() => _searchQuery = ''); },
+            child: Icon(Icons.close_rounded, color: Colors.white.withOpacity(0.80)),
+          )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChip(String city) {
+    final selected = _selectedCity == city;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCity = city),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white.withOpacity(0.90) : Colors.white.withOpacity(0.22),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? Colors.transparent : Colors.white.withOpacity(0.40),
+          ),
+        ),
+        child: Text(
+          city,
+          style: TextStyle(
+            color: selected ? _T.gradientStart : Colors.white,
+            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTripCard(SavedTrip trip) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 16, offset: const Offset(0, 5)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                Image.network(
+                  trip.imageUrl,
+                  height: 180, width: double.infinity, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 180, color: _T.gradientEnd,
+                    child: const Icon(Icons.image_not_supported_outlined,
+                        color: _T.gradientStart, size: 40),
+                  ),
+                ),
+                Positioned(
+                  top: 12, right: 12,
+                  child: GestureDetector(
+                    onTap: () => setState(() => _allTrips.remove(trip)),
+                    child: Container(
+                      width: 40, height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white, shape: BoxShape.circle,
+                        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
+                      ),
+                      child: Icon(
+                        trip.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                        color: trip.isFavorite ? Colors.redAccent : Colors.grey,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(trip.title,
+                      style: const TextStyle(color: _T.textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(trip.dateRange,
+                          style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined, size: 14, color: _T.gradientStart),
+                          const SizedBox(width: 3),
+                          Text('${trip.pointCount} Nokta',
+                              style: const TextStyle(color: _T.gradientStart,
+                                  fontWeight: FontWeight.w600, fontSize: 13)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bookmark_border_rounded, size: 64, color: Colors.white.withOpacity(0.60)),
+          const SizedBox(height: 16),
+          Text('Henüz favori gezin yok',
+              style: TextStyle(color: Colors.white.withOpacity(0.80),
+                  fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text('Gezileri favorilere ekleyerek\nburada görebilirsin.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavBar(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _T.navBar.withOpacity(0.88),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 20, offset: const Offset(0, -4))],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Row(
+                children: [
+                  _navItem(context, Icons.home_rounded, 'Ana Sayfa', false,
+                          () => Navigator.pushAndRemoveUntil(context,
+                          MaterialPageRoute(builder: (_) => const HomeScreen()), (r) => false)),
+                  _navItem(context, Icons.map_outlined, 'Rotalar', false, () {}),
+                  const Expanded(child: SizedBox()),
+                  _navItem(context, Icons.favorite_rounded, 'Favoriler', true, () {}),
+                  _navItem(context, Icons.person_outline, 'Profil', false,
+                          () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const ProfileScreen()))),
+                ],
+              ),
+              Positioned(
+                top: -26,
+                child: Container(
+                  width: 58, height: 58,
+                  decoration: BoxDecoration(
+                    color: _T.accent, shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [BoxShadow(color: _T.accent.withOpacity(0.45), blurRadius: 14, offset: const Offset(0, 4))],
+                  ),
+                  child: const Icon(Icons.add_location_alt_rounded, color: Colors.white, size: 26),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(BuildContext context, IconData icon, String label, bool selected, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: selected ? _T.accent : const Color(0xFFBDBDBD)),
+            const SizedBox(height: 3),
+            Text(label, style: TextStyle(fontSize: 10,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                color: selected ? _T.accent : const Color(0xFFBDBDBD))),
+          ],
+        ),
+      ),
+    );
+  }
+}

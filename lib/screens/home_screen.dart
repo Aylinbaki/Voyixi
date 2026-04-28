@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
+import 'save_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -728,11 +729,14 @@ class _HomeScreenState extends State<HomeScreen> {
             else if(navIndex==1){
               // rotalar
             }
-            else if(navIndex==2){
-              //favoriler
+            else if(navIndex==2){ //favoriler
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SaveScreen()),
+              );
+              return;
             }
-            else if (navIndex == 3) {
-              // Profile olcak
+            else if (navIndex == 3) { // Profil
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ProfileScreen()),
