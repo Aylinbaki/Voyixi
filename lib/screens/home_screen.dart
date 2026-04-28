@@ -5,6 +5,7 @@ import 'settings_screen.dart';
 import 'profile_screen.dart';
 import 'save_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
+import '../services/saved_trip_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedNavIndex = 0;
+  final Set<String> _savedTitles = {};
   User? get _currentUser => FirebaseAuth.instance.currentUser;
   String get _userName {
     final user = _currentUser;
@@ -422,27 +424,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            //SAVE
             Positioned(
-              bottom: 12,
+              top: 10,
               left: 10,
-              right: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tour['city'] as String,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  final city = tour['city'] as String;
+                  if (_savedTitles.contains(city)) {
+                    _savedTitles.remove(city);
+                  } else {
+                    _savedTitles.add(city);
+                    SavedTripService.saveTrip(SavedTrip(
+                      title: city,
+                      city: tour['country'] as String,
+                      imageUrl: tour['image'] as String,
+                      dateRange: '',
+                      pointCount: 0,
+                    ));
+                  }
+                }),
+                child: Container(
+                  width: 32, height: 32,
+                  decoration: const BoxDecoration(
+                    color: Colors.white, shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    tour['country'] as String,
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  child: Icon(
+                    _savedTitles.contains(tour['city'])
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: _savedTitles.contains(tour['city'])
+                        ? Colors.redAccent
+                        : Colors.grey,
+                    size: 17,
                   ),
-                ],
+                ),
               ),
             ),
           ],

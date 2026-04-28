@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
+import '../services/saved_trip_service.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
@@ -13,24 +14,6 @@ class _T {
   static const textPrimary   = Colors.white;
   static const textSecondary = Colors.white70;
   static const textDark      = Color(0xFF1A3A3A);
-}
-
-class SavedTrip {
-  final String title;
-  final String dateRange;
-  final int    pointCount;
-  final String city;
-  final String imageUrl;
-  bool isFavorite;
-
-  SavedTrip({
-    required this.title,
-    required this.dateRange,
-    required this.pointCount,
-    required this.city,
-    required this.imageUrl,
-    this.isFavorite = true,
-  });
 }
 
 class SaveScreen extends StatefulWidget {
