@@ -8,6 +8,8 @@ import 'package:image_picker/image_picker.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
 import 'edit_profile_screen.dart';
+import 'save_screen.dart';
+import '../features/trip_planner/trip_planner_entry.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
@@ -908,33 +910,50 @@ class _ProfileScreenState extends State<ProfileScreen>
                     );
                   }),
                   _navItem(Icons.map_outlined, 'Rotalar', false, () {}),
-                  const Expanded(child: SizedBox()), // FAB boşluğu
-                  _navItem(Icons.favorite_border, 'Favoriler', false, () {}),
+                  const Expanded(child: SizedBox()),
+
+                  _navItem(Icons.favorite_border, 'Favoriler', false, () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SaveScreen()),
+                          (r) => false,
+                    );
+                  }),
                   _navItem(Icons.person_outline, 'Profil', true, () {}),
                 ],
               ),
               // FAB — home_screen ile aynı
               Positioned(
                 top: -26,
-                child: Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4CAF50).withOpacity(0.45),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TripPlannerEntry(),
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.add_location_alt_rounded,
-                    color: Colors.white,
-                    size: 26,
+                    );
+                  },
+                  child: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.45),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.add_location_alt_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
                   ),
                 ),
               ),

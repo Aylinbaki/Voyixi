@@ -1,12 +1,9 @@
-// TO DO: saved trip yerine biten trip yazılacak
-//saved tripleri ana sayfadan al
-//filtreleme özelliği olsun
-
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
+import '../features/trip_planner/trip_planner_entry.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
@@ -378,14 +375,36 @@ class _SaveScreenState extends State<SaveScreen> {
               ),
               Positioned(
                 top: -26,
-                child: Container(
-                  width: 58, height: 58,
-                  decoration: BoxDecoration(
-                    color: _T.accent, shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [BoxShadow(color: _T.accent.withOpacity(0.45), blurRadius: 14, offset: const Offset(0, 4))],
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TripPlannerEntry(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.45),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.add_location_alt_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
                   ),
-                  child: const Icon(Icons.add_location_alt_rounded, color: Colors.white, size: 26),
                 ),
               ),
             ],
