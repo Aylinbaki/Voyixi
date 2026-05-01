@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/profile_screen.dart';
 import '../screens/home_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
-import '../features/routes/started_routes_screen.dart';
+import '../features/routes/routes_screen.dart';
 
 class bottomNav extends StatelessWidget {
   final int selectedIndex;

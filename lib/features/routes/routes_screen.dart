@@ -4,6 +4,8 @@ import 'routes_service.dart';
 import 'routes_model.dart';
 import '../../widgets/navigation_bar.dart';
 import '../active_trip/active_trip_screen.dart';
+import 'package:intl/intl.dart';
+
 class StartedRoutesScreen extends StatelessWidget {
   const StartedRoutesScreen({super.key});
 
@@ -65,40 +67,59 @@ class StartedRoutesScreen extends StatelessWidget {
 
   // ── Sliver Header ─────────────────────────────────────────────────────────
   Widget _buildSliverHeader(BuildContext context, int count) {
-    return SliverAppBar(
-      expandedHeight: 120.0,
-      floating: false,
-      pinned: true,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-        centerTitle: false,
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Rotalarım',
-                style: TextStyle(color: _textDark, fontSize: 22, fontWeight: FontWeight.w800)),
-            if (count > 0)
-              Text('$count Kayıtlı Plan',
-                  style: const TextStyle(color: _textMid, fontSize: 11, fontWeight: FontWeight.w500)),
-          ],
-        ),
+  return SliverAppBar(
+    expandedHeight: 70.0, 
+    pinned: true,
+    backgroundColor: _bgTop,
+    elevation: 0.5,
+    leading: IconButton(
+      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _teal, size: 22),
+      onPressed: () => Navigator.maybePop(context),
+    ),
+    flexibleSpace: FlexibleSpaceBar(
+      titlePadding: const EdgeInsetsDirectional.only(start: 56, bottom: 16),
+      centerTitle: false,
+      title: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Rotalarım',
+            style: TextStyle(
+              color: _textDark,
+              fontSize: 20, 
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+            ),
+          ),
+          if (count > 0)
+            Text(
+              '$count Kayıtlı Plan',
+              style: TextStyle(
+                color: _teal.withOpacity(0.8), // Siyah yerine Voyixi yeşili
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
       ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _teal, size: 20),
-        onPressed: () => Navigator.maybePop(context),
+    ),
+    actions: [
+  Padding(
+    padding: const EdgeInsets.only(right: 35),
+    child: Transform.scale(
+      scale: 4.5, 
+      child: Image.asset(
+        'assets/images/app_logo_plan.png',
+        height: 40,
+        width: 40,
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: Image.asset('assets/images/app_logo_plan.png', height: 40),
-        ),
-      ],
-    );
-  }
+    ),
+  ),
+],
+  );
+}
 
   Widget _buildEmptyState() {
     return Center(
@@ -234,30 +255,45 @@ class _ModernTripCard extends StatelessWidget {
                       child: Text(p, style: const TextStyle(color: _teal, fontSize: 10, fontWeight: FontWeight.w600)),
                     )).toList(),
                   ),
-                const SizedBox(height: 16),
-                
-                // ALT BİLGİ VE SİLME FONKSİYONU
-                Row(
-                  children: [
-                    const Icon(Icons.access_time_filled_rounded, size: 14, color: _teal),
-                    const SizedBox(width: 4),
-                    Text('${trip.days} Gün • ${trip.budget}', 
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _textDark)),
-                    const Spacer(),
-                    
-                    // SİLME BUTONU (FONKSİYONEL)
-                    GestureDetector(
-                      onTap: () => _confirmDelete(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.red.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
-                        child: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent),
+                  const SizedBox(height: 16),
+
+                  // ALT BİLGİ VE SİLME FONKSİYONU
+                  Row(
+                    children: [
+                      // TARİH BÖLÜMÜ 
+                      const Icon(Icons.calendar_month_rounded,size: 14,color: _teal,),
+                      const SizedBox(width: 4),
+                      Text(
+                       DateFormat('dd.MM.yyyy').format(trip.tripDate ?? DateTime.now()),
+                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _textMid),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                      const SizedBox(width: 12), 
+                      // GÜN VE BÜTÇE
+                      const Icon(Icons.access_time_filled_rounded,size: 14,color: _teal,),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${trip.days} Gün • ${trip.budget}',
+                        style: const TextStyle(fontSize: 11,fontWeight: FontWeight.w700,color: _textDark,),
+                      ),
+
+                      const Spacer(),
+                      // SİLME BUTONU
+                      GestureDetector(
+                        onTap: () => _confirmDelete(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.delete_outline_rounded,size: 18,color: Colors.redAccent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
           ),
         ],
       ),
