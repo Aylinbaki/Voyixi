@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/trip_result_model.dart';
-import '../services/gemini_service.dart';
+import '../trip_result_model.dart';
+import '../gemini_service.dart';
 import 'place_card.dart';
 const _dayColors = [
   Color(0xFF00BFA5),

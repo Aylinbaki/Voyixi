@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import '../trip_planner/models/trip_plan_model.dart';
-import 'models/trip_result_model.dart';
-import 'services/gemini_service.dart';
+import '../trip_planner/trip_plan_model.dart';
+import 'trip_result_model.dart';
+import 'gemini_service.dart';
 import 'widgets/day_section.dart';
 import 'widgets/trip_map.dart';
+import '../routes/routes_widget.dart';
+import '../routes/routes_service.dart';
+import '../active_trip/active_trip_screen.dart';
 
 class TripResultScreen extends StatefulWidget {
   final TripPlanModel plan;
@@ -65,7 +68,11 @@ class _TripResultScreenState extends State<TripResultScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF0FAFA),
-      body: _loading ? _buildLoading() : _error.isNotEmpty ? _buildError() : _buildContent(),
+      body: _loading
+          ? _buildLoading()
+          : _error.isNotEmpty
+          ? _buildError()
+          : _buildContent(),
       bottomNavigationBar: _buildBottomBar(),
     );
   }
@@ -74,14 +81,19 @@ class _TripResultScreenState extends State<TripResultScreen> {
     if (_loading || _error.isNotEmpty) return const SizedBox.shrink();
     return Container(
       padding: EdgeInsets.fromLTRB(
-          16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
+        16,
+        12,
+        16,
+        MediaQuery.of(context).padding.bottom + 12,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 16,
-              offset: const Offset(0, -4))
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
         ],
       ),
       child: Row(
@@ -96,14 +108,39 @@ class _TripResultScreenState extends State<TripResultScreen> {
                 side: const BorderSide(color: Color(0xFF00BFA5)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () {},
+              // Geziye Başla onPressed:
+              onPressed: () async {
+                final id = await showModalBottomSheet<String>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => RoutesWidget(result: _result!),
+                );
+
+                if (id != null && mounted) {
+                  final trips = await RoutesService().getTrips().first;
+                  final saved = trips.firstWhere((t) => t.id == id);
+                  if (mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ActiveTripScreen(
+                          savedTrip: saved,
+                          tripResult: _result!,
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
               icon: const Icon(Icons.explore_rounded, size: 18),
               label: const Text('Geziye Başla'),
               style: ElevatedButton.styleFrom(

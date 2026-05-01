@@ -1,8 +1,8 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../trip_planner/models/trip_plan_model.dart';
-import '../models/trip_result_model.dart';
+import '../trip_planner/trip_plan_model.dart';
+import 'trip_result_model.dart';
 
 class GeminiService {
   
@@ -16,7 +16,7 @@ class GeminiService {
     try{
     print('🚀 Gemini çağrısı başlıyor...');
     print('📍 Şehir: ${input.city}, Gün: ${input.days}');
-    print('🔑 Gemini key: $_geminiKey');  // key geliyor mu?
+    print('🔑 Gemini key: ${_geminiKey.isEmpty ? "(empty)" : "(set)"}');
     
     final rawJson = await _callGemini(input);
     print('✅ Gemini yanıtı: $rawJson');

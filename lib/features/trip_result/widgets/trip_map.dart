@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../models/trip_result_model.dart';
+import '../trip_result_model.dart';
 
 const _dayColors = [
   Color(0xFF00BFA5),

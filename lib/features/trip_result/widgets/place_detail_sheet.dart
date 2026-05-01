@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/trip_result_model.dart';
+import '../trip_result_model.dart';
 
 class PlaceDetailSheet extends StatelessWidget {
   final PlaceItem place;

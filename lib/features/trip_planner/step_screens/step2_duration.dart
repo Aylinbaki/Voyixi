@@ -1,8 +1,8 @@
 // lib/features/trip_planner/steps/step2_duration.dart
 
 import 'package:flutter/material.dart';
-import '../models/trip_plan_model.dart';
-import '../widgets/step_shell.dart';
+import '../trip_plan_model.dart';
+import '../step_shell.dart';
 
 class Step2Duration extends StatefulWidget {
   final TripPlanModel plan;

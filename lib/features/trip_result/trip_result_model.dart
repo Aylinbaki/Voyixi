@@ -81,4 +81,5 @@ class TripResult {
     required this.budget,
     required this.dayPlans,
   });
+
 }
