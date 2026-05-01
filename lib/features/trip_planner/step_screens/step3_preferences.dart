@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/trip_plan_model.dart';
-import '../widgets/step_shell.dart';
+import '../trip_plan_model.dart';
+import '../step_shell.dart';
 import '../../trip_result/trip_result_screen.dart';
 
 const _prefItems = [

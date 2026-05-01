@@ -8,26 +8,23 @@ import 'package:image_picker/image_picker.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
 import 'edit_profile_screen.dart';
+import '../widgets/navigation_bar.dart';
+import '../widgets/settings_button.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
   static const gradientEnd   = Color(0xFFB8F0F0);
-  // Accent – yeşil CTA (home'daki 4CAF50)
   static const accent  = Color(0xFF4CAF50);
-  static const accent2 = Color(0xFF81C784); // soft green
-  // Nav bar tonu
+  static const accent2 = Color(0xFF81C784); 
   static const navBar = Color(0xFF5E8BD8);
-  // Glass panel
   static const glassWhite = Colors.white;
-  // Metin
   static const textPrimary   = Colors.white;
   static const textSecondary = Colors.white70;
-  static const textDark      = Color(0xFF1A3A3A); // kart içi koyu metin
+  static const textDark      = Color(0xFF1A3A3A); 
 }
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -37,11 +34,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool isSavedTripsSelected = true;
   final user = FirebaseAuth.instance.currentUser;
   final ImagePicker _picker = ImagePicker();
-
   late AnimationController _fadeCtrl;
   late Animation<double> _fade;
-
-  // ── Notlar listesi ──────────────────────────
   final List<Map<String, dynamic>> _myNotes = [
     {
       'title': 'Galata Kulesi',
@@ -67,8 +61,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     _fadeCtrl.dispose();
     super.dispose();
   }
-
-  // ── Kullanıcı adı ───────────────────────────
   String get _userName {
     if (user?.displayName != null && user!.displayName!.trim().isNotEmpty) {
       return user!.displayName!;
@@ -79,7 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     return 'Voyixi';
   }
 
-  // ── Not ekleme bottom sheet ──────────────────
   void _showAddNoteSheet() {
     final titleCtrl = TextEditingController();
     final noteCtrl  = TextEditingController();
@@ -102,18 +93,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                 const BorderRadius.vertical(top: Radius.circular(28)),
               ),
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-                left: 22,
-                right: 22,
-                top: 16,
-              ),
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,left: 22,right: 22,top: 16,),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // handle
                   Container(
-                    width: 40,
-                    height: 4,
+                    width: 40,height: 4,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(10),
@@ -122,15 +107,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                   const SizedBox(height: 18),
                   const Text(
                     'Yeni Anı Ekle',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: _T.gradientStart,
-                    ),
+                    style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: _T.gradientStart,),
                   ),
                   const SizedBox(height: 18),
-
-                  // Fotoğraf seçici
                   GestureDetector(
                     onTap: () async {
                       final img =
@@ -166,16 +145,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                   ),
                   const SizedBox(height: 14),
-
-                  // Başlık
                   _sheetField(titleCtrl, 'Başlık (Örn: Ayasofya Gezisi)'),
                   const SizedBox(height: 10),
-
-                  // Not
                   _sheetField(noteCtrl, 'Neler yaşadın?', maxLines: 3),
                   const SizedBox(height: 12),
-
-                  // Tarih
                   Row(
                     children: [
                       const Icon(Icons.calendar_today_outlined,
@@ -187,8 +160,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ],
                   ),
                   const SizedBox(height: 18),
-
-                  // Kaydet butonu
                   GestureDetector(
                     onTap: () {
                       if (titleCtrl.text.isNotEmpty) {
@@ -205,29 +176,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                       }
                     },
                     child: Container(
-                      width: double.infinity,
-                      height: 52,
+                      width: double.infinity, height: 52,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [_T.accent, Color(0xFF2E7D32)],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(
-                            color: _T.accent.withOpacity(0.38),
-                            blurRadius: 14,
-                            offset: const Offset(0, 5),
-                          ),
+                          BoxShadow(color: _T.accent.withOpacity(0.38),blurRadius: 14, offset: const Offset(0, 5),),
                         ],
                       ),
                       alignment: Alignment.center,
                       child: const Text(
                         'Notu Kaydet',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15),
-                      ),
+                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
                     ),
                   ),
                 ],
@@ -258,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Resim widget'ı ───────────────────────────
+  // ── Resim widget'ı 
   Widget _buildNoteImage(String path, bool isLocal) {
     return isLocal
         ? Image.file(File(path),
@@ -270,36 +232,31 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
-    // Nav bar yüksekliği + bottom safe area
     final bottomInset  = MediaQuery.of(context).padding.bottom;
     const actionBarH   = 54.0 + 16 + 16;
     const navBarH      = 64.0;
     final scrollBottom = navBarH + bottomInset + actionBarH;
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // ── 1. Gradient arkaplan ─────────────────
+          // ── 1. Gradient arkaplan 
           Container(
             width: double.infinity,
             height: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.topLeft, end: Alignment.bottomRight,
                 colors: [Color.fromARGB(255, 13, 163, 163), Color.fromARGB(255, 184, 240, 240)],
               ),
             ),
           ),
-
-          // ── 2. Kaydırılabilir içerik ─────────────
+          // ── 2. Kaydırılabilir içerik 
           FadeTransition(
             opacity: _fade,
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // Sabit header'ın kapladığı alanı scroll'dan koru
                 SliverToBoxAdapter(child: _buildScrollableUserInfo(context)),
                 SliverToBoxAdapter(
                   child: Padding(
@@ -315,32 +272,26 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                isSavedTripsSelected
-                    ? _buildSavedTripsSliver()
-                    : _buildNotesSliver(),
-                // Alttaki sabit buton + nav bar için boşluk
+
+                isSavedTripsSelected ? _buildSavedTripsSliver(): _buildNotesSliver(),
                 SliverToBoxAdapter(child: SizedBox(height: scrollBottom + 8)),
               ],
             ),
           ),
-
-          // ── 3. SABİT HEADER (Profil yazısı + back/settings) ──
+          // ── 3. header
           Positioned(top: 0, left: 0, right: 0, child: _buildFixedAppBar(context),
           ),
-
-          // ── 4. SABİT ACTION BUTTON (nav bar'ın hemen üstü) ──
+          // ── 4. SABİT action buton
           Positioned(bottom: navBarH + bottomInset, left: 0, right: 0, child: _buildFixedActionButton(),
           ),
-
           // ── 5. Nav bar ───────────────────────────
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNavBar(),
+          Positioned(bottom: 0, left: 0, right: 0, child: const bottomNav( selectedIndex:3,),
           ),
         ],
       ),
     );
   }
-
-  // ── SABİT APPBAR ─────────────────────────────
+  // ── SABİT APPBAR 
   Widget _buildFixedAppBar(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
     return ClipRect(
@@ -358,28 +309,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const Text(
                 'Profil',
-                style: TextStyle(
-                  color: _T.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              _circleBtn(
-                Icons.settings_outlined,
-                    () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                ),
-              ),
+                style: TextStyle(color: _T.textPrimary,fontWeight: FontWeight.bold,fontSize: 20,), ),
+               const SettingsButton()
             ],
           ),
         ),
       ),
     );
   }
-
-  // ── SABİT ACTION BUTTON ───────────────────────
-  // Nav bar'ın hemen üstüne yapışık, içerik altında kaybolmaz
+  // ── SABİT ACTION BUTTON 
   Widget _buildFixedActionButton() {
     final label  = isSavedTripsSelected ? 'Yeni Rota Ekle'        : 'Not Ekle';
     final icon   = isSavedTripsSelected ? Icons.add_location_alt_rounded : Icons.note_add_outlined;
@@ -390,17 +328,11 @@ class _ProfileScreenState extends State<ProfileScreen>
           (r) => false,
     )
         : _showAddNoteSheet;
-
     return Container(
-      // Hafif blur + gradient overlay — butonun içerikten ayrıştığı hissedilsin
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            _T.gradientEnd.withOpacity(0.0),
-            _T.gradientEnd.withOpacity(0.85),
-          ],
+          begin: Alignment.topCenter,end: Alignment.bottomCenter,
+          colors: [_T.gradientEnd.withOpacity(0.0), _T.gradientEnd.withOpacity(0.85), ],
         ),
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -429,11 +361,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.18),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
+                    BoxShadow( color: Colors.black.withOpacity(0.18),blurRadius: 16,offset: const Offset(0, 6),),
                   ],
                 ),
                 child: ClipOval(
@@ -453,8 +381,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   setState(() {});
                 },
                 child: Container(
-                  width: 26,
-                  height: 26,
+                  width: 26,height: 26,
                   decoration: BoxDecoration(
                     color: _T.accent,
                     shape: BoxShape.circle,
@@ -468,11 +395,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           const SizedBox(height: 12),
           Text(
             _userName,
-            style: const TextStyle(
-              color: _T.textPrimary,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(color: _T.textPrimary,fontSize: 22,fontWeight: FontWeight.bold,),
           ),
           const SizedBox(height: 4),
           const Row(
@@ -510,7 +433,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     child: const Icon(Icons.person, color: Colors.white, size: 44),
   );
 
-  // ── Stat Row ────────────────────────────────
+  // ── Stat Row 
   Widget _buildStatRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -556,7 +479,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Toggle ──────────────────────────────────
+  // ── Toggle 
   Widget _buildToggle() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
@@ -615,27 +538,22 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       );
 
-  // ── Saved Trips Sliver ───────────────────────
+  // ── Saved Trips Sliver 
   SliverList _buildSavedTripsSliver() {
     return SliverList(
       delegate: SliverChildListDelegate([
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: _tripCard(
-            city: 'İstanbul Gezisi',
-            days: '3 Gün',
-            image:
-            'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+            city: 'İstanbul Gezisi', days: '3 Gün',
+            image: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
           ),
         ),
       ]),
     );
   }
 
-  Widget _tripCard(
-      {required String city,
-        required String days,
-        required String image}) {
+  Widget _tripCard( {required String city,required String days, required String image}) {
     return Container(
       height: 130,
       decoration: BoxDecoration(
@@ -659,19 +577,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.68)
-                  ],
+                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.68)],
                 ),
               ),
             ),
             Positioned(
-              bottom: 14,
-              left: 16,
-              right: 16,
+              bottom: 14,left: 16,right: 16,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -679,34 +591,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(city,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
+                          style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 16)),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: _T.accent,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(days,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
+                        padding: const EdgeInsets.symmetric( horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(color: _T.accent,borderRadius: BorderRadius.circular(20),),
+                        child: Text(days,style: const TextStyle(color: Colors.white,fontSize: 11,fontWeight: FontWeight.w700)),
                       )
                     ],
                   ),
                   Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle),
-                    child: const Icon(Icons.north_east,
-                        color: Colors.white, size: 18),
+                    width: 36,height: 36,
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2),shape: BoxShape.circle),
+                    child: const Icon(Icons.north_east,color: Colors.white, size: 18),
                   ),
                 ],
               ),
@@ -717,7 +614,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // ── Notes Sliver ─────────────────────────────
+  // ── Notes Sliver ─
   SliverList _buildNotesSliver() {
     return SliverList(
       delegate: SliverChildListDelegate([
@@ -772,16 +669,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             color: Colors.white.withOpacity(0.88),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4))
+              BoxShadow( color: Colors.black.withOpacity(0.10),blurRadius: 12,offset: const Offset(0, 4))
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Resim — sadece path doluysa göster
+              // Resim sadece path
               if ((note['image'] as String).isNotEmpty)
                 ClipRRect(
                   borderRadius:
@@ -799,10 +693,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(note['title']!,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: _T.textDark)),
+                            style: const TextStyle( fontWeight: FontWeight.bold,fontSize: 15,color: _T.textDark)),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
@@ -811,17 +702,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(note['date']!,
-                              style: const TextStyle(
-                                  color: _T.gradientStart,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600)),
+                              style: const TextStyle(color: _T.gradientStart,fontSize: 11,fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(note['note']!,
-                        style: TextStyle(
-                            color: Colors.grey[700], fontSize: 13)),
+                        style: TextStyle(color: Colors.grey[700], fontSize: 13)),
                   ],
                 ),
               ),
@@ -831,7 +718,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
-
   // ── Action Button ────────────────────────────
   Widget _actionButton(
       {required String label,
@@ -847,10 +733,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(
-                color: _T.accent.withOpacity(0.38),
-                blurRadius: 14,
-                offset: const Offset(0, 5))
+            BoxShadow(color: _T.accent.withOpacity(0.38),blurRadius: 14,offset: const Offset(0, 5))
           ],
         ),
         child: Row(
@@ -859,104 +742,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             Icon(icon, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Bottom Nav Bar ─── home_screen ile birebir aynı ───
-  Widget _buildBottomNavBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color.fromARGB(255, 94, 139, 216).withOpacity(0.8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.10),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Row(
-                children: [
-                  _navItem(Icons.home_rounded, 'Ana Sayfa', false, () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const HomeScreen()),
-                          (r) => false,
-                    );
-                  }),
-                  _navItem(Icons.map_outlined, 'Rotalar', false, () {}),
-                  const Expanded(child: SizedBox()), // FAB boşluğu
-                  _navItem(Icons.favorite_border, 'Favoriler', false, () {}),
-                  _navItem(Icons.person_outline, 'Profil', true, () {}),
-                ],
-              ),
-              // FAB — home_screen ile aynı
-              Positioned(
-                top: -26,
-                child: Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4CAF50).withOpacity(0.45),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.add_location_alt_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(
-      IconData icon, String label, bool selected, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                size: 24,
-                color: selected ? _T.accent : const Color(0xFFBDBDBD)),
-            const SizedBox(height: 3),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                    color: selected
-                        ? _T.accent
-                        : const Color(0xFFBDBDBD))),
+                style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15)),
           ],
         ),
       ),

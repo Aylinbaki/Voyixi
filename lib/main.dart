@@ -8,7 +8,12 @@ import 'package:voyixi/screens/home_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+    print("✅ .env dosyası başarıyla yüklendi");
+  } catch (e) {
+    print("❌ .env yüklenirken hata oluştu: $e");
+  }
  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

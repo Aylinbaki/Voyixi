@@ -34,7 +34,11 @@ android {
         applicationId = "com.example.voyixi"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = localProperties.getProperty("GOOGLE_MAPS_API_KEY") ?: ""
+        // Prefer an explicit maps key; fall back to places key for local dev.
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] =
+            localProperties.getProperty("GOOGLE_MAPS_API_KEY")
+                ?: localProperties.getProperty("GOOGLE_PLACES_API_KEY")
+                ?: ""
         minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
