@@ -113,10 +113,7 @@ class _RoutesWidget extends State<RoutesWidget> {
             const SizedBox(width: 12),
             const Text(
               'Planı Kaydet',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: _textDark),
+              style: TextStyle(fontSize: 18,fontWeight: FontWeight.w800,color: _textDark),
             ),
           ]),
           const SizedBox(height: 20),
@@ -178,8 +175,7 @@ class _RoutesWidget extends State<RoutesWidget> {
                       : 'Tarih seç...',
                   style: TextStyle(
                     color: _selectedDate != null
-                        ? _textDark
-                        : const Color(0xFF8AABAB),
+                        ? _textDark : const Color(0xFF8AABAB),
                     fontSize: 14,
                   ),
                 ),

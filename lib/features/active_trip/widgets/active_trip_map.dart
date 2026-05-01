@@ -1,7 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../trip_result/rip_result_model.dart';
+import '../../trip_result/trip_result_model.dart';
 import '../active_trip_state_model.dart';
 import 'package:flutter/gestures.dart';
 
