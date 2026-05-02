@@ -6,6 +6,8 @@ import 'profile_screen.dart';
 import 'save_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 import '../services/saved_trip_service.dart';
+import '../widgets/navigation_bar.dart';
+import '../widgets/settings_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,15 +24,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = _currentUser;
 
     if (user == null) return 'Voyixi';
-    // 1. Önce İsim (displayName) kontrolü
+    // isim kontrolü
     if (user.displayName != null && user.displayName!.trim().isNotEmpty) {
       return user.displayName!;
     }
-    // 2. İsim yoksa Email parçala
+    // isim yoksa emailden çek
     if (user.email != null && user.email!.isNotEmpty) {
       return user.email!.split('@').first;
     }
-    // 3. Hiçbiri yoksa (Fallback)
+    // Hiçbiri yoksa (Fallback)
     return 'Voyixi';
   }
 
@@ -38,18 +40,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Map<String, dynamic>> _popularTours = [
     {
-      'city': 'Paris',
-      'country': 'Fransa',
-      'days': '5 Gün',
-      'image':
-          'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=500',
+      'city': 'Paris','country': 'Fransa','days': '5 Gün',
+      'image':'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=500',
     },
     {
-      'city': 'Moskova',
-      'country': 'Rusya',
-      'days': '4 Gün',
-      'image':
-          'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=500',
+      'city': 'Moskova','country': 'Rusya','days': '4 Gün',
+      'image': 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=500',
     },
     {
       'city': 'İstanbul',
@@ -62,37 +58,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Map<String, dynamic>> _tourPlans = [
     {
-      'title': 'New York',
-      'days': '6 Gün',
-      'image':
-          'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600',
+      'title': 'New York','days': '6 Gün',
+      'image':'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600',
     },
   ];
 
   final List<Map<String, dynamic>> _nearbyPlaces = [
     {
-      'name': 'Sultan Ahmet',
-      'distance': '1.2 km',
-      'image':
-          'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400',
+      'name': 'Sultan Ahmet','distance': '1.2 km',
+      'image':'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=400',
     },
     {
-      'name': 'Kapalıçarşı',
-      'distance': '700 m',
-      'image':
-          'https://images.unsplash.com/photo-1662633272401-9703bff75f3b?q=80&w=687',
+      'name': 'Kapalıçarşı', 'distance': '700 m',
+      'image': 'https://images.unsplash.com/photo-1662633272401-9703bff75f3b?q=80&w=687',
     },
     {
-      'name': 'Topkapı Sarayı',
-      'distance': '2.3 km',
-      'image':
-          'https://images.unsplash.com/photo-1696711156435-5872e329edd4?q=80&w=687',
+      'name': 'Topkapı Sarayı','distance': '2.3 km',
+      'image': 'https://images.unsplash.com/photo-1696711156435-5872e329edd4?q=80&w=687',
     },
     {
-      'name': 'Galata Kulesi',
-      'distance': '3.1 km',
-      'image':
-          'https://images.unsplash.com/photo-1695239510462-a63b0a0c0089?q=80&w=687',
+      'name': 'Galata Kulesi','distance': '3.1 km',
+      'image': 'https://images.unsplash.com/photo-1695239510462-a63b0a0c0089?q=80&w=687',
     },
   ];
 
@@ -130,30 +116,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildTourPlans(),
                 const SizedBox(height: 24),
                 _buildNearbySection(),
-                // Alt barın içeriği kapatmaması için boşluk
                 SizedBox(height: 100 + bottomPadding),
               ],
             ),
           ),
-
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNavBar()),
+          Positioned(bottom: 0, left: 0, right: 0, child: const bottomNav(selectedIndex: 0,)),
         ],
       ),
     );
   }
-
-  // header
  Widget _buildHeader(BuildContext context) {
   final topPad = MediaQuery.of(context).padding.top;
   
   return ShaderMask(
     shaderCallback: (rect) {
       return const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        // Siyah (Opaque) olan yerler görünür, Transparent olan yerler erir.
+        begin: Alignment.topCenter,end: Alignment.bottomCenter,
         colors: [Colors.black, Colors.transparent],
-        // Resmin %70'ine kadar net kalsın, son %30'luk dilimde erisin.
         stops: [0.7, 1.0], 
       ).createShader(rect);
     },
@@ -161,20 +140,16 @@ class _HomeScreenState extends State<HomeScreen> {
     child: Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(
-            'https://images.unsplash.com/photo-1764702946401-337324daa1e0?q=80&w=1170&auto=format&fit=crop',
-          ),
+          image: NetworkImage('https://images.unsplash.com/photo-1764702946401-337324daa1e0?q=80&w=1170&auto=format&fit=crop',),
           fit: BoxFit.cover,
         ),
       ),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withOpacity(0.55),
-              Colors.black.withOpacity(0.22),
+              Colors.black.withOpacity(0.55),Colors.black.withOpacity(0.22),
             ],
           ),
         ),
@@ -183,7 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Profil ve Ayarlar Butonu
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -196,53 +170,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           'Merhaba, $_userName!',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
+                          style: const TextStyle(color: Colors.white,fontWeight: FontWeight.w600,fontSize: 14,),),
                         const Text(
-                          'Tekrar hoş geldin',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                          'Tekrar hoş geldin',style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ],
                     ),
                   ],
                 ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsScreen(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.settings_outlined,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                ),
+              const SettingsButton()
               ],
             ),
             const SizedBox(height: 16),
             const Text(
               'Bir Sonraki\nMaceraya Hazır mısın?',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                height: 1.3,
+                color: Colors.white,fontSize: 22,fontWeight: FontWeight.bold,height: 1.3,
               ),
             ),
             const SizedBox(height: 16),
@@ -256,9 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          color: Colors.black.withOpacity(0.08),blurRadius: 10,offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -269,10 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(width: 8),
                         Text(
                           'Tur ara...',
-                          style: TextStyle(
-                            color: Color(0xFF9E9E9E),
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Color(0xFF9E9E9E),fontSize: 14,),
                         ),
                       ],
                     ),
@@ -280,17 +218,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 12),
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 48,height: 48,
                   decoration: BoxDecoration(
                     color: const Color(0xFF4CAF50),
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4CAF50).withOpacity(0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
+                        color: const Color(0xFF4CAF50).withOpacity(0.4), blurRadius: 10,offset: const Offset(0, 4),),
                     ],
                   ),
                   child: const Icon(Icons.tune, color: Colors.white, size: 22),
@@ -305,8 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
   Widget _buildAvatar() {
     return Container(
-      width: 44,
-      height: 44,
+      width: 44,height: 44,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),
@@ -336,21 +269,13 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Text(
                 'Popüler Turlar',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                style: TextStyle( fontSize: 17,fontWeight: FontWeight.bold,color: Colors.white, ),
               ),
               GestureDetector(
                 onTap: () {},
                 child: const Text(
                   'Tümünü Gör',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 183, 241, 185),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Color.fromARGB(255, 183, 241, 185),fontWeight: FontWeight.w600,fontSize: 13,),
                 ),
               ),
             ],
@@ -371,7 +296,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
   Widget _buildTourCard(Map<String, dynamic> tour) {
     return Container(
       width: 128,
@@ -379,11 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.13),blurRadius: 10,offset: const Offset(0, 4),),
         ],
       ),
       child: ClipRRect(
@@ -406,8 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Positioned(
-              top: 10,
-              right: 10,
+              top: 10,right: 10,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -476,11 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'Tur Planlarım',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+            style: TextStyle( fontSize: 17, fontWeight: FontWeight.bold,color: Colors.white,),
           ),
         ),
         const SizedBox(height: 14),
@@ -501,11 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.15),blurRadius: 14,offset: const Offset(0, 6),),
         ],
       ),
       child: ClipRRect(
@@ -521,19 +432,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.05),
-                    Colors.black.withOpacity(0.65),
-                  ],
+                  begin: Alignment.topCenter,end: Alignment.bottomCenter,
+                  colors: [ Colors.black.withOpacity(0.05),Colors.black.withOpacity(0.65),],
                 ),
               ),
             ),
             Positioned(
-              bottom: 16,
-              left: 16,
-              right: 16,
+              bottom: 16,left: 16,right: 16,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -543,17 +448,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         plan['title'] as String,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(color: Colors.white,fontSize: 22,fontWeight: FontWeight.bold,),
                       ),
                       const SizedBox(height: 5),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                          horizontal: 10,vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4CAF50),
@@ -561,27 +461,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Text(
                           plan['days'] as String,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
+                          style: const TextStyle(color: Colors.white,fontWeight: FontWeight.w700,fontSize: 12,),
                         ),
                       ),
                     ],
                   ),
                   Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.north_east,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    width: 38,height: 38,
+                    decoration: BoxDecoration( color: Colors.white.withOpacity(0.2),shape: BoxShape.circle,),
+                    child: const Icon(Icons.north_east,color: Colors.white,size: 20,),
                   ),
                 ],
               ),
@@ -591,7 +479,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
   // civarı keşfet
   Widget _buildNearbySection() {
     return Column(
@@ -604,22 +491,14 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Text(
                 'Civarını Keşfet!',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontSize: 17,fontWeight: FontWeight.bold,color: Colors.white,),
               ),
               const SizedBox(width: 8),
               const Padding(
                 padding: EdgeInsets.only(bottom: 1),
                 child: Text(
                   'İstanbul',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color.fromARGB(255, 199, 198, 198),
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color.fromARGB(255, 199, 198, 198),),
                 ),
               ),
             ],
@@ -631,10 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            childAspectRatio: 1.05,
+            crossAxisCount: 2,crossAxisSpacing: 14,mainAxisSpacing: 14,childAspectRatio: 1.05,
           ),
           itemCount: _nearbyPlaces.length,
           itemBuilder: (context, index) =>
@@ -649,11 +525,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.10),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.10),blurRadius: 8,offset: const Offset(0, 3),),
         ],
       ),
       child: ClipRRect(
@@ -669,16 +541,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topCenter,end: Alignment.bottomCenter,
                   colors: [Colors.transparent, Colors.black.withOpacity(0.70)],
                 ),
               ),
             ),
             Positioned(
-              bottom: 10,
-              left: 10,
-              right: 10,
+              bottom: 10,left: 10,right: 10,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -686,29 +555,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: Text(
                       place['name'] as String,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 12,),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 4),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.near_me,
-                        color: Color(0xFF81C784),
-                        size: 11,
-                      ),
+                      const Icon(Icons.near_me,color: Color(0xFF81C784),size: 11,),
                       const SizedBox(width: 3),
                       Text(
                         place['distance'] as String,
-                        style: const TextStyle(
-                          color: Color(0xFF81C784),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                        style: const TextStyle(color: Color(0xFF81C784),fontSize: 11,fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -858,7 +716,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 class _DefaultAvatarIcon extends StatelessWidget {
   const _DefaultAvatarIcon();
   @override

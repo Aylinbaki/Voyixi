@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/trip_result_model.dart';
+import '../trip_result_model.dart';
 import 'place_detail_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 

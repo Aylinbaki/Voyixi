@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'models/trip_plan_model.dart';
+import 'trip_plan_model.dart';
 import 'step_screens/step1_destination.dart';
 import 'step_screens/step2_duration.dart';
 import 'step_screens/step3_preferences.dart';
