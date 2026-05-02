@@ -11,8 +11,6 @@ class _T {
   static const gradientEnd   = Color(0xFFB8F0F0);
   static const accent        = Color(0xFF4CAF50);
   static const navBar        = Color(0xFF5E8BD8);
-  static const textPrimary   = Colors.white;
-  static const textSecondary = Colors.white70;
   static const textDark      = Color(0xFF1A3A3A);
 }
 
@@ -24,60 +22,29 @@ class SaveScreen extends StatefulWidget {
 }
 
 class _SaveScreenState extends State<SaveScreen> {
-  final List<SavedTrip> _allTrips = [
-    SavedTrip(
-      title: 'İstanbul Tarihi Yarımada',
-      dateRange: '15-20 Mayıs 2026',
-      pointCount: 12,
-      city: 'İstanbul',
-      imageUrl: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
-    ),
-    SavedTrip(
-      title: 'Kapadokya Turu',
-      dateRange: '1-5 Haziran 2026',
-      pointCount: 8,
-      city: 'Kapadokya',
-      imageUrl: 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800',
-    ),
-    SavedTrip(
-      title: 'İzmir Sahil Gezisi',
-      dateRange: '10-12 Temmuz 2026',
-      pointCount: 6,
-      city: 'İzmir',
-      imageUrl: 'https://images.unsplash.com/photo-1602867741746-6df80f40b3f6?w=800',
-    ),
-    SavedTrip(
-      title: 'Antalya Tatili',
-      dateRange: '20-27 Ağustos 2026',
-      pointCount: 10,
-      city: 'Antalya',
-      imageUrl: 'https://images.unsplash.com/photo-1580502304784-8985b7eb7260?w=800',
-    ),
-  ];
-
   String _selectedCity = 'Tümü';
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
 
-  List<String> get _cityFilters {
-    final cities = _allTrips.map((t) => t.city).toSet().toList();
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  List<String> _cityFilters(List<SavedTrip> trips) {
+    final cities = trips.map((t) => t.city).toSet().toList();
     return ['Tümü', ...cities];
   }
 
-  List<SavedTrip> get _filtered {
-    return _allTrips.where((t) {
+  List<SavedTrip> _filtered(List<SavedTrip> trips) {
+    return trips.where((t) {
       final matchCity   = _selectedCity == 'Tümü' || t.city == _selectedCity;
       final matchSearch = _searchQuery.isEmpty ||
           t.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           t.city.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchCity && matchSearch;
     }).toList();
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
   }
 
   @override
@@ -90,7 +57,7 @@ class _SaveScreenState extends State<SaveScreen> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 1. Teal gradient arkaplan
+          // 1. Arkaplan
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -101,39 +68,50 @@ class _SaveScreenState extends State<SaveScreen> {
             ),
           ),
 
-          // 2. İçerik
-          Column(
-            children: [
-              SizedBox(height: topPad),
-              _buildAppBar(context),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _buildSearchBar(),
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 38,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: _cityFilters.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, i) => _buildChip(_cityFilters[i]),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Expanded(
-                child: _filtered.isEmpty
-                    ? _buildEmpty()
-                    : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 80 + bottomPad),
-                  itemCount: _filtered.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (_, i) => _buildTripCard(_filtered[i]),
-                ),
-              ),
-            ],
+          // 2. İçerik — Firestore stream'den okur
+          StreamBuilder<List<SavedTrip>>(
+            stream: SavedTripService.savedTripsStream(),
+            builder: (context, snapshot) {
+              final allTrips = snapshot.data ?? [];
+              final filters  = _cityFilters(allTrips);
+              final filtered = _filtered(allTrips);
+
+              return Column(
+                children: [
+                  SizedBox(height: topPad),
+                  _buildAppBar(context),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSearchBar(),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    height: 38,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: filters.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) => _buildChip(filters[i]),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Expanded(
+                    child: snapshot.connectionState == ConnectionState.waiting
+                        ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                        : filtered.isEmpty
+                        ? _buildEmpty()
+                        : ListView.separated(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 80 + bottomPad),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      itemBuilder: (_, i) => _buildTripCard(filtered[i]),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
 
           // 3. Bottom Nav
@@ -257,19 +235,24 @@ class _SaveScreenState extends State<SaveScreen> {
                         color: _T.gradientStart, size: 40),
                   ),
                 ),
+                // Kalp — Firestore'dan sil
                 Positioned(
                   top: 12, right: 12,
                   child: GestureDetector(
-                    onTap: () => setState(() => _allTrips.remove(trip)),
+                    onTap: () {
+                      if (trip.id != null) {
+                        SavedTripService.removeTrip(trip.id!);
+                      }
+                    },
                     child: Container(
                       width: 40, height: 40,
                       decoration: const BoxDecoration(
                         color: Colors.white, shape: BoxShape.circle,
                         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
                       ),
-                      child: Icon(
-                        trip.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                        color: trip.isFavorite ? Colors.redAccent : Colors.grey,
+                      child: const Icon(
+                        Icons.favorite_rounded,
+                        color: Colors.redAccent,
                         size: 20,
                       ),
                     ),
@@ -292,7 +275,7 @@ class _SaveScreenState extends State<SaveScreen> {
                           style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                       Row(
                         children: [
-                          Icon(Icons.location_on_outlined, size: 14, color: _T.gradientStart),
+                          const Icon(Icons.location_on_outlined, size: 14, color: _T.gradientStart),
                           const SizedBox(width: 3),
                           Text('${trip.pointCount} Nokta',
                               style: const TextStyle(color: _T.gradientStart,
@@ -359,34 +342,16 @@ class _SaveScreenState extends State<SaveScreen> {
               Positioned(
                 top: -26,
                 child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const TripPlannerEntry(),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const TripPlannerEntry())),
                   child: Container(
-                    width: 58,
-                    height: 58,
+                    width: 58, height: 58,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4CAF50),
-                      shape: BoxShape.circle,
+                      color: _T.accent, shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF4CAF50).withOpacity(0.45),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: [BoxShadow(color: _T.accent.withOpacity(0.45), blurRadius: 14, offset: const Offset(0, 4))],
                     ),
-                    child: const Icon(
-                      Icons.add_location_alt_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
+                    child: const Icon(Icons.add_location_alt_rounded, color: Colors.white, size: 26),
                   ),
                 ),
               ),
