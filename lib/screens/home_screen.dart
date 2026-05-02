@@ -5,7 +5,7 @@ import 'settings_screen.dart';
 import 'profile_screen.dart';
 import 'save_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
-import '../services/saved_trip_service.dart';
+import '../services/favorites_service.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
 
@@ -354,12 +354,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     _savedTitles.remove(city);
                   } else {
                     _savedTitles.add(city);
-                    SavedTripService.saveTrip(SavedTrip(
+                    FavoritesService.addFavoriteRoute(FavoriteRoute(
+                      routeId: city,
                       title: city,
                       city: tour['country'] as String,
+                      days: 0,
+                      budget: '',
                       imageUrl: tour['image'] as String,
-                      dateRange: '',
-                      pointCount: 0,
+                      summary: '',
                     ));
                   }
                 }),
