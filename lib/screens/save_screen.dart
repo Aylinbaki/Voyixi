@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import '../features/routes/routes_screen.dart';
@@ -59,7 +60,6 @@ class _SaveScreenState extends State<SaveScreen>
               ),
             ),
           ),
-
           // 2. İçerik
           Column(
             children: [
@@ -84,7 +84,6 @@ class _SaveScreenState extends State<SaveScreen>
               ),
             ],
           ),
-
           // 3. Bottom Nav
           Positioned(
             bottom: 0, left: 0, right: 0,
@@ -172,11 +171,7 @@ class _SaveScreenState extends State<SaveScreen>
               color: _T.accent,
               borderRadius: BorderRadius.circular(26),
               boxShadow: [
-                BoxShadow(
-                  color: _T.accent.withOpacity(0.38),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
+                BoxShadow(color: _T.accent.withOpacity(0.38), blurRadius: 10, offset: const Offset(0, 3)),
               ],
             ),
             labelColor: Colors.white,
@@ -186,10 +181,7 @@ class _SaveScreenState extends State<SaveScreen>
             dividerColor: Colors.transparent,
             indicatorSize: TabBarIndicatorSize.tab,
             padding: const EdgeInsets.all(4),
-            tabs: const [
-              Tab(text: 'Rotalar'),
-              Tab(text: 'Mekanlar'),
-            ],
+            tabs: const [Tab(text: 'Rotalar'), Tab(text: 'Mekanlar')],
           ),
         ),
       ),
@@ -248,71 +240,73 @@ class _SaveScreenState extends State<SaveScreen>
 
   // ── Rota Kartı ────────────────────────────────────────────────────────────
   Widget _buildRouteCard(FavoriteRoute route) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 16, offset: const Offset(0, 5))],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                route.imageUrl != null
-                    ? Image.network(route.imageUrl!,
-                    height: 160, width: double.infinity, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _imagePlaceholder())
-                    : _imagePlaceholder(),
-                Positioned(
-                  top: 12, right: 12,
-                  child: GestureDetector(
-                    onTap: () async {
-                      if (route.id != null) {
-                        await FavoritesService.removeFavoriteRoute(route.id!);
-                      }
-                    },
-                    child: Container(
-                      width: 40, height: 40,
-                      decoration: const BoxDecoration(
-                        color: Colors.white, shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
-                      ),
-                      child: const Icon(Icons.favorite_rounded, color: Colors.redAccent, size: 20),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => const StartedRoutesScreen())),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 16, offset: const Offset(0, 5))],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
                 children: [
-                  Text(route.title,
-                      style: const TextStyle(color: _T.textDark, fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text(route.summary, maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, size: 14, color: _T.gradientStart),
-                      const SizedBox(width: 3),
-                      Text(route.city, style: const TextStyle(color: _T.gradientStart, fontSize: 12)),
-                      const SizedBox(width: 12),
-                      Icon(Icons.calendar_today_outlined, size: 14, color: _T.gradientStart),
-                      const SizedBox(width: 3),
-                      Text('${route.days} Gün • ${route.budget}',
-                          style: const TextStyle(color: _T.gradientStart, fontSize: 12, fontWeight: FontWeight.w600)),
-                    ],
+                  route.imageUrl != null
+                      ? Image.network(route.imageUrl!,
+                      height: 160, width: double.infinity, fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _imagePlaceholder())
+                      : _imagePlaceholder(),
+                  Positioned(
+                    top: 12, right: 12,
+                    child: GestureDetector(
+                      onTap: () async {
+                        if (route.id != null) await FavoritesService.removeFavoriteRoute(route.id!);
+                      },
+                      child: Container(
+                        width: 40, height: 40,
+                        decoration: const BoxDecoration(
+                          color: Colors.white, shape: BoxShape.circle,
+                          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
+                        ),
+                        child: const Icon(Icons.favorite_rounded, color: Colors.redAccent, size: 20),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(route.title,
+                        style: const TextStyle(color: _T.textDark, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    Text(route.summary, maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_outlined, size: 14, color: _T.gradientStart),
+                        const SizedBox(width: 3),
+                        Text(route.city, style: const TextStyle(color: _T.gradientStart, fontSize: 12)),
+                        const SizedBox(width: 12),
+                        Icon(Icons.calendar_today_outlined, size: 14, color: _T.gradientStart),
+                        const SizedBox(width: 3),
+                        Text('${route.days} Gün • ${route.budget}',
+                            style: const TextStyle(color: _T.gradientStart, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -320,57 +314,68 @@ class _SaveScreenState extends State<SaveScreen>
 
   // ── Mekan Kartı ───────────────────────────────────────────────────────────
   Widget _buildPlaceCard(FavoritePlace place) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
-            child: place.photoUrl != null
-                ? Image.network(place.photoUrl!,
-                width: 90, height: 90, fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _smallPlaceholder())
-                : _smallPlaceholder(),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(place.name,
-                      style: const TextStyle(color: _T.textDark, fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(place.description, maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, size: 12, color: _T.gradientStart),
-                      const SizedBox(width: 3),
-                      Text(place.city, style: const TextStyle(color: _T.gradientStart, fontSize: 11)),
-                    ],
-                  ),
-                ],
+    return GestureDetector(
+      onTap: () async {
+        if (place.lat != null && place.lng != null) {
+          final url = Uri.parse(
+            'https://www.google.com/maps/search/?api=1'
+                '&query=${place.lat},${place.lng}',
+          );
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          }
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 12, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+              child: place.photoUrl != null
+                  ? Image.network(place.photoUrl!,
+                  width: 90, height: 90, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _smallPlaceholder())
+                  : _smallPlaceholder(),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(place.name,
+                        style: const TextStyle(color: _T.textDark, fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(place.description, maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_outlined, size: 12, color: _T.gradientStart),
+                        const SizedBox(width: 3),
+                        Text(place.city, style: const TextStyle(color: _T.gradientStart, fontSize: 11)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () async {
-              if (place.id != null) {
-                await FavoritesService.removeFavoritePlace(place.id!);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: const Icon(Icons.favorite_rounded, color: Colors.redAccent, size: 22),
+            GestureDetector(
+              onTap: () async {
+                if (place.id != null) await FavoritesService.removeFavoritePlace(place.id!);
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(12),
+                child: Icon(Icons.favorite_rounded, color: Colors.redAccent, size: 22),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
