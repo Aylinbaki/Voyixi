@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
+import 'save_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
+import '../services/saved_trip_service.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
 
@@ -16,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedNavIndex = 0;
+  final Set<String> _savedTitles = {};
   User? get _currentUser => FirebaseAuth.instance.currentUser;
   String get _userName {
     final user = _currentUser;
@@ -340,21 +343,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            //SAVE
             Positioned(
-              bottom: 12,left: 10,right: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tour['city'] as String,
-                    style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 14,),
+              top: 10,
+              left: 10,
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  final city = tour['city'] as String;
+                  if (_savedTitles.contains(city)) {
+                    _savedTitles.remove(city);
+                  } else {
+                    _savedTitles.add(city);
+                    SavedTripService.saveTrip(SavedTrip(
+                      title: city,
+                      city: tour['country'] as String,
+                      imageUrl: tour['image'] as String,
+                      dateRange: '',
+                      pointCount: 0,
+                    ));
+                  }
+                }),
+                child: Container(
+                  width: 32, height: 32,
+                  decoration: const BoxDecoration(
+                    color: Colors.white, shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    tour['country'] as String,
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  child: Icon(
+                    _savedTitles.contains(tour['city'])
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: _savedTitles.contains(tour['city'])
+                        ? Colors.redAccent
+                        : Colors.grey,
+                    size: 17,
                   ),
-                ],
+                ),
               ),
             ),
           ],
@@ -552,6 +575,142 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    // Gerçek sıralama: 0=Home, 1=Rotalar, [FAB], 2=Favoriler, 3=Profil
+    const leftItems = [
+      {'icon': Icons.home_rounded, 'label': 'Ana Sayfa'},
+      {'icon': Icons.map_outlined, 'label': 'Rotalar'},
+    ];
+    const rightItems = [
+      {'icon': Icons.favorite_border, 'label': 'Favoriler'},
+      {'icon': Icons.person_outline, 'label': 'Profil'},
+    ];
+
+    Widget navItem(Map item, int navIndex) {
+      final isSelected = _selectedNavIndex == navIndex;
+      return Expanded(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            if(navIndex==0){
+              // home
+            }
+            else if(navIndex==1){
+              // rotalar
+            }
+            else if(navIndex==2){ //favoriler
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SaveScreen()),
+              );
+              return;
+            }
+            else if (navIndex == 3) { // Profil
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+              return;
+            }
+            setState(() => _selectedNavIndex = navIndex);
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                item['icon'] as IconData,
+                size: 24,
+                color: isSelected
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFBDBDBD),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                item['label'] as String,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                  color: isSelected
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFBDBDBD),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 94, 139, 216).withOpacity(0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Row(
+                children: [
+                  navItem(leftItems[0], 0),
+                  navItem(leftItems[1], 1),
+                  // FAB için boşluk
+                  const Expanded(child: SizedBox()),
+                  navItem(rightItems[0], 2),
+                  navItem(rightItems[1], 3),
+                ],
+              ),
+              Positioned(
+                top: -26,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TripPlannerEntry(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.45),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.add_location_alt_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

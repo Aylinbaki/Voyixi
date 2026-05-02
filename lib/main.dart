@@ -7,6 +7,7 @@ import 'package:voyixi/screens/login_screen.dart';
 import 'package:voyixi/screens/home_screen.dart';
 import 'package:voyixi/screens/register_screen.dart';
 import 'package:voyixi/screens/forgot_password_screen.dart';
+import 'package:voyixi/screens/save_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
         "/home": (context) => const HomeScreen(),
         "/register": (context) => const RegisterScreen(),
         "/forgot-password": (context) => const ForgotPasswordScreen(),
+        "/save": (context) => const SaveScreen(),
       },
     );
   }

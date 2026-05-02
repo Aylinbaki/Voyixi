@@ -8,6 +8,8 @@ import 'package:image_picker/image_picker.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
 import 'edit_profile_screen.dart';
+import 'save_screen.dart';
+import '../features/trip_planner/trip_planner_entry.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
 
@@ -294,33 +296,52 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── SABİT APPBAR 
   Widget _buildFixedAppBar(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          color: _T.gradientStart.withOpacity(0.30),
-          padding: EdgeInsets.fromLTRB(20, topPad + 10, 20, 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _circleBtn(
-                Icons.arrow_back_ios_new_rounded,
-                    () => Navigator.pop(context),
+    return Container(
+      color: Colors.transparent,
+      padding: EdgeInsets.fromLTRB(20, topPad + 10, 20, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.22),
+                shape: BoxShape.circle,
               ),
-              const Text(
-                'Profil',
-                style: TextStyle(color: _T.textPrimary,fontWeight: FontWeight.bold,fontSize: 20,), ),
-               const SettingsButton()
-            ],
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white, size: 18),
+            ),
           ),
-        ),
+          const Text(
+            'Profil',
+            style: TextStyle(
+              color: Colors.white, fontSize: 20,
+              fontWeight: FontWeight.bold, letterSpacing: 1.2,
+            ),
+          ),
+          GestureDetector(
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.22),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.settings_outlined,
+                  color: Colors.white, size: 18),
+            ),
+          ),
+        ],
       ),
     );
   }
   // ── SABİT ACTION BUTTON 
   Widget _buildFixedActionButton() {
-    final label  = isSavedTripsSelected ? 'Yeni Rota Ekle'        : 'Not Ekle';
-    final icon   = isSavedTripsSelected ? Icons.add_location_alt_rounded : Icons.note_add_outlined;
+    final label  = isSavedTripsSelected ? 'Not Ekle'        : 'Not Ekle';
+    final icon   = isSavedTripsSelected ? Icons.note_add_outlined : Icons.note_add_outlined;
     final onTap  = isSavedTripsSelected
         ? () => Navigator.pushAndRemoveUntil(
       context,
@@ -494,9 +515,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           child: Row(
             children: [
-              _toggleItem('Saved Trips', isSavedTripsSelected,
+              _toggleItem('Biten Geziler', isSavedTripsSelected,
                       () => setState(() => isSavedTripsSelected = true)),
-              _toggleItem('Notes', !isSavedTripsSelected,
+              _toggleItem('Notlar', !isSavedTripsSelected,
                       () => setState(() => isSavedTripsSelected = false)),
             ],
           ),
@@ -742,7 +763,121 @@ class _ProfileScreenState extends State<ProfileScreen>
             Icon(icon, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15)),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Bottom Nav Bar ─── home_screen ile birebir aynı ───
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 94, 139, 216).withOpacity(0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Row(
+                children: [
+                  _navItem(Icons.home_rounded, 'Ana Sayfa', false, () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                          (r) => false,
+                    );
+                  }),
+                  _navItem(Icons.map_outlined, 'Rotalar', false, () {}),
+                  const Expanded(child: SizedBox()),
+
+                  _navItem(Icons.favorite_border, 'Favoriler', false, () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SaveScreen()),
+                          (r) => false,
+                    );
+                  }),
+                  _navItem(Icons.person_outline, 'Profil', true, () {}),
+                ],
+              ),
+              // FAB — home_screen ile aynı
+              Positioned(
+                top: -26,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TripPlannerEntry(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF4CAF50).withOpacity(0.45),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.add_location_alt_rounded,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(
+      IconData icon, String label, bool selected, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 24,
+                color: selected ? _T.accent : const Color(0xFFBDBDBD)),
+            const SizedBox(height: 3),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                    color: selected
+                        ? _T.accent
+                        : const Color(0xFFBDBDBD))),
           ],
         ),
       ),
