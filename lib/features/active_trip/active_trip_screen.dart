@@ -444,6 +444,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                 number: placeIdx + 1,
                 state: _stateOf(dayIdx, placeIdx),
                 dayColor: dayColor,
+                city: widget.savedTrip.city,
                 onComplete: () => _completePlace(dayIdx, placeIdx),
                 onReview: (r, rev) =>
                     _saveReview(dayIdx, placeIdx, r, rev),

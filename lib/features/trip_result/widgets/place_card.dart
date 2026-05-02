@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../trip_result_model.dart';
 import 'place_detail_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../services/favorites_service.dart';
 
-class PlaceCard extends StatelessWidget {
+//  StatefulWidget: Kalp butonunun anlık görsel güncellemesi için
+class PlaceCard extends StatefulWidget {
   final PlaceItem place;
   final int index;
   final Color dayColor;
@@ -24,13 +26,59 @@ class PlaceCard extends StatelessWidget {
   });
 
   @override
+  State<PlaceCard> createState() => _PlaceCardState();
+}
+
+class _PlaceCardState extends State<PlaceCard> {
+  bool _isFavorited = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFavorite();
+  }
+
+  // Firestore'dan bu mekanın favoride olup olmadığını kontrol et
+  Future<void> _checkFavorite() async {
+    final result = await FavoritesService.isPlaceFavorited(
+        widget.place.name, widget.city);
+    if (mounted) setState(() => _isFavorited = result);
+  }
+
+  // Kalbe basınca: favorideyse çıkar, değilse ekle
+  Future<void> _toggleFavorite() async {
+    if (_isFavorited) {
+      // Favoriden çıkar — stream'den doc ID bul ve sil
+      final places = await FavoritesService.favoritePlacesStream().first;
+      final doc = places.firstWhere(
+            (p) => p.name == widget.place.name && p.city == widget.city,
+        orElse: () => FavoritePlace(name: '', description: '', city: ''),
+      );
+      if (doc.id != null) await FavoritesService.removeFavoritePlace(doc.id!);
+    } else {
+      // Favoriye ekle
+      await FavoritesService.addFavoritePlace(FavoritePlace(
+        name: widget.place.name,
+        description: widget.place.description,
+        city: widget.city,
+        photoUrl: widget.place.photoUrl,
+        placeId: widget.place.placeId,
+        lat: widget.place.lat,
+        lng: widget.place.lng,
+      ));
+    }
+    // setState ile ikon anında değişir
+    if (mounted) setState(() => _isFavorited = !_isFavorited);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (_) => PlaceDetailSheet(place: place, dayColor: dayColor),
+        builder: (_) => PlaceDetailSheet(place: widget.place, dayColor: widget.dayColor),
       ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
@@ -39,7 +87,7 @@ class PlaceCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: dayColor.withOpacity(0.10),
+              color: widget.dayColor.withOpacity(0.10),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -56,11 +104,11 @@ class PlaceCard extends StatelessWidget {
                   Container(
                     width: 30, height: 30,
                     decoration: BoxDecoration(
-                      color: dayColor,
+                      color: widget.dayColor,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: Text('$index',
+                      child: Text('${widget.index}',
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 13,
@@ -73,14 +121,14 @@ class PlaceCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: SizedBox(
                       width: 80, height: 80,
-                      child: place.photoUrl != null
+                      child: widget.place.photoUrl != null
                           ? Image.network(
-                              place.photoUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _placeholderImage(dayColor),
-                            )
-                          : _placeholderImage(dayColor),
+                        widget.place.photoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            _placeholderImage(widget.dayColor),
+                      )
+                          : _placeholderImage(widget.dayColor),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -91,16 +139,37 @@ class PlaceCard extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(place.name,
+                              child: Text(widget.place.name,
                                   style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: Color(0xFF1A2E2E),
                                   )),
                             ),
+                            // Kalp butonu
+                            GestureDetector(
+                              onTap: _toggleFavorite,
+                              child: Container(
+                                width: 26, height: 26,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.08),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _isFavorited
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  size: 14,
+                                  color: _isFavorited
+                                      ? Colors.redAccent
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
                             // Sil
                             GestureDetector(
-                              onTap: onDelete,
+                              onTap: widget.onDelete,
                               child: Container(
                                 width: 26, height: 26,
                                 decoration: BoxDecoration(
@@ -114,7 +183,7 @@ class PlaceCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(place.description,
+                        Text(widget.place.description,
                             style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF6B8C8C),
@@ -135,13 +204,13 @@ class PlaceCard extends StatelessWidget {
                   // Etiket satırı
                   Row(
                     children: [
-                      _chip(Icons.access_time_rounded, place.timeSlot,
+                      _chip(Icons.access_time_rounded, widget.place.timeSlot,
                           const Color(0xFFE8F5F3), const Color(0xFF00BFA5)),
                       const SizedBox(width: 8),
-                      _chip(Icons.timer_outlined, place.duration,
+                      _chip(Icons.timer_outlined, widget.place.duration,
                           const Color(0xFFE8F0FF), const Color(0xFF5B8DEF)),
                       const SizedBox(width: 8),
-                      _crowdChip(place.crowdLevel),
+                      _crowdChip(widget.place.crowdLevel),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -151,8 +220,8 @@ class PlaceCard extends StatelessWidget {
                         child: _outlineButton(
                           icon: Icons.swap_horiz_rounded,
                           label: 'Değiştir',
-                          color: dayColor,
-                          onTap: onReplace,
+                          color: widget.dayColor,
+                          onTap: widget.onReplace,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -160,8 +229,8 @@ class PlaceCard extends StatelessWidget {
                         child: _fillButton(
                           icon: Icons.navigation_rounded,
                           label: 'Nasıl Giderim?',
-                          color: dayColor,
-                          onTap: () => _openMaps(place),
+                          color: widget.dayColor,
+                          onTap: () => _openMaps(widget.place),
                         ),
                       ),
                     ],
@@ -176,20 +245,20 @@ class PlaceCard extends StatelessWidget {
   }
 
   Widget _placeholderImage(Color color) => Container(
-        color: color.withOpacity(0.12),
-        child: Icon(Icons.place_rounded, color: color, size: 32),
-      );
+    color: color.withOpacity(0.12),
+    child: Icon(Icons.place_rounded, color: color, size: 32),
+  );
 
   Widget _chip(IconData icon, String label, Color bg, Color fg) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 12, color: fg),
-          const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600)),
-        ]),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 12, color: fg),
+      const SizedBox(width: 4),
+      Text(label,
+          style: TextStyle(fontSize: 11, color: fg, fontWeight: FontWeight.w600)),
+    ]),
+  );
 
   Widget _crowdChip(String level) {
     final colors = {
@@ -251,13 +320,13 @@ class PlaceCard extends StatelessWidget {
       );
 
   void _openMaps(PlaceItem p) async {
-  if (p.lat == null || p.lng == null) return;
-  final url = Uri.parse(
-    'https://www.google.com/maps/dir/?api=1'
-    '&destination=${p.lat},${p.lng}&travelmode=walking'
-  );
-  if (await canLaunchUrl(url)) {
-    await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (p.lat == null || p.lng == null) return;
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+          '&destination=${p.lat},${p.lng}&travelmode=walking',
+    );
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
-}
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../screens/profile_screen.dart';
 import '../screens/home_screen.dart';
+import '../screens/save_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 import '../features/routes/routes_screen.dart';
+
 
 class bottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -19,7 +21,7 @@ class bottomNav extends StatelessWidget {
        Navigator.push(context,MaterialPageRoute(builder: (_) => const StartedRoutesScreen(),),);
         break;
       case 2:
-       // Navigator.pushReplacementNamed(context, '/favorites');
+        Navigator.push(context,MaterialPageRoute(builder: (_) => const SaveScreen()));
         break;
       case 3:
         Navigator.push(context,MaterialPageRoute(builder: (_) => const ProfileScreen(),),);

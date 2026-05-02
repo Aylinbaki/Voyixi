@@ -7,6 +7,7 @@ import 'widgets/trip_map.dart';
 import '../routes/routes_widget.dart';
 import '../routes/routes_service.dart';
 import '../active_trip/active_trip_screen.dart';
+import '../routes/routes_service.dart';
 
 class TripResultScreen extends StatefulWidget {
   final TripPlanModel plan;
@@ -53,15 +54,35 @@ class _TripResultScreenState extends State<TripResultScreen> {
     }
   }
 
+
   Future<void> _savePlan() async {
-    // TODO: Firestore'a kaydedilcek
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Plan kaydedildi! ✅'),
-        backgroundColor: Color(0xFF00BFA5),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (_result == null) return; //gemini'dan gelen rota var mı
+    try {
+      await RoutesService().saveTrip(
+        result: _result!,
+        title: '${_result!.city} Seyahati',
+        tripDate: DateTime.now(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Plan kaydedildi! ✅'),
+            backgroundColor: Color(0xFF00BFA5),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Kayıt hatası: $e'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
