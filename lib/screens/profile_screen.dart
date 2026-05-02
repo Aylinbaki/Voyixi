@@ -831,10 +831,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                   const Expanded(child: SizedBox()),
 
                   _navItem(Icons.favorite_border, 'Favoriler', false, () {
-                    Navigator.pushAndRemoveUntil(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const SaveScreen()),
-                          (r) => false,
                     );
                   }),
                   _navItem(Icons.person_outline, 'Profil', true, () {}),
