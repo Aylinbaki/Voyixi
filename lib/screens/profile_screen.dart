@@ -12,6 +12,8 @@ import 'save_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
+import '../features/routes/routes_service.dart';
+import '../features/routes/routes_model.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
@@ -563,12 +565,34 @@ class _ProfileScreenState extends State<ProfileScreen>
   SliverList _buildSavedTripsSliver() {
     return SliverList(
       delegate: SliverChildListDelegate([
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _tripCard(
-            city: 'İstanbul Gezisi', days: '3 Gün',
-            image: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
-          ),
+        StreamBuilder<List<SavedTrip>>(
+          stream: RoutesService().getTrips(),
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final trips = snap.data ?? [];
+            if (trips.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(40),
+                child: Center(
+                  child: Text('Henüz biten gezin yok',
+                      style: TextStyle(color: Colors.white70, fontSize: 14)),
+                ),
+              );
+            }
+            return Column(
+              children: trips.map((trip) => Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                child: _tripCard(
+                  city: trip.title,
+                  days: '${trip.days} Gün',
+                  image: trip.imageUrl ??
+                      'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+                ),
+              )).toList(),
+            );
+          },
         ),
       ]),
     );
