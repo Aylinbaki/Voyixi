@@ -8,6 +8,8 @@ import '../routes/routes_widget.dart';
 import '../routes/routes_service.dart';
 import '../active_trip/active_trip_screen.dart';
 import '../routes/routes_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/user_service.dart';
 
 class TripResultScreen extends StatefulWidget {
   final TripPlanModel plan;
@@ -54,15 +56,48 @@ class _TripResultScreenState extends State<TripResultScreen> {
     }
   }
 
-
-  Future<void> _savePlan() async {
-    if (_result == null) return; //gemini'dan gelen rota var mı
+  // Sessiz kayıt — hata olursa görmezden gel
+  Future<void> _saveQuietly() async {
+    if (_result == null) return;
     try {
       await RoutesService().saveTrip(
         result: _result!,
         title: '${_result!.city} Seyahati',
         tripDate: DateTime.now(),
       );
+    } catch (_) {}
+  }
+
+  Future<void> _savePlan() async {
+    if (_result == null) return; //gemini'dan gelen rota var mı
+    try {
+      // 1. Mevcut trip kaydetme — değişmedi
+      await RoutesService().saveTrip(
+        result: _result!,
+        title: '${_result!.city} Seyahati',
+        tripDate: DateTime.now(),
+      );
+
+      // 2. Profil istatistiklerini güncelle
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        // Müze sayısını place isimlerinden bul
+        final museumCount = _result!.dayPlans
+            .expand((d) => d.places)
+            .where((p) =>
+        p.name.toLowerCase().contains('müze') ||
+            p.name.toLowerCase().contains('museum'))
+            .length;
+
+        await UserService().incrementStats(
+          uid: uid,
+          distanceKm: _result!.totalDistanceKm,
+          city: _result!.city,
+          country: _result!.country,
+          museumCount: museumCount,
+        );
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -139,6 +174,8 @@ class _TripResultScreenState extends State<TripResultScreen> {
             child: ElevatedButton.icon(
               // Geziye Başla onPressed:
               onPressed: () async {
+                await _savePlan();
+
                 final id = await showModalBottomSheet<String>(
                   context: context,
                   isScrollControlled: true,
