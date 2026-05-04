@@ -14,6 +14,8 @@ import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
 import '../features/routes/routes_service.dart';
 import '../features/routes/routes_model.dart';
+import '../services/user_service.dart';
+import '../features/active_trip/active_trip_screen.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
@@ -456,16 +458,33 @@ class _ProfileScreenState extends State<ProfileScreen>
     child: const Icon(Icons.person, color: Colors.white, size: 44),
   );
 
-  // ── Stat Row 
   Widget _buildStatRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _statBox('4', 'City', Icons.location_on_outlined),
-        _statBox('12', 'Museum', Icons.account_balance_outlined),
-        _statBox('847', 'Total km', Icons.near_me_outlined),
-        _statBox('1', 'Country', Icons.map_outlined),
-      ],
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox();
+
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: UserService().statsStream(uid),
+      builder: (context, snap) {
+        final stats   = snap.data ?? {};
+        final city    = stats['cityCount']    ?? 0;
+        final museum  = stats['museumCount']  ?? 0;
+        final km      = (stats['totalKm'] as double?) ?? 0.0;
+        final country = stats['countryCount'] ?? 1;
+
+        final kmStr = km >= 1000
+            ? '${(km / 1000).toStringAsFixed(1)}k'
+            : km.toStringAsFixed(0);
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _statBox(city.toString(),    'Ülke',     Icons.location_on_outlined),
+            _statBox(museum.toString(),  'Müze',   Icons.account_balance_outlined),
+            _statBox(kmStr,              'Toplam km', Icons.near_me_outlined),
+            _statBox(country.toString(), 'Şehir',  Icons.map_outlined),
+          ],
+        );
+      },
     );
   }
 
@@ -584,11 +603,23 @@ class _ProfileScreenState extends State<ProfileScreen>
             return Column(
               children: trips.map((trip) => Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-                child: _tripCard(
-                  city: trip.title,
-                  days: '${trip.days} Gün',
-                  image: trip.imageUrl ??
-                      'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+                child: GestureDetector( // Tıklama özelliği eklendi
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ActiveTripScreen(
+                          savedTrip: trip,
+                          tripResult: trip.toTripResult(),
+                        ),
+                      ),
+                    );
+                  },
+                  child: _tripCard(
+                    city: trip.title,
+                    days: '${trip.days} Gün',
+                    image: trip.imageUrl ?? 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+                  ),
                 ),
               )).toList(),
             );

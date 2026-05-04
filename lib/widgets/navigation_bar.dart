@@ -18,7 +18,7 @@ class bottomNav extends StatelessWidget {
         Navigator.pushAndRemoveUntil( context,MaterialPageRoute(builder: (_) => const HomeScreen()), (r) => false,);
         break;
       case 1:
-       Navigator.push(context,MaterialPageRoute(builder: (_) => const StartedRoutesScreen(),),);
+       Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (_) => const StartedRoutesScreen()), (r) => false,);
         break;
       case 2:
         Navigator.push(context,MaterialPageRoute(builder: (_) => const SaveScreen()));

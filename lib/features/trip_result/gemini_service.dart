@@ -20,10 +20,13 @@ class GeminiService {
     
     final rawJson = await _callGemini(input);
     print('✅ Gemini yanıtı: $rawJson');
-    
-    final dayPlans = _parseGeminiResponse(rawJson);
+
+    final parsed   = _parseGeminiResponse(rawJson);
+    final dayPlans = parsed['days'] as List<DayPlan>;
+    final totalKm  = parsed['totalKm'] as double;
+    final country  = parsed['country'] as String;
     print('📅 Parse edildi: ${dayPlans.length} gün');
-    
+
     final enriched = await _enrichWithPlaces(dayPlans, input.city);
     print('📸 Places tamamlandı');
     
@@ -32,6 +35,8 @@ class GeminiService {
       days: input.days,
       budget: input.budget,
       dayPlans: enriched,
+      totalDistanceKm: totalKm,
+      country: country,
     );
     }catch(e,stack){
     print('❌ HATA: $e');
@@ -85,10 +90,13 @@ KURALLAR:
 - timeSlot formatı: "HH:mm - HH:mm"
 - crowdLevel: "Sakin" | "Orta" | "Yoğun" | "Çok Yoğun"
 - Sıralamayı ise birbirine mesafelerine göre yap.
+- total_distance_km: Tüm günlerdeki mekanlar arası toplam tahmini mesafeyi km cinsinden hesapla ve JSON'a ekle.
 
 SADECE şu JSON formatında yanıt ver, başka hiçbir şey yazma:
 Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
 {
+  "total_distance_km": 8.5,
+  "country": "Türkiye",
   "days": [
     {
       "day": 1,
@@ -109,16 +117,22 @@ Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
 ''';
   }
 
-  List<DayPlan> _parseGeminiResponse(String raw) {
+  Map<String, dynamic> _parseGeminiResponse(String raw) {
     try {
-      // Bazen Gemini ```json ``` bloğu içinde döndürür
       final cleaned = raw
           .replaceAll('```json', '')
           .replaceAll('```', '')
           .trim();
       final data = jsonDecode(cleaned) as Map<String, dynamic>;
-      final days = data['days'] as List;
-      return days.map((d) => DayPlan.fromJson(d as Map<String, dynamic>)).toList();
+
+      final days = (data['days'] as List)
+          .map((d) => DayPlan.fromJson(d as Map<String, dynamic>))
+          .toList();
+
+      final totalKm = (data['total_distance_km'] as num?)?.toDouble() ?? 0.0;
+      final country = (data['country'] as String?) ?? '';  // ← YENİ
+
+      return {'days': days, 'totalKm': totalKm, 'country':country};
     } catch (e) {
       throw Exception('Gemini yanıtı parse edilemedi: $e\nRaw: $raw');
     }

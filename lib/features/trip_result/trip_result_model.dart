@@ -71,15 +71,19 @@ class DayPlan {
 
 class TripResult {
   final String city;
+  final String country;
   final int days;
   final String budget;
   final List<DayPlan> dayPlans;
+  final double totalDistanceKm;
 
   TripResult({
     required this.city,
     required this.days,
     required this.budget,
     required this.dayPlans,
+    this.totalDistanceKm = 0,
+    this.country = '',
   });
 
 }
