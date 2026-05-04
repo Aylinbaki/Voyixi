@@ -6,6 +6,7 @@ import 'profile_screen.dart';
 import '../features/routes/routes_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 import '../services/favorites_service.dart';
+import '../widgets/navigation_bar.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
@@ -85,9 +86,7 @@ class _SaveScreenState extends State<SaveScreen>
             ],
           ),
           // 3. Bottom Nav
-          Positioned(
-            bottom: 0, left: 0, right: 0,
-            child: _buildBottomNavBar(context),
+          Positioned(bottom: 0, left: 0, right: 0, child: bottomNav(selectedIndex: 2),
           ),
         ],
       ),
@@ -405,78 +404,6 @@ class _SaveScreenState extends State<SaveScreen>
           Text(subtitle, textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 13)),
         ],
-      ),
-    );
-  }
-
-  // ── Bottom Nav ────────────────────────────────────────────────────────────
-  Widget _buildBottomNavBar(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _T.navBar.withOpacity(0.88),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 20, offset: const Offset(0, -4))],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Row(
-                children: [
-                  _navItem(context, Icons.home_rounded, 'Ana Sayfa', false,
-                          () => Navigator.pushAndRemoveUntil(context,
-                          MaterialPageRoute(builder: (_) => const HomeScreen()), (r) => false)),
-                  _navItem(context, Icons.map_outlined, 'Rotalar', false,
-                          () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const StartedRoutesScreen()))),
-                  const Expanded(child: SizedBox()),
-                  _navItem(context, Icons.favorite_rounded, 'Favoriler', true, () {}),
-                  _navItem(context, Icons.person_outline, 'Profil', false,
-                          () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => const ProfileScreen()))),
-                ],
-              ),
-              Positioned(
-                top: -26,
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const TripPlannerEntry())),
-                  child: Container(
-                    width: 58, height: 58,
-                    decoration: BoxDecoration(
-                      color: _T.accent, shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: [BoxShadow(color: _T.accent.withOpacity(0.45), blurRadius: 14, offset: const Offset(0, 4))],
-                    ),
-                    child: const Icon(Icons.add_location_alt_rounded, color: Colors.white, size: 26),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(BuildContext context, IconData icon, String label, bool selected, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 24, color: selected ? _T.accent : const Color(0xFFBDBDBD)),
-            const SizedBox(height: 3),
-            Text(label, style: TextStyle(fontSize: 10,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                color: selected ? _T.accent : const Color(0xFFBDBDBD))),
-          ],
-        ),
       ),
     );
   }
