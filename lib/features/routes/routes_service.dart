@@ -22,6 +22,18 @@ class RoutesService {
   }) async {
     if (_uid == null) throw Exception('Kullanıcı giriş yapmamış');
 
+    //Aynı şehir ve gün sayısına sahip aktif bir plan var mı?
+    final existing = await _tripsRef
+        .where('city', isEqualTo: result.city)
+        .where('days', isEqualTo: result.days)
+        .limit(1)
+        .get();
+
+    if (existing.docs.isNotEmpty) {
+      // Eğer varsa mevcut olanın ID'sini döndür ya da hata fırlat
+      return existing.docs.first.id;
+    }
+
     // Gemini 
     final summary = await _generateSummary(result);
 

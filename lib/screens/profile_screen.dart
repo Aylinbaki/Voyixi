@@ -15,6 +15,7 @@ import '../widgets/settings_button.dart';
 import '../features/routes/routes_service.dart';
 import '../features/routes/routes_model.dart';
 import '../services/user_service.dart';
+import '../features/active_trip/active_trip_screen.dart';
 
 class _T {
   static const gradientStart = Color(0xFF0DA3A3);
@@ -602,11 +603,23 @@ class _ProfileScreenState extends State<ProfileScreen>
             return Column(
               children: trips.map((trip) => Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-                child: _tripCard(
-                  city: trip.title,
-                  days: '${trip.days} Gün',
-                  image: trip.imageUrl ??
-                      'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+                child: GestureDetector( // Tıklama özelliği eklendi
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ActiveTripScreen(
+                          savedTrip: trip,
+                          tripResult: trip.toTripResult(),
+                        ),
+                      ),
+                    );
+                  },
+                  child: _tripCard(
+                    city: trip.title,
+                    days: '${trip.days} Gün',
+                    image: trip.imageUrl ?? 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
+                  ),
                 ),
               )).toList(),
             );
