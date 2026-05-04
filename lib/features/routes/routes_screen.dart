@@ -75,7 +75,13 @@ class StartedRoutesScreen extends StatelessWidget {
       elevation: 0.5,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _teal, size: 22),
-        onPressed: () => Navigator.maybePop(context),
+        onPressed: () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        },
       ),
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsetsDirectional.only(start: 56, bottom: 16),
