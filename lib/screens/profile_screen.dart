@@ -466,10 +466,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       stream: UserService().statsStream(uid),
       builder: (context, snap) {
         final stats   = snap.data ?? {};
-        final city    = stats['cityCount']    ?? 0;
-        final museum  = stats['museumCount']  ?? 0;
-        final km      = (stats['totalKm'] as double?) ?? 0.0;
-        final country = stats['countryCount'] ?? 1;
+        final cityCount = stats['cityCount'] ?? 0;
+        final countryCount = stats['countryCount'] ?? 1;
+        final museum = stats['museumCount'] ?? 0;
+        final km = (stats['totalKm'] as double?) ?? 0.0;
 
         final kmStr = km >= 1000
             ? '${(km / 1000).toStringAsFixed(1)}k'
@@ -478,10 +478,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _statBox(city.toString(),    'Ülke',     Icons.location_on_outlined),
-            _statBox(museum.toString(),  'Müze',   Icons.account_balance_outlined),
-            _statBox(kmStr,              'Toplam km', Icons.near_me_outlined),
-            _statBox(country.toString(), 'Şehir',  Icons.map_outlined),
+            _statBox(countryCount.toString(), 'Ülke', Icons.location_on_outlined),
+            _statBox(museum.toString(),       'Müze', Icons.account_balance_outlined),
+            _statBox(kmStr,                   'Toplam km', Icons.near_me_outlined),
+            _statBox(cityCount.toString(),    'Şehir', Icons.map_outlined),
           ],
         );
       },

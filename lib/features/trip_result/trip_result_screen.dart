@@ -92,8 +92,8 @@ class _TripResultScreenState extends State<TripResultScreen> {
         await UserService().incrementStats(
           uid: uid,
           distanceKm: _result!.totalDistanceKm,
-          city: _result!.city,
-          country: _result!.country,
+          city: _result!.city.trim(),
+          country: _result!.country.trim(),
           museumCount: museumCount,
         );
       }
