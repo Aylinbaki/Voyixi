@@ -167,18 +167,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                   const SizedBox(height: 18),
                   GestureDetector(
-                    onTap: () {
-                      if (titleCtrl.text.isNotEmpty) {
-                        setState(() {
-                          _myNotes.add({
-                            'title': titleCtrl.text,
-                            'note': noteCtrl.text,
-                            'date': formattedDate,
-                            'image': selectedImage?.path ?? '',
-                            'isLocal': selectedImage != null,
-                          });
-                        });
-                        Navigator.pop(ctx);
+                    onTap: () async {
+                      if (titleCtrl.text.isNotEmpty && user != null) {
+                        // Firebase'e kaydetme işlemi
+                        await UserService().addNote(
+                          uid: user!.uid,
+                          title: titleCtrl.text,
+                          note: noteCtrl.text,
+                          imageUrl: selectedImage?.path ?? '',
+                          isLocal: selectedImage != null,
+                        );
+                        if (mounted) Navigator.pop(ctx);
                       }
                     },
                     child: Container(
@@ -196,6 +195,108 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: const Text(
                         'Notu Kaydet',
                         style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditNoteSheet(Map<String, dynamic> noteData) {
+    final titleCtrl = TextEditingController(text: noteData['title']);
+    final noteCtrl  = TextEditingController(text: noteData['note']);
+
+    String currentImagePath = noteData['imageUrl'] ?? '';
+    bool currentIsLocal = noteData['isLocal'] ?? false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder( // setModal için StatefulBuilder ekledik
+        builder: (ctx, setModal) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.92),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+                left: 22, right: 22, top: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+
+                  // FOTOĞRAF DÜZENLEME ALANI
+                  GestureDetector(
+                    onTap: () async {
+                      final img = await _picker.pickImage(source: ImageSource.gallery);
+                      if (img != null) {
+                        setModal(() {
+                          currentImagePath = img.path;
+                          currentIsLocal = true;
+                        });
+                      }
+                    },
+                    child: Container(
+                      height: 120,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: _T.gradientEnd.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: currentImagePath.isEmpty
+                          ? const Icon(Icons.add_a_photo, color: _T.gradientStart)
+                          : ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: _buildNoteImage(currentImagePath, currentIsLocal),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Anıyı Düzenle',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _T.gradientStart),
+                  ),
+                  const SizedBox(height: 14),
+                  _sheetField(titleCtrl, 'Başlık'),
+                  const SizedBox(height: 10),
+                  _sheetField(noteCtrl, 'Neler yaşadın?', maxLines: 3),
+                  const SizedBox(height: 20),
+                  GestureDetector(
+
+                    onTap: () async {
+                      if (titleCtrl.text.isNotEmpty && user != null) {
+                        await UserService().updateNote(
+                          uid: user!.uid,
+                          noteId: noteData['id'],
+                          title: titleCtrl.text,
+                          note: noteCtrl.text,
+                          imageUrl: currentImagePath,
+                          isLocal: currentIsLocal,
+                        );
+                        if (mounted) Navigator.pop(ctx);
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity, height: 52,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [_T.accent, Color(0xFF2E7D32)]),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'Değişiklikleri Kaydet',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -692,45 +793,55 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // ── Notes Sliver ─
   SliverList _buildNotesSliver() {
+    if (user == null) return SliverList(delegate: SliverChildListDelegate([const SizedBox()]));
+
     return SliverList(
       delegate: SliverChildListDelegate([
-        ...List.generate(_myNotes.length, (index) {
-          final note = _myNotes[index];
-          return Padding(
-            padding:
-            const EdgeInsets.only(left: 20, right: 20, bottom: 14),
-            child: Dismissible(
-              key: UniqueKey(),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  borderRadius: BorderRadius.circular(20),
+        StreamBuilder<List<Map<String, dynamic>>>(
+          stream: UserService().notesStream(user!.uid), // Firebase'den notlar
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: Padding(
+                padding: EdgeInsets.all(30.0),
+                child: CircularProgressIndicator(color: _T.accent),
+              ));
+            }
+
+            final notes = snap.data ?? [];
+            if (notes.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(40),
+                child: Center(
+                  child: Text('Henüz bir anı eklememişsin.',
+                      style: TextStyle(color: Colors.white70, fontSize: 14)),
                 ),
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.only(right: 20),
-                child: const Icon(Icons.delete_outline,
-                    color: Colors.white, size: 28),
-              ),
-              onDismissed: (_) {
-                setState(() => _myNotes.removeAt(index));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${note['title']} silindi'),
-                    backgroundColor: _T.gradientStart,
-                    action: SnackBarAction(
-                      label: 'Geri Al',
-                      textColor: _T.accent2,
-                      onPressed: () =>
-                          setState(() => _myNotes.insert(index, note)),
+              );
+            }
+
+            return Column(
+              // notes.map().toList() şeklinde listeye çeviriyoruz
+              children: notes.map((note) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 14),
+                  child: Dismissible(
+                    key: Key(note['id']),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(20)),
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
                     ),
+                    onDismissed: (_) async {
+                      await UserService().deleteNote(user!.uid, note['id']);
+                    },
+                    child: _noteCard(note),
                   ),
                 );
-              },
-              child: _noteCard(note),
-            ),
-          );
-        }),
+              }).toList(),
+            );
+          },
+        ),
       ]),
     );
   }
@@ -745,21 +856,22 @@ class _ProfileScreenState extends State<ProfileScreen>
             color: Colors.white.withOpacity(0.88),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow( color: Colors.black.withOpacity(0.10),blurRadius: 12,offset: const Offset(0, 4))
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4))
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Resim sadece path
-              if ((note['image'] as String).isNotEmpty)
+              // 1. Resim Alanı
+              if ((note['imageUrl'] as String? ?? '').isNotEmpty)
                 ClipRRect(
-                  borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-                  child: _buildNoteImage(
-                      note['image'], note['isLocal'] ?? false),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: _buildNoteImage(note['imageUrl'], note['isLocal'] ?? false),
                 ),
-              // Metin alanı
+              // 2. Metin Alanı
               Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(
@@ -768,23 +880,51 @@ class _ProfileScreenState extends State<ProfileScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(note['title']!,
-                            style: const TextStyle( fontWeight: FontWeight.bold,fontSize: 15,color: _T.textDark)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: _T.gradientEnd.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(20),
+                        // Başlık
+                        Expanded(
+                          child: Text(
+                            note['title'] ?? '',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: _T.textDark),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          child: Text(note['date']!,
-                              style: const TextStyle(color: _T.gradientStart,fontSize: 11,fontWeight: FontWeight.w600)),
+                        ),
+                        // Düzenle Butonu ve Tarih
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _showEditNoteSheet(note),
+                              child: const Icon(Icons.edit_note,
+                                  color: _T.gradientStart, size: 22),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: _T.gradientEnd.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                note['date'] ?? '',
+                                style: const TextStyle(
+                                    color: _T.gradientStart,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(note['note']!,
-                        style: TextStyle(color: Colors.grey[700], fontSize: 13)),
+                    // Not İçeriği
+                    Text(
+                      note['note'] ?? '',
+                      style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                    ),
                   ],
                 ),
               ),
@@ -794,6 +934,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     );
   }
+
   // ── Action Button ────────────────────────────
   Widget _actionButton(
       {required String label,

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class UserService {
 
@@ -62,8 +63,65 @@ class UserService {
         'cityCount':   (d['cityCount']   as num?)?.toInt() ?? 0,
         'museumCount': (d['museumCount'] as num?)?.toInt() ?? 0,
         'totalKm':     (d['totalKm']     as num?)?.toDouble() ?? 0.0,
-        'countryCount':(d['countryCount']as num?)?.toInt() ?? 1,
+        'countryCount':(d['countryCount']as num?)?.toInt() ?? 0,
       };
+    });
+  }
+
+  // Firebase'e Not Kaydetme ──────────────────────────────
+  Future<void> addNote({
+    required String uid,
+    required String title,
+    required String note,
+    required String imageUrl,
+    required bool isLocal,
+  }) async {
+    await _db.collection("users").doc(uid).collection("notes").add({
+      "title": title,
+      "note": note,
+      "imageUrl": imageUrl,
+      "isLocal": isLocal,
+      "date": DateFormat('dd.MM.yyyy').format(DateTime.now()),
+      "createdAt": FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> notesStream(String uid) {
+    return _db
+        .collection("users")
+        .doc(uid)
+        .collection("notes")
+        .orderBy("createdAt", descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map((doc) => {
+      "id": doc.id,
+      ...doc.data(),
+    }).toList());
+  }
+  //Not Silme
+  Future<void> deleteNote(String uid, String noteId) async {
+    await _db.collection("users").doc(uid).collection("notes").doc(noteId).delete();
+  }
+
+  Future<void> updateNote({
+    required String uid,
+    required String noteId,
+    required String title,
+    required String note,
+    required String imageUrl,
+    required bool isLocal,
+  }) async {
+    await _db
+        .collection("users")
+        .doc(uid)
+        .collection("notes")
+        .doc(noteId)
+        .update({
+      "title": title,
+      "note": note,
+      "imageUrl": imageUrl,
+      "isLocal": isLocal,
+      "updatedAt": FieldValue.serverTimestamp(),
     });
   }
 }
