@@ -19,6 +19,7 @@ class RoutesService {
     required TripResult result,
     required String title,
     DateTime? tripDate,
+    DateTime? startDate,
   }) async {
     if (_uid == null) throw Exception('Kullanıcı giriş yapmamış');
 
@@ -45,6 +46,10 @@ class RoutesService {
       'day': day.dayNumber,
       'places': day.places.map((p) => p.toJson()).toList(),
     }).toList();
+    final resolvedStart = startDate ?? tripDate;
+    final resolvedEnd = resolvedStart != null
+        ? resolvedStart.add(Duration(days: result.days - 1))
+        : null;
 
     final docRef = _tripsRef.doc();
     final trip = SavedTrip(
@@ -57,6 +62,9 @@ class RoutesService {
       summary: summary,
       imageUrl: imageUrl,
       tripDate: tripDate,
+      startDate: resolvedStart,
+      endDate: resolvedEnd,
+      completionRate: 0.0,
       dayPlans: dayPlansMap,
       createdAt: DateTime.now(),
     );
@@ -76,17 +84,68 @@ class RoutesService {
             .toList());
   }
 
-  // Planı sil 
+  //En yakın aktif/yaklaşan plan
+  Stream<SavedTrip?> getUpcomingTrip() {
+    if (_uid == null) return Stream.value(null);
+    return _tripsRef
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) {
+      final trips =
+      snap.docs.map((doc) => SavedTrip.fromMap(doc.data())).toList();
+
+      // Önce aktif olanlar (bugün başlamış, bitmemiş)
+      final active = trips.where((t) => t.isActive).toList();
+      if (active.isNotEmpty) {
+        active.sort((a, b) => (a.startDate ?? DateTime(9999))
+            .compareTo(b.startDate ?? DateTime(9999)));
+        return active.first;
+      }
+
+      // Aktif yoksa yaklaşan planlar
+      final upcoming = trips.where((t) => t.isUpcoming).toList();
+      if (upcoming.isNotEmpty) {
+        upcoming.sort((a, b) => (a.startDate ?? DateTime(9999))
+            .compareTo(b.startDate ?? DateTime(9999)));
+        return upcoming.first;
+      }
+
+      // startDate'siz eski kayıtlar için fallback
+      final noDate = trips.where((t) => t.startDate == null).toList();
+      return noDate.isNotEmpty ? noDate.first : null;
+    });
+  }
+
+  //tamamlanma oranı güncellemesi
+  Future<void> updateCompletionRate(String tripId, double rate) async {
+    if (_uid == null) return;
+    final clamped = rate.clamp(0.0, 1.0);
+    await _tripsRef.doc(tripId).update({'completionRate': clamped});
+  }
+
+      // Planı sil
   Future<void> deleteTrip(String id) async {
     await _tripsRef.doc(id).delete();
   }
 
   //Başlık / tarih 
   Future<void> updateTrip(
-      String id, {String? title, DateTime? tripDate}) async {
+      String id, {
+        String? title,
+        DateTime? tripDate,
+        DateTime? startDate,
+        int? days,
+      }) async {
     final updates = <String, dynamic>{};
     if (title != null) updates['title'] = title;
     if (tripDate != null) updates['tripDate'] = tripDate.toIso8601String();
+    if (startDate != null) {updates['startDate'] = startDate.toIso8601String();
+      if (days != null) {
+        final end = startDate.add(Duration(days: days - 1));
+        updates['endDate'] = end.toIso8601String();
+        updates['days'] = days;
+      }
+    }
     await _tripsRef.doc(id).update(updates);
   }
 
