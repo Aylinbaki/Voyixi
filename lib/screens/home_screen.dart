@@ -583,8 +583,7 @@ class _HomeScreenState extends State<HomeScreen> {
       statusColor = const Color(0xFF4CAF50);
     }
 
-    final int completedCount =
-    (trip.completionRate * trip.days).round();
+    final int completedCount = (trip.completionRate * trip.days).round();
 
     return Container(
       height: 200,

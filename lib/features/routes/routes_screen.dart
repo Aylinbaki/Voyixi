@@ -377,7 +377,7 @@ class _ModernTripCardState extends State<_ModernTripCard> {
     );
   }
 
-  // ── SENİN ORİJİNAL FONKSİYONLARIN (GÜNCELLENDİ) ───────────────────────────
+  // ──ORİJİNAL FONKSİYONLAR───────────────────────────
   void _showEditDialog(BuildContext context) {
     final titleCtrl = TextEditingController(text: widget.trip.title);
     showModalBottomSheet(

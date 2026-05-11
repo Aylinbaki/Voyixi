@@ -7,6 +7,8 @@ import 'widgets/active_place_card.dart';
 import 'widgets/active_trip_map.dart';
 import '../../widgets/navigation_bar.dart';
 import 'widgets/audio_guide_button.dart';
+import '../../features/routes/routes_service.dart';
+
 
 const _dayColors = [
   Color(0xFF00BFA5), Color(0xFF5B8DEF), Color(0xFF9C6FDE),
@@ -94,23 +96,28 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
 
   void _completePlace(int dayIdx, int placeIdx) {
     setState(() {
-      // Mevcut tamamlandı
       final idx = _states.indexWhere(
-          (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx);
+              (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx);
       if (idx != -1) _states[idx].status = TripPlaceStatus.completed;
 
-      // Sonraki current
       final all = _allPlaces;
       final flat = all.indexWhere(
-          (a) => a.dayIdx == dayIdx && a.placeIdx == placeIdx);
+              (a) => a.dayIdx == dayIdx && a.placeIdx == placeIdx);
       if (flat < all.length - 1) {
         final next = all[flat + 1];
         final ni = _states.indexWhere(
-            (s) => s.dayIdx == next.dayIdx && s.placeIdx == next.placeIdx);
+                (s) => s.dayIdx == next.dayIdx && s.placeIdx == next.placeIdx);
         if (ni != -1) _states[ni].status = TripPlaceStatus.current;
       }
     });
+
     ActiveTripService().saveProgress(widget.savedTrip.id, _states);
+
+    //completionRate Firebase'e yaz
+    if (_totalCount > 0) {
+      final rate = _completedCount / _totalCount;
+      RoutesService().updateCompletionRate(widget.savedTrip.id, rate);
+    }
   }
 
   void _saveReview(int dayIdx, int placeIdx, int rating, String review) {
