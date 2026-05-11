@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../routes/routes_model.dart';
 import '../trip_result/trip_result_model.dart';
 import 'active_trip_state_model.dart';
-import 'active_trip_service.dart';
+import 'services/active_trip_service.dart';
 import 'widgets/active_place_card.dart';
 import 'widgets/active_trip_map.dart';
 import '../../widgets/navigation_bar.dart';
+import 'widgets/audio_guide_button.dart';
 
 const _dayColors = [
   Color(0xFF00BFA5), Color(0xFF5B8DEF), Color(0xFF9C6FDE),
@@ -333,36 +334,19 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                     fontSize: 17,
                     fontWeight: FontWeight.w800)),
             Text('${place.timeSlot} • ${place.duration}',
-                style:
-                    const TextStyle(color: Colors.white70, fontSize: 12)),
-          ]),
-        ),
-        GestureDetector(
-          onTap: () {},
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.volume_up_rounded,
-                    color: Colors.white, size: 18),
-                SizedBox(height: 2),
-                Text('Sesli\nRehber',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700)),
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
               ],
             ),
           ),
-        ),
-      ]),
+          AudioGuideButton(
+            placeName: place.name,
+            city: widget.savedTrip.city,
+            description: place.description,
+            compact: true, // küçük buton modu
+          ),
+        ],
+      ),
     );
   }
 
@@ -439,15 +423,13 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
               final placeIdx = pe.key;
               final place = pe.value;
               return ActivePlaceCard(
-                key: ValueKey('${dayIdx}_$placeIdx'),
                 place: place,
                 number: placeIdx + 1,
                 state: _stateOf(dayIdx, placeIdx),
                 dayColor: dayColor,
-                city: widget.savedTrip.city,
+                city: widget.savedTrip.city, // bunu ekle
                 onComplete: () => _completePlace(dayIdx, placeIdx),
-                onReview: (r, rev) =>
-                    _saveReview(dayIdx, placeIdx, r, rev),
+                onReview: (r, rev) => _saveReview(dayIdx, placeIdx, r, rev),
               );
             }),
             const SizedBox(height: 8),

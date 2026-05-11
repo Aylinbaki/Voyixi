@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'active_trip_state_model.dart';
+import '../active_trip_state_model.dart';
 
 class ActiveTripService {
   final _db = FirebaseFirestore.instance;
+  
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
 
@@ -16,6 +17,7 @@ class ActiveTripService {
   // Firebase'e kaydet
   Future<void> saveProgress(
       String tripId, List<TripPlaceState> states) async {
+        
     await _ref(tripId).update({
       'progress': states.map((s) => s.toMap()).toList(),
       'startedAt': FieldValue.serverTimestamp(),

@@ -3,6 +3,7 @@ import '../../trip_result/trip_result_model.dart';
 import '../active_trip_state_model.dart';
 import 'review_sheet.dart';
 import '../../../services/favorites_service.dart';
+import 'audio_guide_button.dart';
 
 //  StatefulWidget: Kalp butonunun anlık görsel güncellemesi için
 class ActivePlaceCard extends StatefulWidget {
@@ -279,16 +280,16 @@ class _ActivePlaceCardState extends State<ActivePlaceCard> {
                 if (_isCurrent) ...[
                   Row(children: [
                     Expanded(
-                      child: _fillBtn(
-                        icon: Icons.volume_up_rounded,
-                        label: 'Sesli Rehber',
-                        color: const Color(0xFF9C6FDE),
-                        onTap: () {},
+                        child: AudioGuideButton(
+                          placeName: widget.place.name,
+                          city: 'İstanbul', // city parametresini dışarıdan al
+                          description: widget.place.description,
+                          color: const Color(0xFF9C6FDE),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _fillBtn(
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _fillBtn(
                         icon: Icons.check_circle_rounded,
                         label: 'Tamamlandı',
                         color: const Color(0xFF00BFA5),
