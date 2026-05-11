@@ -389,8 +389,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           Positioned(top: 0, left: 0, right: 0, child: _buildFixedAppBar(context),
           ),
           // ── 4. SABİT action buton
-          Positioned(bottom: navBarH + bottomInset, left: 0, right: 0, child: _buildFixedActionButton(),
-          ),
+          if (!isSavedTripsSelected)
+            Positioned(bottom: navBarH + bottomInset, left: 0, right: 0,
+              child: _buildFixedActionButton(),
+            ),
           // ── 5. Nav bar ───────────────────────────
           Positioned(bottom: 0, left: 0, right: 0, child: const bottomNav( selectedIndex:3,),
           ),
@@ -445,24 +447,23 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
   // ── SABİT ACTION BUTTON 
   Widget _buildFixedActionButton() {
-    final label  = isSavedTripsSelected ? 'Not Ekle'        : 'Not Ekle';
-    final icon   = isSavedTripsSelected ? Icons.note_add_outlined : Icons.note_add_outlined;
-    final onTap  = isSavedTripsSelected
-        ? () => Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (r) => false,
-    )
-        : _showAddNoteSheet;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,end: Alignment.bottomCenter,
-          colors: [_T.gradientEnd.withOpacity(0.0), _T.gradientEnd.withOpacity(0.85), ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _T.gradientEnd.withOpacity(0.0),
+            _T.gradientEnd.withOpacity(0.85),
+          ],
         ),
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      child: _actionButton(label: label, icon: icon, onPressed: onTap),
+      child: _actionButton(
+        label: 'Not Ekle',
+        icon: Icons.note_add_outlined,
+        onPressed: _showAddNoteSheet,
+      ),
     );
   }
 
@@ -692,12 +693,19 @@ class _ProfileScreenState extends State<ProfileScreen>
               return const Center(child: CircularProgressIndicator());
             }
             final trips = snap.data ?? [];
-            if (trips.isEmpty) {
+            // Biten + tarihi olmayan (eski kayıt) planları göster
+            final finishedTrips = trips
+                .where((t) => t.completionRate >= 1.0)
+                .toList();
+
+            if (finishedTrips.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.all(40),
                 child: Center(
-                  child: Text('Henüz biten gezin yok',
-                      style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  child: Text(
+                      'Henüz tamamladığın bir gezi yok',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                 ),
               );
             }
