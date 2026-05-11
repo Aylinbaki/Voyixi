@@ -39,7 +39,7 @@ android {
             localProperties.getProperty("GOOGLE_MAPS_API_KEY")
                 ?: localProperties.getProperty("GOOGLE_PLACES_API_KEY")
                 ?: ""
-        minSdk = 21
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
