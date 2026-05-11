@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import 'package:geolocator/geolocator.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
 import 'save_screen.dart';
@@ -15,7 +17,6 @@ import '../features/routes/routes_model.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -28,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // 1. Arama sorgusu için değişken
   String _searchQuery = "";
   String _selectedBudget = "Hepsi";
+  late Future<List<Map<String, dynamic>>> _nearbyFuture;
 
   User? get _currentUser => FirebaseAuth.instance.currentUser;
 
@@ -48,12 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // 2. Arama çubuğunu dinlemeye başladık
     _searchCtrl.addListener(() {
-      setState(() {
-        _searchQuery = _searchCtrl.text.toLowerCase();
-      });
+      setState(() => _searchQuery = _searchCtrl.text.toLowerCase());
     });
+    _nearbyFuture = TourService().getNearbyPlaces();
   }
 
   @override
@@ -268,35 +268,54 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 1. POPÜLER TURLAR (Firebase) (Aramaya Göre Filtrelenmiş)
+  // 1. POPÜLER TURLAR (Firebase)
+  //Rehber/admin Firebase console'dan bu collection'a tur ekler.
   Widget _buildPopularTours() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text('Popüler Turlar', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+          child: Text('Popüler Turlar',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
         ),
         const SizedBox(height: 14),
         SizedBox(
-          height: 165,
+          height: 185,
           child: StreamBuilder<List<Map<String, dynamic>>>(
             stream: TourService().getPopularTours(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: Colors.white));
+                return const Center(
+                    child: CircularProgressIndicator(color: Colors.white));
               }
               final tours = snapshot.data ?? [];
 
-              // Arama kutusuna yazılan metne göre şehirleri filtreliyoruz
               final filteredTours = tours.where((tour) {
-                final cityMatch = (tour['city'] ?? '').toString().toLowerCase().contains(_searchQuery);
-                final budgetMatch = _selectedBudget == "Hepsi" || (tour['budget'] ?? 'Orta') == _selectedBudget;
-                return cityMatch && budgetMatch;
+                final cityMatch = _searchQuery.isEmpty ||
+                    (tour['city'] ?? '')
+                        .toString()
+                        .toLowerCase()
+                        .contains(_searchQuery) ||
+                    (tour['title'] ?? '')
+                        .toString()
+                        .toLowerCase()
+                        .contains(_searchQuery);
+                final filterMatch = _selectedBudget == 'Hepsi' ||
+                    (tour['city'] ?? '')
+                        .toString()
+                        .toLowerCase() ==
+                        _selectedBudget.toLowerCase();
+                return cityMatch && filterMatch;
               }).toList();
 
               if (filteredTours.isEmpty) {
-                return const Center(child: Text('Eşleşen tur bulunamadı.', style: TextStyle(color: Colors.white70)));
+                return const Center(
+                    child: Text('Eşleşen tur bulunamadı.',
+                        style: TextStyle(color: Colors.white70)));
               }
 
               return ListView.builder(
@@ -304,7 +323,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(left: 20),
                 physics: const BouncingScrollPhysics(),
                 itemCount: filteredTours.length,
-                itemBuilder: (context, index) => _buildTourCard(filteredTours[index]),
+                itemBuilder: (context, index) =>
+                    _buildTourCard(filteredTours[index]),
               );
             },
           ),
@@ -312,8 +332,20 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
+  // Guide tour kartı — title, city, price, guideName, tourDate gösterir
   Widget _buildTourCard(Map<String, dynamic> tour) {
+    String? dateStr;
+    final rawDate = tour['tourDate'];
+    if (rawDate != null) {
+      try {
+        final dt = DateTime.parse(rawDate.toString());
+        dateStr = DateFormat('d MMM', 'tr_TR').format(dt);
+      } catch (_) {}
+    }
+
+    final price = tour['price'];
+    final priceStr = price != null ? '₺$price' : null;
+
     return Container(
       width: 128,
       margin: const EdgeInsets.only(right: 14),
@@ -321,10 +353,9 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
+              color: Colors.black.withOpacity(0.13),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
         ],
       ),
       child: ClipRRect(
@@ -332,169 +363,121 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // 1. Resim ve Tıklanma Alanı
-            GestureDetector(
-              onTap: () {
-                // Gelecekte buraya detay sayfası yönlendirmesi eklenebilir
-                print("${tour['city']} detayına gidiliyor...");
-              },
-              child: Image.network(
-                tour['image'] ?? '',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(color: Colors.grey[300]),
+            // Arkaplan resmi
+            Image.network(
+              tour['imageUrl'] ?? '',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: const Color(0xFF0DA3A3).withOpacity(0.4),
+                child: const Icon(Icons.tour_outlined,
+                    color: Colors.white54, size: 40),
               ),
             ),
-
-            // 2. Gradyan Karartma (Metinlerin okunabilmesi için alt kısmı koyulaştırır)
-            IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.8), // Alt kısmı daha koyu yapar
-                    ],
-                  ),
+            // Karartma
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.85),
+                  ],
                 ),
               ),
             ),
-
-            // 3. Gün Sayısı Etiketi (Sağ Üst)
+            // Rehber adı (sol üst)
             Positioned(
               top: 10,
-              right: 10,
+              left: 10,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  tour['days'] ?? '',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.person_outline,
+                        color: Colors.white, size: 11),
+                    const SizedBox(width: 3),
+                    Text(
+                      (tour['guideName'] ?? 'Rehber').toString().trim(),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ],
                 ),
               ),
             ),
-
-            // 4. Favori Butonu
+            // Fiyat (sağ üst)
+            if (priceStr != null)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    priceStr,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            // Alt bilgi: başlık + şehir + tarih
             Positioned(
-              top: 10,
-              left: 10,
-              child: FavoriteButton(tour: tour),
-            ),
-
-            // 5. Şehir İsmi (Alt Orta)
-            Positioned(
-              bottom: 12,
+              bottom: 10,
               left: 10,
               right: 10,
-              child: Text(
-                tour['city'] ?? '', // Firebase'deki 'city'
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 2. TUR PLANLARIM (Kullanıcın Rotaları)
-  Widget _buildTourPlans() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Tur Planlarım', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
-              GestureDetector(
-                // Bu buton Rotalar (Index 1) sayfasına yönlendirir
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StartedRoutesScreen())),
-                child: const Text('Tümünü Gör', style: TextStyle(color: Color(0xFFB7F1B9), fontWeight: FontWeight.w600, fontSize: 13)),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        StreamBuilder<List<SavedTrip>>(
-          stream: RoutesService().getTrips(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox();
-            final trips = snapshot.data ?? [];
-            if (trips.isEmpty) return const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('Henüz plan yok.', style: TextStyle(color: Colors.white70)));
-
-            // .take(2) ile sadece ilk iki planı alıyoruz
-            final displayTrips = trips.take(2).toList();
-
-            return Column(
-              children: displayTrips.map((trip) => Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-                child: GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ActiveTripScreen(savedTrip: trip, tripResult: trip.toTripResult()))),
-                  child: _buildTourPlanCard({
-                    'title': trip.title,
-                    'days': '${trip.days} Gün',
-                    'image': trip.imageUrl ?? 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600',
-                  }),
-                ),
-              )).toList(),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTourPlanCard(Map<String, dynamic> plan) {
-    return Container(
-      height: 185,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 14, offset: const Offset(0, 6))],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.network(plan['image'] ?? '', fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey[400])),
-            Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.05), Colors.black.withOpacity(0.65)]))),
-            Positioned(
-              bottom: 16, left: 16, right: 16,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(plan['title'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 5),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: const Color(0xFF4CAF50), borderRadius: BorderRadius.circular(20)),
-                        child: Text(plan['days'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
-                      ),
-                    ],
+                  Text(
+                    tour['title'] ?? tour['city'] ?? '',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Container(
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                    child: const Icon(Icons.north_east, color: Colors.white, size: 20),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: Colors.white70, size: 11),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          tour['city'] ?? '',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (dateStr != null) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          dateStr,
+                          style: const TextStyle(
+                              color: Color(0xFFB7F1B9),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -505,38 +488,69 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 3. CİVARINI KEŞFET (Firebase)
-  Widget _buildNearbySection() {
+  // 2. TUR PLANLARIM (Kullanıcın Rotaları)
+  //1 plan gösteriyoruz: aktif olan veya en yakın
+  Widget _buildTourPlans() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Civarını Keşfet!', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
-              SizedBox(width: 8),
-              Text('İstanbul', style: TextStyle(fontSize: 14, color: Colors.white70)),
+              const Text('Tur Planlarım',
+                  style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+              GestureDetector(
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const StartedRoutesScreen())),
+                child: const Text('Tümünü Gör',
+                    style: TextStyle(
+                        color: Color(0xFFB7F1B9),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
+              ),
             ],
           ),
         ),
         const SizedBox(height: 14),
-        StreamBuilder<List<Map<String, dynamic>>>(
-          stream: TourService().getNearbyPlaces(),
+        StreamBuilder<SavedTrip?>(
+          stream: RoutesService().getUpcomingTrip(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: Colors.white));
+              return const SizedBox(
+                height: 60,
+                child: Center(
+                    child: CircularProgressIndicator(color: Colors.white)),
+              );
             }
-            final places = snapshot.data ?? [];
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+
+            final trip = snapshot.data;
+
+            if (trip == null) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildEmptyPlanCard(),
+              );
+            }
+
+            return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, crossAxisSpacing: 14, mainAxisSpacing: 14, childAspectRatio: 1.05
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ActiveTripScreen(
+                      savedTrip: trip,
+                      tripResult: trip.toTripResult(),
+                    ),
+                  ),
+                ),
+                child: _buildUpcomingTripCard(trip),
               ),
-              itemCount: places.length,
-              itemBuilder: (context, index) => _buildNearbyCard(places[index]),
             );
           },
         ),
@@ -544,32 +558,466 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Aktif veya yaklaşan plan kartı — başlama tarihi + bitirme oranı gösterir
+  Widget _buildUpcomingTripCard(SavedTrip trip) {
+    // Tarih formatı: "15 Mayıs 2026"
+    final dateFormat = DateFormat('d MMMM yyyy', 'tr_TR');
+    final startStr = trip.startDate != null
+        ? dateFormat.format(trip.startDate!)
+        : null;
+    final endStr = trip.endDate != null
+        ? dateFormat.format(trip.endDate!)
+        : null;
+
+    // Durum etiketi: Aktif mi, Yaklaşıyor mu?
+    final String statusLabel;
+    final Color statusColor;
+    if (trip.isActive) {
+      statusLabel = 'Devam Ediyor';
+      statusColor = const Color(0xFF4CAF50);
+    } else if (trip.isUpcoming) {
+      statusLabel = 'Yaklaşıyor';
+      statusColor = const Color(0xFFFFA726);
+    } else {
+      statusLabel = '${trip.days} Gün';
+      statusColor = const Color(0xFF4CAF50);
+    }
+
+    final int completedCount =
+    (trip.completionRate * trip.days).round();
+
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 14,
+              offset: const Offset(0, 6))
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Arkaplan resmi
+            Image.network(
+              trip.imageUrl ??
+                  'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Container(color: Colors.grey[400]),
+            ),
+            // Karartma
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.05),
+                    Colors.black.withOpacity(0.75),
+                  ],
+                ),
+              ),
+            ),
+            // İçerik
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Şehir adı
+                        Expanded(
+                          child: Text(
+                            trip.title,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Durum etiketi
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(statusLabel,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11)),
+                        ),
+                      ],
+                    ),
+                    // Tarih satırı
+                    if (startStr != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today_outlined,
+                              color: Colors.white70, size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            endStr != null
+                                ? '$startStr – $endStr'
+                                : startStr,
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    // Tamamlanma oranı
+                    // Neden LinearProgressIndicator?
+                    // Kullanıcı "Devam Ediyor" planında kaç yeri işaretlediğini
+                    // görsel olarak anlasın. completionRate 0.0–1.0 arası float.
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: trip.completionRate,
+                              backgroundColor: Colors.white24,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  statusColor),
+                              minHeight: 5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '$completedCount/${trip.days} Gün',
+                          style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Sağ üst ok ikonu
+            Positioned(
+              top: 14,
+              right: 14,
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.north_east,
+                    color: Colors.white, size: 18),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Plan yoksa boş durum kartı
+  Widget _buildEmptyPlanCard() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const TripPlannerEntry()),
+      ),
+      child: Container(
+        height: 120,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white30, width: 1.5),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_circle_outline, color: Colors.white70, size: 32),
+              SizedBox(height: 8),
+              Text('Yeni Tur Planla',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15)),
+              SizedBox(height: 4),
+              Text('Henüz aktif planın yok',
+                  style: TextStyle(color: Colors.white60, fontSize: 12)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  // 3. CİVARINI KEŞFET (Firebase)
+  Widget _buildNearbySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text('Civarını Keşfet!',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
+        ),
+        const SizedBox(height: 14),
+        FutureBuilder<List<Map<String, dynamic>>>(
+          future: _nearbyFuture,
+          builder: (context, snapshot) {
+            // Yükleniyor
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 180,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: Colors.white),
+                      SizedBox(height: 12),
+                      Text('Çevrendeki yerler aranıyor...',
+                          style:
+                          TextStyle(color: Colors.white70, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Hata — türüne göre farklı mesaj
+            if (snapshot.hasError) {
+              return _buildNearbyError(snapshot.error);
+            }
+
+            // Başarılı ama boş
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return _buildNearbyInfoCard(
+                icon: Icons.search_off_rounded,
+                message: 'Çevrenizde önerilecek yer bulunamadı.',
+                showRetry: true,
+                onRetry: () {
+                  setState(() {
+                    _nearbyFuture = TourService().getNearbyPlaces();
+                  });
+                },
+              );
+            }
+
+            final places = snapshot.data!;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                  childAspectRatio: 1.0,
+                ),
+                itemCount: places.length > 4 ? 4 : places.length,
+                itemBuilder: (context, index) =>
+                    _buildNearbyCard(places[index]),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // Hata tipine göre doğru mesajı seç
+  Widget _buildNearbyError(Object? error) {
+    if (error is LocationPermissionDeniedException) {
+      return _buildNearbyInfoCard(
+        icon: Icons.location_off_rounded,
+        message: 'Konum izni verilmedi.\nYakın yerleri görmek için izin ver.',
+        showRetry: true,
+        // İzin tekrar istemek için butona tıklayınca future'ı yenile
+        onRetry: () {
+          setState(() {
+            _nearbyFuture = TourService().getNearbyPlaces();
+          });
+        },
+      );
+    }
+
+    if (error is LocationPermissionPermanentlyDeniedException) {
+      return _buildNearbyInfoCard(
+        icon: Icons.location_disabled_rounded,
+        message:
+        'Konum izni kalıcı olarak reddedildi.\nTelefon ayarlarından izin ver.',
+        showRetry: false,
+        // Ayarlar sayfasını aç
+        onRetry: () => Geolocator.openAppSettings(),
+        retryLabel: 'Ayarları Aç',
+      );
+    }
+
+    // Genel hata (internet yok, API hatası vs.)
+    return _buildNearbyInfoCard(
+      icon: Icons.wifi_off_rounded,
+      message: 'Yerler yüklenemedi.\nİnternet bağlantını kontrol et.',
+      showRetry: true,
+      onRetry: () {
+        setState(() {
+          _nearbyFuture = TourService().getNearbyPlaces();
+        });
+      },
+    );
+  }
+
+  Widget _buildNearbyInfoCard({
+    required IconData icon,
+    required String message,
+    required bool showRetry,
+    VoidCallback? onRetry,
+    String retryLabel = 'Tekrar Dene',
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white24, width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white70, size: 36),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 13, height: 1.5),
+            ),
+            if (showRetry && onRetry != null) ...[
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: onRetry,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(retryLabel,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13)),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildNearbyCard(Map<String, dynamic> place) {
+    final rating = (place['rating'] as num?)?.toDouble() ?? 0.0;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 8, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.10),
+              blurRadius: 8,
+              offset: const Offset(0, 3))
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(place['image'] ?? '', fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey[300])),
-            Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withOpacity(0.70)]))),
+            Image.network(
+              place['image'] ?? '',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                color: Colors.grey[300],
+                child: const Icon(Icons.image_not_supported,
+                    color: Colors.grey, size: 40),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.72)
+                  ],
+                ),
+              ),
+            ),
             Positioned(
-              bottom: 10, left: 10, right: 10,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              bottom: 10,
+              left: 10,
+              right: 10,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(child: Text(place['name'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12), overflow: TextOverflow.ellipsis)),
-                  Row(
-                    children: [
-                      const Icon(Icons.near_me, color: Color(0xFF81C784), size: 11),
-                      const SizedBox(width: 3),
-                      Text(place['distance'] ?? '', style: const TextStyle(color: Color(0xFF81C784), fontSize: 11, fontWeight: FontWeight.w600)),
-                    ],
+                  Text(
+                    place['name'] ?? '',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  if (rating > 0) ...[
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            color: Color(0xFFFFC107), size: 12),
+                        const SizedBox(width: 3),
+                        Text(
+                          rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
