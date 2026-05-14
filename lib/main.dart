@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 import 'package:voyixi/screens/onboarding_screen.dart';
 import 'package:voyixi/screens/login_screen.dart';
@@ -13,6 +14,8 @@ import 'features/guide/application/guide_application_screen.dart';
 import 'features/admin/admin_panel_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('tr_TR', null);
+
   try {
     await dotenv.load(fileName: ".env");
     print("✅ .env dosyası başarıyla yüklendi");
