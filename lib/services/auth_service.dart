@@ -1,9 +1,24 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../models/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  Future<UserModel?> getUserData(String uid) async {
+    try {
+      var doc = await _db.collection('users').doc(uid).get();
+      if (doc.exists && doc.data() != null) {
+        // Ham veriyi modelimize gönderip tertemiz bir obje alıyoruz
+        return UserModel.fromMap(doc.data()!, doc.id);
+      }
+    } catch (e) {
+      print("Kullanıcı verisi çekilirken hata: $e");
+    }
+    return null;
+  }
 
   // EMAIL SIGN UP
   Future<User?> signUp(String email, String password) async {
@@ -12,6 +27,7 @@ class AuthService {
         email: email,
         password: password,
       );
+      
       return user.user;
     } catch (e) {
       print(e);

@@ -13,6 +13,9 @@ import '../features/routes/routes_screen.dart';
 import '../features/routes/routes_model.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
+import '../services/auth_service.dart';
+import '../models/user_model.dart';
+import '../features/guide/panel/guide_panel.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -24,6 +27,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
+  // kullanıcı rolü öğrenme için
+  final AuthService _authService = AuthService();
+  UserModel? _userModel;
+
   // 1. Arama sorgusu için değişken
   String _searchQuery = "";
   String _selectedBudget = "Hepsi";
@@ -47,12 +54,23 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     // 2. Arama çubuğunu dinlemeye başladık
     _searchCtrl.addListener(() {
       setState(() {
         _searchQuery = _searchCtrl.text.toLowerCase();
       });
     });
+  }
+  Future<void> _loadUserData() async {
+    if (_currentUser != null) {
+      final data = await _authService.getUserData(_currentUser!.uid);
+      if (mounted) { // Widget hala ekrandaysa durumu güncelle
+        setState(() {
+          _userModel = data;
+        });
+      }
+    }
   }
 
   @override
@@ -112,6 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeader(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
+    final user = _userModel;
 
     return ShaderMask(
       shaderCallback: (rect) => const LinearGradient(
@@ -156,9 +175,39 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  const SettingsButton()
+                  const SettingsButton(),
                 ],
+                
               ),
+              const Divider(color: Colors.white24, height: 32),
+              if (user != null) ...[
+      if (user.isAdmin)
+        _buildRoleTile(
+          title: "Admin Paneli",
+          icon: Icons.admin_panel_settings,
+          color: Colors.redAccent,
+          onTap: () => Navigator.pushNamed(context, '/adminPanel'),
+        ),
+      if (user.isGuide)
+  _buildRoleTile(
+    title: "Rehber Paneli",
+    icon: Icons.explore,
+    color: const Color(0xFF00BFA5),
+    onTap: () => showGuidePanel(context), 
+  ),
+      if (!user.isAdmin && !user.isGuide)
+        user.isPending 
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text("Başvurunuz Değerlendiriliyor...", style: TextStyle(color: Colors.white60)),
+            )
+          : _buildRoleTile(
+              title: "Rehber Ol",
+              icon: Icons.directions_walk,
+              color: const Color(0xFF00BFA5),
+              onTap: () => Navigator.pushNamed(context, '/guideApply'),
+            ),
+    ],
               const SizedBox(height: 16),
               const Text('Bir Sonraki\nMaceraya Hazır mısın?',
                   style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, height: 1.3)),
@@ -577,7 +626,34 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+  Widget _buildRoleTile({
+  required String title,
+  required IconData icon,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return ListTile(
+    onTap: onTap,
+    leading: Icon(icon, color: color),
+    title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+    trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+    contentPadding: EdgeInsets.zero,
+  );
 }
+
+Widget _buildStatusTile(String message) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: Text(
+      message,
+      style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic),
+    ),
+  );
+}
+}
+
+
+
 
 class _DefaultAvatarIcon extends StatelessWidget {
   const _DefaultAvatarIcon();
@@ -652,4 +728,5 @@ class _FavoriteButtonState extends State<FavoriteButton> {
       ),
     );
   }
+  
 }

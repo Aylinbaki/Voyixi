@@ -3,6 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'edit_profile_screen.dart';
+import '../features/admin/admin_panel_screen.dart';
+import '../features/guide/panel/guide_panel.dart';
+import '../features/guide/application/guide_application_screen.dart';
+import '../services/auth_service.dart';
+import '../models/user_model.dart';
 
 const _teal = Color(0xFF00BFA5);
 const _tealDark = Color(0xFF00897B);
@@ -19,6 +24,10 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 class _SettingsScreenState extends State<SettingsScreen> {
+  final AuthService _authService = AuthService();
+  UserModel? _userModel; 
+  
+  
 
   bool _audioGuide = true;
   bool _darkMode = false;
@@ -35,6 +44,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String get _email => _user?.email ?? '';
   String? get _photo => _user?.photoURL;
 
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // Sayfa açılırken rolleri kontrol et
+  }
+  Future<void> _loadUserData() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final data = await _authService.getUserData(currentUser.uid);
+      if (mounted) {
+        setState(() {
+          _userModel = data;
+        });
+      }
+    }
+  }
   @override
   void dispose() {
     _reportCtrl.dispose();
@@ -106,9 +133,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ]),
           const SizedBox(height: 16),
-          _sectionTitle('Uygulama'),
+          _sectionTitle('Rehberlik'),
           _card([
-            _tile(Icons.tour_outlined, 'Rehber Uygulaması', onTap: () {}),
+            // 1. DURUM: Kullanıcı zaten rehberse (Başvuru butonuna ihtiyacı yok)
+            if (_userModel?.isGuide == true)
+              _tile(
+                Icons.verified_user_outlined, 
+                'Voyixi Rehberisiniz', 
+                trailing: const Icon(Icons.check_circle, color: _teal, size: 20),
+                onTap: () {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(content: Text("Harika iş çıkarıyorsun rehber! Paneline ana ekrandan ulaşabilirsin."))
+                   );
+                },
+              )
+            
+            // 2. DURUM: Başvuru yapmış ama Admin onayı bekliyor
+            else if (_userModel?.isPending == true)
+              _tile(
+                Icons.hourglass_empty_rounded, 
+                'Başvurunuz İnceleniyor', 
+                trailing: const Text('Beklemede', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Başvurunuz admin ekibimiz tarafından inceleniyor. En kısa sürede döneceğiz!"))
+                  );
+                },
+              )
+            
+            // 3. DURUM: Standart kullanıcı (Başvuru yapabilir)
+            else
+              _tile(
+                Icons.tour_outlined, 
+                'Rehber Ol', 
+                onTap: () {
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (context) => const GuideApplicationScreen())
+                  );
+                },
+              ),
+
             _tile(Icons.info_outline_rounded, 'Versiyon',
                 trailing: const Text('v1.0.0', style: TextStyle(color: _textLight)),
                 isLast: true),

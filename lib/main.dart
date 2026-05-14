@@ -9,6 +9,8 @@ import 'package:voyixi/screens/register_screen.dart';
 import 'package:voyixi/screens/forgot_password_screen.dart';
 import 'package:voyixi/screens/save_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'features/guide/application/guide_application_screen.dart';
+import 'features/admin/admin_panel_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -44,6 +46,8 @@ class MyApp extends StatelessWidget {
         "/register": (context) => const RegisterScreen(),
         "/forgot-password": (context) => const ForgotPasswordScreen(),
         "/save": (context) => const SaveScreen(),
+        '/guideApply': (context) => const GuideApplicationScreen(),
+        '/adminPanel': (context) => const AdminPanelScreen(),
       },
     );
   }
