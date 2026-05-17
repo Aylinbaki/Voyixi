@@ -525,16 +525,28 @@ class _ProfileScreenState extends State<ProfileScreen>
             style: const TextStyle(color: _T.textPrimary,fontSize: 22,fontWeight: FontWeight.bold,),
           ),
           const SizedBox(height: 4),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.location_on_outlined, size: 13, color: _T.textSecondary),
-              SizedBox(width: 3),
-              Text(
-                'Türkiye',
-                style: TextStyle(color: _T.textSecondary, fontSize: 13),
-              ),
-            ],
+          StreamBuilder<Map<String, dynamic>>(
+            stream: UserService().userStream(user!.uid),
+            builder: (context, snap) {
+              final city    = snap.data?['city']    ?? '';
+              final country = snap.data?['country'] ?? '';
+              // Şehir varsa "İstanbul, Türkiye", sadece ülke varsa "Türkiye", ikisi de yoksa boş
+              final location = [city, country]
+                  .where((s) => s.isNotEmpty)
+                  .join(', ');
+              if (location.isEmpty) return const SizedBox();
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 13, color: _T.textSecondary),
+                  const SizedBox(width: 3),
+                  Text(
+                    location,
+                    style: const TextStyle(color: _T.textSecondary, fontSize: 13),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
         ],

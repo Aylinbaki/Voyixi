@@ -24,9 +24,9 @@ class StartedRoutesScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [_bgTop, _bgBottom],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0DA3A3), Color(0xFFB8F0F0)],
           ),
         ),
         child: SafeArea(
@@ -71,8 +71,9 @@ class StartedRoutesScreen extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 70.0,
       pinned: true,
-      backgroundColor: _bgTop,
-      elevation: 0.5,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      forceElevated: false,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _teal, size: 22),
         onPressed: () {

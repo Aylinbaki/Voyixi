@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/user_service.dart';
 
 const _teal     = Color(0xFF00BFA5);
 const _tealDark = Color(0xFF00897B);
@@ -17,6 +18,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final user = FirebaseAuth.instance.currentUser;
   late TextEditingController _nameController;
   late TextEditingController _countryController;
+  late TextEditingController _cityController;
   XFile? _pickedImage; // seçilen fotoğrafı tutar
   final ImagePicker _picker = ImagePicker();
 
@@ -24,13 +26,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _nameController    = TextEditingController(text: user?.displayName ?? '');
-    _countryController = TextEditingController(text: 'Türkiye');
+    _countryController = TextEditingController(text: '');
+    _cityController    = TextEditingController(text: '');
+
+    if (user != null) {
+      UserService().userStream(user!.uid).first.then((data) {
+        if (mounted) {
+          setState(() {
+            _countryController.text = data['country'] ?? '';
+            _cityController.text    = data['city']    ?? '';
+          });
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _countryController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
@@ -136,20 +151,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   const SizedBox(height: 18),
                   _buildEditField('Ülke', _countryController),
+                  const SizedBox(height: 18),
+                  _buildEditField('Şehir', _cityController),
                 ],
               ),
             ),
 
             const SizedBox(height: 36),
-
             // Güncelle butonu — Settings'deki _actionButton stili
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
                   try {
+                    // 1. Firebase Auth displayName güncelle
                     await user?.updateDisplayName(_nameController.text);
                     await user?.reload();
+                    // 2. Firestore'a city ve country yaz
+                    if (user != null) {
+                      await UserService().updateProfile(
+                        uid:     user!.uid,
+                        name:    _nameController.text,
+                        city:    _cityController.text,
+                        country: _countryController.text,
+                      );
+                    }
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

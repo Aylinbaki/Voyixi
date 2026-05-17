@@ -65,10 +65,19 @@ class _RoutesWidget extends State<RoutesWidget> {
   } catch (e) {
     if (mounted) {
       setState(() => _saving = false);
+
+      // Duplicate mı yoksa başka hata mı ayırt et
+      final isDuplicate = e.toString().contains('DUPLICATE');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating),
+          SnackBar(
+              content: Text(
+                isDuplicate
+                    ? '"${_titleCtrl.text.trim()}" adında bir plan zaten kayıtlı.'
+                    : 'Hata: $e',
+              ),
+              backgroundColor: isDuplicate ? const Color(0xFF00BFA5) : Colors.red,
+              behavior: SnackBarBehavior.floating,
+          ),
       );
     }
   }
