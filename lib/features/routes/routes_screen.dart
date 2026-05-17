@@ -74,18 +74,31 @@ class StartedRoutesScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       forceElevated: false,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _teal, size: 22),
-        onPressed: () {
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          } else {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        },
+
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: GestureDetector(
+          onTap: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          },
+          child: Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.22),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: Colors.white, size: 18),
+          ),
+        ),
       ),
+
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsetsDirectional.only(start: 56, bottom: 16),
+        titlePadding: const EdgeInsetsDirectional.only(start: 64, bottom: 16),
         centerTitle: false,
         title: Column(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -95,17 +108,17 @@ class StartedRoutesScreen extends StatelessWidget {
             Text(
               'Rotalarım',
               style: TextStyle(
-                color: _textDark,
+                color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
+                fontWeight: FontWeight.bold,  // w700
+                letterSpacing: 0,
               ),
             ),
             if (count > 0)
               Text(
                 '$count Kayıtlı Plan',
                 style: TextStyle(
-                  color: _teal.withOpacity(0.8), // Siyah yerine Voyixi yeşili
+                  color: Colors.white.withOpacity(0.85),
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),

@@ -424,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           const Text(
             'Profil',
             style: TextStyle(
-              color: Colors.white, fontSize: 20,
+              color: Colors.white, fontSize: 30,
               fontWeight: FontWeight.bold, letterSpacing: 1.2,
             ),
           ),

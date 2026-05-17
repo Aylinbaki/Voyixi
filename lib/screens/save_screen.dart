@@ -96,26 +96,58 @@ class _SaveScreenState extends State<SaveScreen>
   // ── AppBar ────────────────────────────────────────────────────────────────
   Widget _buildAppBar(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.22),
-                shape: BoxShape.circle,
+          // Geri butonu
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.22),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white, size: 18),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white, size: 18),
             ),
           ),
-          const Text('FAVORİLER',
-              style: TextStyle(color: Colors.white, fontSize: 20,
-                  fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-          const SizedBox(width: 40),
+          const SizedBox(width: 12),
+
+          // Başlık — geri okun hemen yanında, sola yasalı
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Favoriler',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Logo — sağda
+          Padding(
+            padding: const EdgeInsets.only(right: 19),
+            child: Transform.scale(
+              scale: 4.5,
+              child: Image.asset(
+                'assets/images/app_logo_plan.png',
+                height: 40,
+                width: 40,
+              ),
+            ),
+          ),
         ],
       ),
     );
