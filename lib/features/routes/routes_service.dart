@@ -26,13 +26,12 @@ class RoutesService {
     //Aynı şehir ve gün sayısına sahip aktif bir plan var mı?
     final existing = await _tripsRef
         .where('city', isEqualTo: result.city)
-        .where('days', isEqualTo: result.days)
+        .where('title', isEqualTo: title)
         .limit(1)
         .get();
 
     if (existing.docs.isNotEmpty) {
-      // Eğer varsa mevcut olanın ID'sini döndür ya da hata fırlat
-      return existing.docs.first.id;
+      throw Exception('DUPLICATE');
     }
 
     // Gemini 
@@ -125,7 +124,33 @@ class RoutesService {
 
       // Planı sil
   Future<void> deleteTrip(String id) async {
+    if (_uid == null) return;
+
+    // 1. Önce silinecek trip'in bilgilerini oku
+    final doc = await _tripsRef.doc(id).get();
+    final data = doc.data();
+    final city    = data?['city']    as String?;
+    final country = data?['country'] as String?;
+
+    // 2. Trip'i sil
     await _tripsRef.doc(id).delete();
+
+    // 3. Bu şehir başka bir trip'te hâlâ var mı kontrol et
+    if (city != null) {
+      final remaining = await _tripsRef
+          .where('city', isEqualTo: city)
+          .limit(1)
+          .get();
+
+      // Başka trip yoksa cities array'inden ve count'tan düş
+      if (remaining.docs.isEmpty) {
+        final userRef = _db.collection('users').doc(_uid);
+        await userRef.set({
+          'cities':    FieldValue.arrayRemove([city]),
+          'cityCount': FieldValue.increment(-1),
+        }, SetOptions(merge: true));
+      }
+    }
   }
 
   //Başlık / tarih 

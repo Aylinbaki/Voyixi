@@ -116,13 +116,20 @@ class FavoritesService {
   }
 
   // ── MEKAN FAVORİLERİ ──────────────────────────────────────────────────────
-
   static Future<void> addFavoritePlace(FavoritePlace place) async {
     final ref = _placesRef;
     if (ref == null) return;
-    // Aynı mekan zaten varsa tekrar ekleme
-    final existing = await ref.where('name', isEqualTo: place.name)
-        .where('city', isEqualTo: place.city).get();
+    // placeId varsa ona göre, yoksa name+city'ye göre kontrol et
+    Query query;
+    if (place.placeId != null && place.placeId!.isNotEmpty) {
+      query = ref.where('placeId', isEqualTo: place.placeId);
+    } else {
+      query = ref
+          .where('name', isEqualTo: place.name)
+          .where('city', isEqualTo: place.city);
+    }
+
+    final existing = await query.limit(1).get();
     if (existing.docs.isEmpty) {
       await ref.add(place.toMap());
     }

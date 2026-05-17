@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
 import 'save_screen.dart';
+import 'tour_detail_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 import '../services/favorites_service.dart';
 import '../services/user_service.dart';
@@ -16,6 +17,7 @@ import '../features/routes/routes_screen.dart';
 import '../features/routes/routes_model.dart';
 import '../widgets/navigation_bar.dart';
 import '../widgets/settings_button.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -317,7 +319,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text('Eşleşen tur bulunamadı.',
                         style: TextStyle(color: Colors.white70)));
               }
-
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(left: 20),
@@ -332,157 +333,105 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
   // Guide tour kartı — title, city, price, guideName, tourDate gösterir
   Widget _buildTourCard(Map<String, dynamic> tour) {
-    String? dateStr;
-    final rawDate = tour['tourDate'];
-    if (rawDate != null) {
-      try {
-        final dt = DateTime.parse(rawDate.toString());
-        dateStr = DateFormat('d MMM', 'tr_TR').format(dt);
-      } catch (_) {}
-    }
+    final title = (tour['title'] as String? ?? '').trim();
+    final city  = (tour['city']  as String? ?? '').trim();
 
-    final price = tour['price'];
-    final priceStr = price != null ? '₺$price' : null;
+    final showCity = city.isNotEmpty &&
+        !title.toLowerCase().contains(city.toLowerCase());
 
-    return Container(
-      width: 128,
-      margin: const EdgeInsets.only(right: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TourDetailScreen(tour: tour),
+        ),
+      ),
+      child: Container(
+        width: 128,
+        margin: const EdgeInsets.only(right: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
               color: Colors.black.withOpacity(0.13),
               blurRadius: 10,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Arkaplan resmi
-            Image.network(
-              tour['imageUrl'] ?? '',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                color: const Color(0xFF0DA3A3).withOpacity(0.4),
-                child: const Icon(Icons.tour_outlined,
-                    color: Colors.white54, size: 40),
-              ),
-            ),
-            // Karartma
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.85),
-                  ],
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Arkaplan resmi
+              Image.network(
+                tour['imageUrl'] ?? '',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: const Color(0xFF0DA3A3).withOpacity(0.4),
+                  child: const Icon(Icons.tour_outlined,
+                      color: Colors.white54, size: 40),
                 ),
               ),
-            ),
-            // Rehber adı (sol üst)
-            Positioned(
-              top: 10,
-              left: 10,
-              child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              // Karartma
+              Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.person_outline,
-                        color: Colors.white, size: 11),
-                    const SizedBox(width: 3),
-                    Text(
-                      (tour['guideName'] ?? 'Rehber').toString().trim(),
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Fiyat (sağ üst)
-            if (priceStr != null)
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    priceStr,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            // Alt bilgi: başlık + şehir + tarih
-            Positioned(
-              bottom: 10,
-              left: 10,
-              right: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    tour['title'] ?? tour['city'] ?? '',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined,
-                          color: Colors.white70, size: 11),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          tour['city'] ?? '',
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 10),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (dateStr != null) ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          dateStr,
-                          style: const TextStyle(
-                              color: Color(0xFFB7F1B9),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.80),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+              // Alt bilgi: sadece başlık + konum
+              Positioned(
+                bottom: 10,
+                left: 10,
+                right: 10,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title.isNotEmpty ? title : (city.isNotEmpty ? city : 'Tur'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (showCity) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_outlined,
+                              color: Colors.white70, size: 11),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              city,
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 10),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
