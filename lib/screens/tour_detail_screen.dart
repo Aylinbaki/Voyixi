@@ -316,8 +316,11 @@ class _GuideSheet extends StatelessWidget {
           child: FutureBuilder<DocumentSnapshot>(
             future: FirebaseFirestore.instance
                 .collection('guide_applications')
-                .doc(guideId)
-                .get(),
+                .where('userId', isEqualTo: guideId)
+                .limit(1)
+                .get()
+                .then((snap) => snap.docs.first),
+
             builder: (context, snap) {
               final handle = Center(
                 child: Container(
@@ -348,8 +351,8 @@ class _GuideSheet extends StatelessWidget {
               final city      = data?['city']      ?? '';
               final email     = data?['email']     ?? '';
               final phone     = data?['phone']     ?? '';
-              final languages =
-              List<String>.from(data?['languages'] ?? []);
+              final previousTours = List<String>.from(data?['previousTours'] ?? []);
+              final languages = List<String>.from(data?['languages'] ?? []);
 
               return SingleChildScrollView(
                 child: Column(
@@ -422,6 +425,27 @@ class _GuideSheet extends StatelessWidget {
                         ))
                             .toList(),
                       ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    if (previousTours.isNotEmpty) ...[
+                      _label('Önceki Turlar'),
+                      const SizedBox(height: 8),
+                      ...previousTours.map((t) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(children: [
+                          Container(
+                            width: 8, height: 8,
+                            decoration: BoxDecoration(
+                              color: _teal,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(t, style: const TextStyle(
+                              color: _textMid, fontSize: 14)),
+                        ]),
+                      )),
                       const SizedBox(height: 16),
                     ],
 
