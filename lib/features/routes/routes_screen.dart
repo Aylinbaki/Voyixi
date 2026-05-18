@@ -14,13 +14,16 @@ class StartedRoutesScreen extends StatelessWidget {
   static const _teal = Color(0xFF00BFA5);
   static const _textDark = Color(0xFF1A2E2E);
   static const _textMid = Color(0xFF4A6060);
-  static const _bgTop = Color(0xFFE0F2F1);
-  static const _bgBottom = Color(0xFFF5FDFD);
+  //static const _bgTop = Color(0xFFE0F2F1);
+  //static const _bgBottom = Color(0xFFF5FDFD);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // Arka plan degrade
+      extendBodyBehindAppBar: false,
+      backgroundColor: const Color(0xFF0DA3A3),
+      bottomNavigationBar: const bottomNav(selectedIndex: 1),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -29,49 +32,52 @@ class StartedRoutesScreen extends StatelessWidget {
             colors: [Color(0xFF0DA3A3), Color(0xFFB8F0F0)],
           ),
         ),
-        child: SafeArea(
-          bottom: false,
-          child: StreamBuilder<List<SavedTrip>>(
-            stream: RoutesService().getTrips(),
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: _teal));
-              }
-              final trips = snap.data ?? [];
+        child: StreamBuilder<List<SavedTrip>>(
+          stream: RoutesService().getTrips(),
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(
+                  child: CircularProgressIndicator(color: _teal));
+            }
+            final trips = snap.data ?? [];
 
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  _buildSliverHeader(context, trips.length),
-                  if (trips.isEmpty)
-                    SliverFillRemaining(child: _buildEmptyState())
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                              (context, i) => _ModernTripCard(trip: trips[i]),
-                          childCount: trips.length,
-                        ),
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                _buildSliverHeader(context, trips.length),
+                if (trips.isEmpty)
+                  SliverFillRemaining(child: _buildEmptyState())
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                            (context, i) => _ModernTripCard(trip: trips[i]),
+                        childCount: trips.length,
                       ),
                     ),
-                ],
-              );
-            },
-          ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
-      // Nav bar'ı Stack yerine buraya aldım, daha stabil çalışır
-      bottomNavigationBar: const bottomNav(selectedIndex: 1),
     );
   }
+
 
   // ── Sliver Header ─────────────────────────────────────────────────────────
   Widget _buildSliverHeader(BuildContext context, int count) {
     return SliverAppBar(
-      expandedHeight: 70.0,
+      expandedHeight: 0,
       pinned: true,
-      backgroundColor: Colors.transparent,
+      toolbarHeight: 70,
+      stretch: false,
+      centerTitle: false,
+
+      backgroundColor: const Color(0xFF0DA3A3),
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
       elevation: 0,
       forceElevated: false,
 
@@ -97,34 +103,30 @@ class StartedRoutesScreen extends StatelessWidget {
         ),
       ),
 
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsetsDirectional.only(start: 64, bottom: 16),
-        centerTitle: false,
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      title: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,  // ← center → start
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Rotalarım',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0,
+            ),
+          ),
+          if (count > 0)
             Text(
-              'Rotalarım',
+              '$count Kayıtlı Plan',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,  // w700
-                letterSpacing: 0,
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            if (count > 0)
-              Text(
-                '$count Kayıtlı Plan',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
       actions: [
         Padding(
@@ -307,8 +309,11 @@ class _ModernTripCardState extends State<_ModernTripCard> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.8)],
                       ),
                     ),
                     child: Text(widget.trip.title,
@@ -394,59 +399,117 @@ class _ModernTripCardState extends State<_ModernTripCard> {
   // ──ORİJİNAL FONKSİYONLAR───────────────────────────
   void _showEditDialog(BuildContext context) {
     final titleCtrl = TextEditingController(text: widget.trip.title);
+    DateTime? selectedDate = widget.trip.startDate ?? widget.trip.tripDate;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 16, 20,
-            MediaQuery.of(context).viewInsets.bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: Container(width: 40, height: 4,
-                decoration: BoxDecoration(color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10)))),
-            const SizedBox(height: 20),
-            const Text('Plan Adını Düzenle',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: titleCtrl,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: 'Yeni Plan Adı',
-                labelStyle: const TextStyle(color: _teal),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: _teal)),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _teal,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+      builder: (ctx) => StatefulBuilder(          // ← ctx + StatefulBuilder
+        builder: (_, setModal) => Padding(        // ← setModal burada tanımlı
+          padding: EdgeInsets.fromLTRB(20, 16, 20,
+              MediaQuery.of(context).viewInsets.bottom + 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 40, height: 4,
+                  decoration: BoxDecoration(color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10)))),
+              const SizedBox(height: 20),
+              const Text('Planı Düzenle',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: titleCtrl,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Yeni Plan Adı',
+                  labelStyle: const TextStyle(color: _teal),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _teal)),
                 ),
-                onPressed: () async {
-                  await RoutesService().updateTrip(widget.trip.id,
-                      title: titleCtrl.text.trim());
-                  if (context.mounted) Navigator.pop(context);
-                },
-                child: const Text('Değişiklikleri Kaydet',
-                    style: TextStyle(color: Colors.white,
-                        fontWeight: FontWeight.bold)),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              const Text('Gezi Tarihi',
+                  style: TextStyle(fontSize: 13,
+                      fontWeight: FontWeight.w600, color: _textMid)),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker( //takvim
+                    context: context,
+                    initialDate: selectedDate ?? DateTime.now(),
+                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    builder: (ctx, child) => Theme(
+                      data: Theme.of(ctx).copyWith(
+                        colorScheme: const ColorScheme.light(primary: _teal),
+                      ),
+                      child: child!,
+                    ),
+                  );
+                  if (picked != null) setModal(() => selectedDate = picked); //UI güncelle
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.calendar_today_rounded, color: _teal, size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      selectedDate != null
+                          ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+                          : 'Tarih seç...',
+                      style: TextStyle(
+                        color: selectedDate != null ? _textDark : Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (selectedDate != null)
+                      GestureDetector(
+                        onTap: () => setModal(() => selectedDate = null),  // ← çalışır
+                        child: const Icon(Icons.close_rounded, color: Colors.grey, size: 18),
+                      ),
+                  ]),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _teal,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    await RoutesService().updateTrip( //update Firestone
+                      widget.trip.id,
+                      title: titleCtrl.text.trim(),
+                      tripDate: selectedDate,  // seçilen tarih
+                      startDate: selectedDate, // aynı tarih startDate olarak da kaydediliyor
+                      days: widget.trip.days,
+                    );
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: const Text('Değişiklikleri Kaydet',
+                      style: TextStyle(color: Colors.white,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
