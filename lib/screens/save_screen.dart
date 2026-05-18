@@ -57,7 +57,7 @@ class _SaveScreenState extends State<SaveScreen>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF0DA3A3), Color(0xFF4DD0D0)],
+                colors: [Color(0xFF0DA3A3), Color(0xFFB8F0F0)],
               ),
             ),
           ),

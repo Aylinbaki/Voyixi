@@ -178,7 +178,7 @@ class RoutesService {
   Future<String> _generateSummary(TripResult result) async {
     try {
       final key = dotenv.env['GEMINI_API_KEY'] ?? '';
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent';
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
       final places = result.dayPlans
           .expand((d) => d.places).take(5).map((p) => p.name).join(', ');
