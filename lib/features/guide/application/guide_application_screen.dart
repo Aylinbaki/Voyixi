@@ -84,7 +84,7 @@ class _GuideApplicationScreenState extends State<GuideApplicationScreen> {
         userId: uid,
         fullName: _nameCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
-        phone: _phoneCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim().replaceAll(RegExp(r'\s+'), ''), // Boşlukları temizleyerek kaydet
         city: _cityCtrl.text.trim(),
         age: int.tryParse(_ageCtrl.text.trim()) ?? 0,
         languages: _selectedLanguages,
@@ -197,7 +197,6 @@ class _GuideApplicationScreenState extends State<GuideApplicationScreen> {
         child: ListView(
           padding: const EdgeInsets.all(18),
           children: [
-            // Bilgi kartı
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -226,10 +225,53 @@ class _GuideApplicationScreenState extends State<GuideApplicationScreen> {
                 required: true),
             _field(_emailCtrl, 'E-posta', Icons.mail_outline_rounded,
                 required: true, keyboardType: TextInputType.emailAddress),
-            _field(_phoneCtrl, 'Telefon', Icons.phone_outlined,
-                required: true, keyboardType: TextInputType.phone),
-            _field(_ageCtrl, 'Yaş', Icons.cake_outlined,
-                required: true, keyboardType: TextInputType.number),
+            
+            // --- GÜNCELLEME: Telefon Alanı Doğrulaması ---
+            _field(
+              _phoneCtrl, 
+              'Telefon', 
+              Icons.phone_outlined,
+              required: true, 
+              keyboardType: TextInputType.phone,
+              customValidator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Telefon gerekli';
+                }
+                // Kullanıcı boşluk bıraktıysa onları temizleyip kontrol ediyoruz
+                final cleanPhone = value.trim().replaceAll(RegExp(r'\s+'), '');
+                // Sadece rakamlardan oluşan tam 11 haneli RegExp kontrolü
+                if (!RegExp(r'^\d{11}$').hasMatch(cleanPhone)) {
+                  return 'Telefon 11 haneli bir sayı dizisi olmalıdır (örn: 05xxxxxxxxx)';
+                }
+                return null;
+              },
+            ),
+            
+            _field(
+  _ageCtrl, 
+  'Yaş', 
+  Icons.cake_outlined,
+  keyboardType: TextInputType.number,
+  customValidator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Yaş gerekli';
+    }
+    
+    // Girilen metni sayıya çevirmeyi deniyoruz
+    final age = int.tryParse(value.trim());
+    
+    if (age == null) {
+      return 'Geçerli bir yaş giriniz';
+    }
+    
+    // 18 yaş kontrolü
+    if (age < 18) {
+      return 'Rehber olabilmek için en az 18 yaşında olmalısınız';
+    }
+    
+    return null; // Her şey yolundaysa hata döndürme
+  },
+),
             _field(_cityCtrl, 'Rehberlik Yaptığınız Şehir',
                 Icons.location_on_outlined, required: true),
 
@@ -325,21 +367,24 @@ class _GuideApplicationScreenState extends State<GuideApplicationScreen> {
                 letterSpacing: 1.2)),
       );
 
+  // --- GÜNCELLEME: customValidator parametresi eklendi ---
   Widget _field(
     TextEditingController ctrl,
     String label,
     IconData icon, {
     bool required = false,
     TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? customValidator,
   }) =>
       Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: TextFormField(
           controller: ctrl,
           keyboardType: keyboardType,
-          validator: required
+          // Eğer dışarıdan özel validator verildiyse onu kullan, yoksa default boş kontrolünü yap
+          validator: customValidator ?? (required
               ? (v) => (v == null || v.trim().isEmpty) ? '$label gerekli' : null
-              : null,
+              : null),
           decoration: InputDecoration(
             labelText: label,
             labelStyle: const TextStyle(color: _textMid, fontSize: 14),
