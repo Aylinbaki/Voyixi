@@ -1,3 +1,5 @@
+// lib/features/active_trip/widgets/active_trip_map.dart
+
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -49,7 +51,7 @@ class _ActiveTripMapState extends State<ActiveTripMap> {
 
   TripPlaceState _stateOf(int dayIdx, int placeIdx) =>
       widget.states.firstWhere(
-        (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx,
+            (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx,
         orElse: () => TripPlaceState(dayIdx: dayIdx, placeIdx: placeIdx),
       );
 
@@ -102,12 +104,13 @@ class _ActiveTripMapState extends State<ActiveTripMap> {
           position: LatLng(place.lat!, place.lng!),
           icon: icon,
           zIndex: state.status == TripPlaceStatus.current ? 2 : 1,
+          // 1. ÇEVİRİ: Haritadaki pinlerin başlık pencereleri İngilizce yapıldı
           infoWindow: InfoWindow(
             title: state.status == TripPlaceStatus.current
-                ? '📍 Şu An: ${place.name}'
+                ? '📍 Current: ${place.name}'
                 : state.status == TripPlaceStatus.completed
-                    ? '✅ ${place.name}'
-                    : place.name,
+                ? '✅ ${place.name}'
+                : place.name,
             snippet: place.timeSlot,
           ),
         );
@@ -150,7 +153,7 @@ class _ActiveTripMapState extends State<ActiveTripMap> {
     if (current.isNotEmpty && _ctrl != null) {
       final cp = current.first;
       final place =
-          widget.dayPlans[cp.dayIdx].places[cp.placeIdx];
+      widget.dayPlans[cp.dayIdx].places[cp.placeIdx];
       if (place.lat != null) {
         _ctrl!.animateCamera(CameraUpdate.newLatLngZoom(
             LatLng(place.lat!, place.lng!), 14));
@@ -221,80 +224,82 @@ class _ActiveTripMapState extends State<ActiveTripMap> {
   }
 
   @override
-Widget build(BuildContext context) {
-  LatLng center = const LatLng(41.0082, 28.9784);
-  outer:
-  for (final day in widget.dayPlans) {
-    for (final p in day.places) {
-      if (p.lat != null) {
-        center = LatLng(p.lat!, p.lng!);
-        break outer;
+  Widget build(BuildContext context) {
+    LatLng center = const LatLng(41.0082, 28.9784);
+    outer:
+    for (final day in widget.dayPlans) {
+      for (final p in day.places) {
+        if (p.lat != null) {
+          center = LatLng(p.lat!, p.lng!);
+          break outer;
+        }
       }
     }
+
+    return SizedBox(
+      height: 240,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            RawGestureDetector(
+              gestures: {
+                PanGestureRecognizer:
+                GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
+                      () => PanGestureRecognizer(),
+                      (i) => i.onDown = (_) {},
+                ),
+                ScaleGestureRecognizer:
+                GestureRecognizerFactoryWithHandlers<ScaleGestureRecognizer>(
+                      () => ScaleGestureRecognizer(),
+                      (i) => i.onStart = (_) {},
+                ),
+              },
+              child: GoogleMap(
+                initialCameraPosition:
+                CameraPosition(target: center, zoom: 13),
+                markers: Set.of(_markers.values),
+                polylines: Set.of(_polylines.values),
+                onMapCreated: (c) {
+                  _ctrl = c;
+                  _buildMarkers();
+                },
+                zoomGesturesEnabled: true,
+                scrollGesturesEnabled: true,
+                rotateGesturesEnabled: true,
+                tiltGesturesEnabled: true,
+                zoomControlsEnabled: false,
+                myLocationButtonEnabled: false,
+                mapToolbarEnabled: false,
+              ),
+            ),
+            // Legend
+            Positioned(
+              bottom: 10, left: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.93),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(
+                      color: Colors.black.withOpacity(0.07), blurRadius: 8)],
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  // 2. ÇEVİRİ: Harita açıklama (Legend) metinleri İngilizce yapıldı
+                  _dot(const Color(0xFF00BFA5).withOpacity(0.4), 'Completed'),
+                  const SizedBox(width: 10),
+                  _dot(const Color(0xFF0077B6), 'Current'),
+                  const SizedBox(width: 10),
+                  _dot(const Color(0xFF00BFA5), 'Waiting'),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  return SizedBox(
-    height: 240,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Stack(
-        children: [
-          RawGestureDetector(
-            gestures: {
-              PanGestureRecognizer:
-                  GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
-                () => PanGestureRecognizer(),
-                (i) => i.onDown = (_) {},
-              ),
-              ScaleGestureRecognizer:
-                  GestureRecognizerFactoryWithHandlers<ScaleGestureRecognizer>(
-                () => ScaleGestureRecognizer(),
-                (i) => i.onStart = (_) {},
-              ),
-            },
-            child: GoogleMap(
-              initialCameraPosition:
-                  CameraPosition(target: center, zoom: 13),
-              markers: Set.of(_markers.values),
-              polylines: Set.of(_polylines.values),
-              onMapCreated: (c) {
-                _ctrl = c;
-                _buildMarkers();
-              },
-              zoomGesturesEnabled: true,
-              scrollGesturesEnabled: true,
-              rotateGesturesEnabled: true,
-              tiltGesturesEnabled: true,
-              zoomControlsEnabled: false,
-              myLocationButtonEnabled: false,
-              mapToolbarEnabled: false,
-            ),
-          ),
-          // Legend
-          Positioned(
-            bottom: 10, left: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.93),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(
-                    color: Colors.black.withOpacity(0.07), blurRadius: 8)],
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                _dot(const Color(0xFF00BFA5).withOpacity(0.4), 'Tamamlandı'),
-                const SizedBox(width: 10),
-                _dot(const Color(0xFF0077B6), 'Şu An'),
-                const SizedBox(width: 10),
-                _dot(const Color(0xFF00BFA5), 'Bekliyor'),
-              ]),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
   Widget _dot(Color color, String label) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [

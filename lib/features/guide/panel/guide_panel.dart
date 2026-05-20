@@ -31,7 +31,8 @@ void showGuidePanel(BuildContext context) {
                         ),
                       Expanded(
                         child: Text(
-                          showList ? 'Turlarımı Yönet' : 'Rehber Paneli',
+                          // 1. ÇEVİRİ: Panel başlıkları İngilizce yapıldı
+                          showList ? 'Manage My Tours' : 'Guide Panel',
                           textAlign: showList ? TextAlign.left : TextAlign.center,
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A2E2E)),
                         ),
@@ -46,7 +47,8 @@ void showGuidePanel(BuildContext context) {
                       children: [
                         _buildPopupButton(
                           context,
-                          title: 'Yeni Tur\nOluştur',
+                          // 2. ÇEVİRİ: Buton etiketleri İngilizce yapıldı
+                          title: 'Create\nNew Tour',
                           icon: Icons.add_location_alt_rounded,
                           color: const Color(0xFF00BFA5),
                           onTap: () {
@@ -57,7 +59,7 @@ void showGuidePanel(BuildContext context) {
                         const SizedBox(width: 12),
                         _buildPopupButton(
                           context,
-                          title: 'Turları\nDüzenle',
+                          title: 'Edit\nTours',
                           icon: Icons.edit_calendar_rounded,
                           color: const Color(0xFF4A6060),
                           onTap: () => setState(() => showList = true),
@@ -71,19 +73,19 @@ void showGuidePanel(BuildContext context) {
                         maxHeight: MediaQuery.of(context).size.height * 0.4,
                       ),
                       child: StreamBuilder<List<GuideTour>>(
-                        // BURAYI GÜNCELLEDİK: Senin servisindeki gerçek metod
-                        stream: GuideTourService().getMyTours(), 
+                        stream: GuideTourService().getMyTours(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Center(child: CircularProgressIndicator(color: Color(0xFF00BFA5)));
                           }
-                          
+
                           final tours = snapshot.data ?? [];
-                          
+
                           if (tours.isEmpty) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Text("Henüz bir tur oluşturmadınız.", style: TextStyle(color: Colors.grey)),
+                              // 3. ÇEVİRİ: Boş liste mesajı İngilizce yapıldı
+                              child: Text("You haven't created any tours yet.", style: TextStyle(color: Colors.grey)),
                             );
                           }
 
@@ -135,7 +137,7 @@ void showGuidePanel(BuildContext context) {
   );
 }
 
-// Yardımcı buton widget'ı (Diğer kodla aynı)
+// Yardımcı buton widget'ı
 Widget _buildPopupButton(BuildContext context, {required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
   return Expanded(
     child: GestureDetector(
@@ -166,17 +168,18 @@ void _confirmDelete(BuildContext context, String tourId) {
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text("Turu Sil?", style: TextStyle(fontWeight: FontWeight.bold)),
-      content: const Text("Bu turu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."),
+      // 4. ÇEVİRİ: Onay kutusu diyalog metinleri tamamen İngilizce yapıldı
+      title: const Text("Delete Tour?", style: TextStyle(fontWeight: FontWeight.bold)),
+      content: const Text("Are you sure you want to delete this tour? This action cannot be undone."),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Vazgeç", style: TextStyle(color: Colors.grey))),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, elevation: 0),
-          onPressed: () async {
-            await GuideTourService().deleteTour(tourId);
-            Navigator.pop(ctx);
-          }, 
-          child: const Text("Sil", style: TextStyle(color: Colors.white))
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, elevation: 0),
+            onPressed: () async {
+              await GuideTourService().deleteTour(tourId);
+              Navigator.pop(ctx);
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.white))
         ),
       ],
     ),

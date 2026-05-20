@@ -224,8 +224,9 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                               fontSize: 16,
                               fontWeight: FontWeight.w800)),
                       const SizedBox(height: 3),
+                      // 1. ÇEVİRİ: Mekan tamamlandı yazısı İngilizce yapıldı
                       Text(
-                          '$_completedCount / $_totalCount Mekan Tamamlandı',
+                          '$_completedCount / $_totalCount Places Completed',
                           style: const TextStyle(
                               color: Colors.white70, fontSize: 12)),
                     ],
@@ -236,10 +237,11 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('İlerleme',
+                    // 2. ÇEVİRİ: İlerleme başlığı İngilizce yapıldı
+                    const Text('Progress',
                         style: TextStyle(
                             color: Colors.white70, fontSize: 10)),
-                    Text('%${(progress * 100).toInt()}',
+                    Text('${(progress * 100).toInt()}%', // Yüzde işareti sona alındı (İngilizce formatı)
                         style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
@@ -291,7 +293,8 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
           Icon(Icons.check_circle_rounded, color: Colors.white, size: 26),
           SizedBox(width: 12),
           Expanded(
-            child: Text('Tebrikler! Tüm mekanları tamamladınız 🎉',
+            // 3. ÇEVİRİ: Tebrik mesajı İngilizce yapıldı
+            child: Text('Congratulations! You completed all places 🎉',
                 style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -333,7 +336,8 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Şimdi Neredesiniz?',
+              // 4. ÇEVİRİ: Şimdi neredesiniz başlığı İngilizce yapıldı
+              const Text('Where are you now?',
                   style: TextStyle(color: Colors.white70, fontSize: 11)),
               Text(place.name,
                   style: const TextStyle(
@@ -365,7 +369,8 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         const Row(children: [
           Icon(Icons.navigation_rounded, color: _teal, size: 18),
           SizedBox(width: 8),
-          Text('Seyahat Rotanız',
+          // 5. ÇEVİRİ: Seyahat rotası başlığı İngilizce yapıldı
+          Text('Your Travel Route',
               style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -407,7 +412,8 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                 const Icon(Icons.calendar_today_rounded,
                     color: Colors.white, size: 16),
                 const SizedBox(width: 8),
-                Text('Gün ${dayIdx + 1}',
+                // 6. ÇEVİRİ: Gün X başlığı İngilizce yapıldı
+                Text('Day ${dayIdx + 1}',
                     style: const TextStyle(color: Colors.white,fontWeight: FontWeight.w800,fontSize: 15)),
                 const SizedBox(width: 8),
                 Container(
@@ -417,7 +423,8 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                     color: Colors.white.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text('${day.places.length} Mekan',
+                  // 7. ÇEVİRİ: Mekan sayısı İngilizce yapıldı
+                  child: Text('${day.places.length} Places',
                       style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,

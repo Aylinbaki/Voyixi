@@ -43,7 +43,7 @@ class ActivePlaceCard extends StatelessWidget {
       ),
     );
   }
-  
+
 
   @override
   Widget build(BuildContext context) {
@@ -59,8 +59,8 @@ class ActivePlaceCard extends StatelessWidget {
           border: _isCurrent
               ? Border.all(color: const Color(0xFF0077B6), width: 2)
               : _isCompleted
-                  ? Border.all(color: dayColor.withOpacity(0.25))
-                  : null,
+              ? Border.all(color: dayColor.withOpacity(0.25))
+              : null,
           boxShadow: [
             BoxShadow(
               color: _isCurrent
@@ -83,20 +83,21 @@ class ActivePlaceCard extends StatelessWidget {
                 decoration: const BoxDecoration(
                   color: Color(0xFF0077B6),
                   borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(18)),
+                  BorderRadius.vertical(top: Radius.circular(18)),
                 ),
                 child: const Row(children: [
                   Icon(Icons.location_on_rounded,
                       color: Colors.white, size: 14),
                   SizedBox(width: 6),
-                  Text('ŞU ANDA BURADASINIZ',
+                  // 1. ÇEVİRİ: Şu an buradasınız banner metinleri İngilizce yapıldı
+                  Text('YOU ARE HERE NOW',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.8)),
                   Spacer(),
-                  Text('Detaylar için dokun →',
+                  Text('Tap for details →',
                       style: TextStyle(
                           color: Colors.white60, fontSize: 10)),
                 ]),
@@ -117,19 +118,19 @@ class ActivePlaceCard extends StatelessWidget {
                           color: _isCompleted
                               ? dayColor.withOpacity(0.15)
                               : _isCurrent
-                                  ? const Color(0xFF0077B6)
-                                  : dayColor,
+                              ? const Color(0xFF0077B6)
+                              : dayColor,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: _isCompleted
                               ? Icon(Icons.check_rounded,
-                                  color: dayColor, size: 16)
+                              color: dayColor, size: 16)
                               : Text('$number',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700)),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700)),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -140,9 +141,9 @@ class ActivePlaceCard extends StatelessWidget {
                           width: 76, height: 76,
                           child: place.photoUrl != null
                               ? Image.network(place.photoUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      _placeholder())
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _placeholder())
                               : _placeholder(),
                         ),
                       ),
@@ -209,7 +210,8 @@ class ActivePlaceCard extends StatelessWidget {
                             Icon(Icons.person_outline_rounded,
                                 color: Color(0xFFF9A825), size: 14),
                             SizedBox(width: 6),
-                            Text('Değerlendirmeniz',
+                            // 2. ÇEVİRİ: Yorum başlığı İngilizce yapıldı
+                            Text('Your Review',
                                 style: TextStyle(
                                     color: Color(0xFFF9A825),
                                     fontSize: 11,
@@ -240,7 +242,8 @@ class ActivePlaceCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     _outlineBtn(
                       icon: Icons.edit_outlined,
-                      label: 'Yorumu Düzenle',
+                      // 3. ÇEVİRİ: Yorum düzenleme butonu İngilizce yapıldı
+                      label: 'Edit Review',
                       color: const Color(0xFF00BFA5),
                       onTap: () => _showReview(context),
                     ),
@@ -261,7 +264,8 @@ class ActivePlaceCard extends StatelessWidget {
                       Expanded(
                         child: _fillBtn(
                           icon: Icons.check_circle_rounded,
-                          label: 'Tamamlandı',
+                          // 4. ÇEVİRİ: Tamamlandı onay butonu İngilizce yapıldı
+                          label: 'Completed',
                           color: const Color(0xFF00BFA5),
                           onTap: () {
                             onComplete();
@@ -276,7 +280,8 @@ class ActivePlaceCard extends StatelessWidget {
                   if (!_isCurrent && !_isCompleted)
                     _outlineBtn(
                       icon: Icons.navigation_rounded,
-                      label: 'Nasıl Giderim?',
+                      // 5. ÇEVİRİ: Navigasyon yönlendirme butonu İngilizce yapıldı
+                      label: 'How to Get There?',
                       color: dayColor,
                       onTap: () {},
                     ),
@@ -308,14 +313,15 @@ class ActivePlaceCard extends StatelessWidget {
       );
 
   // Statik crowd chip (aktif olmayan kartlar için)
+  // ── FIX: Gemini veri yapısıyla tam uyumlu İngilizce Crowd eşleştirmesi ──
   Widget _staticCrowdChip(String level) {
     final map = {
-      'Sakin': (const Color(0xFFE8F5E9), const Color(0xFF4CAF50)),
-      'Orta': (const Color(0xFFFFF8E1), const Color(0xFFF9A825)),
-      'Yoğun': (const Color(0xFFFFF3E0), const Color(0xFFEF6C00)),
-      'Çok Yoğun': (const Color(0xFFFFEBEE), const Color(0xFFE53935)),
+      'Calm': (const Color(0xFFE8F5E9), const Color(0xFF4CAF50)),
+      'Moderate': (const Color(0xFFFFF8E1), const Color(0xFFF9A825)),
+      'Busy': (const Color(0xFFFFF3E0), const Color(0xFFEF6C00)),
+      'Very Busy': (const Color(0xFFFFEBEE), const Color(0xFFE53935)),
     };
-    final c = map[level] ?? map['Orta']!;
+    final c = map[level] ?? map['Moderate']!;
     return _chip(Icons.people_rounded, level, c.$1, c.$2);
   }
 

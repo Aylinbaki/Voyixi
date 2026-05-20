@@ -69,7 +69,7 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
   @override
   void dispose() {
     for (final c in [_titleCtrl, _descCtrl, _cityCtrl, _contactCtrl,
-        _placeCtrl, _priceCtrl, _maxCtrl]) {
+      _placeCtrl, _priceCtrl, _maxCtrl]) {
       c.dispose();
     }
     super.dispose();
@@ -115,13 +115,13 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_tourDate == null) {
-      _snack('Lütfen tur tarihini seçin', error: true); return;
+      _snack('Please select the tour date', error: true); return;
     }
     if (_tourTime == null) {
-      _snack('Lütfen tur saatini seçin', error: true); return;
+      _snack('Please select the tour time', error: true); return;
     }
     if (_places.isEmpty) {
-      _snack('En az bir gezilecek yer ekleyin', error: true); return;
+      _snack('Please add at least one place to visit', error: true); return;
     }
 
     setState(() => _saving = true);
@@ -135,7 +135,7 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
       final guideName = userData.data()?['displayName'] ??
           user.displayName ??
           user.email?.split('@').first ??
-          'Rehber';
+          'Guide';
 
       final id = _isEditing
           ? widget.existing!.id
@@ -168,11 +168,11 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
       }
 
       if (mounted) {
-        _snack(_isEditing ? 'Tur güncellendi ✅' : 'Tur yayınlandı 🎉');
+        _snack(_isEditing ? 'Tour updated successfully ✅' : 'Tour published successfully 🎉');
         Navigator.pop(context);
       }
     } catch (e) {
-      _snack('Hata: $e', error: true);
+      _snack('Error: $e', error: true);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -204,18 +204,25 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
                 color: _teal, size: 18),
           ),
         ),
-        title: Text(_isEditing ? 'Turu Düzenle' : 'Tur Oluştur',
-            style: const TextStyle(
-                color: _textDark,
-                fontWeight: FontWeight.w700,
-                fontSize: 17)),
+        title: Text(
+          _isEditing ? 'Edit Tour' : 'Create Tour',
+          style: const TextStyle(
+              color: _textDark,
+              fontWeight: FontWeight.w700,
+              fontSize: 20),
+        ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Image.asset('assets/images/app_logo_plan.png',
-                height: 30,
+            padding: const EdgeInsets.only(right: 16),
+            child: SizedBox(
+              width: 80,
+              child: Image.asset(
+                'assets/images/app_logo_plan.png',
+                fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.explore_rounded, color: _teal)),
+                const Icon(Icons.explore_rounded, color: _teal),
+              ),
+            ),
           ),
         ],
       ),
@@ -224,16 +231,16 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
         child: ListView(
           padding: const EdgeInsets.all(18),
           children: [
-            _sectionTitle('Tur Bilgileri'),
-            _field(_titleCtrl, 'Tur Başlığı',
+            _sectionTitle('Tour Details'),
+            _field(_titleCtrl, 'Tour Title',
                 Icons.title_rounded, required: true),
-            _field(_cityCtrl, 'Şehir',
+            _field(_cityCtrl, 'City',
                 Icons.location_on_outlined, required: true),
-            _multiField(_descCtrl, 'Tur Açıklaması',
+            _multiField(_descCtrl, 'Tour Description',
                 required: true, minLines: 3),
 
             const SizedBox(height: 16),
-            _sectionTitle('Tarih ve Saat'),
+            _sectionTitle('Date and Time'),
             Row(children: [
               Expanded(child: _dateTile()),
               const SizedBox(width: 12),
@@ -241,13 +248,13 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
             ]),
 
             const SizedBox(height: 16),
-            _sectionTitle('Gezilecek Yerler'),
+            _sectionTitle('Places to Visit'),
             Row(children: [
               Expanded(
                 child: TextFormField(
                   controller: _placeCtrl,
                   decoration: _inputDecor(
-                      'Yer ekle...', Icons.add_location_alt_rounded),
+                      'Add place...', Icons.add_location_alt_rounded),
                   onFieldSubmitted: (_) => _addPlace(),
                 ),
               ),
@@ -293,21 +300,21 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
             ],
 
             const SizedBox(height: 16),
-            _sectionTitle('İletişim Bilgisi'),
-            _field(_contactCtrl, 'E-posta veya Telefon',
+            _sectionTitle('Contact Information'),
+            _field(_contactCtrl, 'Email or Phone Number',
                 Icons.contact_mail_outlined, required: true),
 
             const SizedBox(height: 16),
-            _sectionTitle('Opsiyonel'),
+            _sectionTitle('Optional Details'),
             Row(children: [
               Expanded(
-                child: _field(_priceCtrl, 'Fiyat (₺)',
+                child: _field(_priceCtrl, 'Price (\$)',
                     Icons.payments_outlined,
                     keyboardType: TextInputType.number),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _field(_maxCtrl, 'Maks. Katılımcı',
+                child: _field(_maxCtrl, 'Max Participants',
                     Icons.group_outlined,
                     keyboardType: TextInputType.number),
               ),
@@ -320,17 +327,17 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
                 onPressed: _saving ? null : _save,
                 icon: _saving
                     ? const SizedBox(
-                        width: 18, height: 18,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
+                    width: 18, height: 18,
+                    child: CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2))
                     : const Icon(Icons.rocket_launch_rounded,
-                        color: Colors.white, size: 18),
+                    color: Colors.white, size: 18),
                 label: Text(
                     _saving
-                        ? 'Kaydediliyor...'
+                        ? 'Saving...'
                         : _isEditing
-                            ? 'Güncelle'
-                            : 'Turu Yayınla',
+                        ? 'Update'
+                        : 'Publish Tour',
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -353,14 +360,14 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
   }
 
   Widget _sectionTitle(String t) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Text(t.toUpperCase(),
-            style: const TextStyle(
-                color: _tealDark,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2)),
-      );
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Text(t.toUpperCase(),
+        style: const TextStyle(
+            color: _tealDark,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2)),
+  );
 
   InputDecoration _inputDecor(String label, IconData icon) =>
       InputDecoration(
@@ -381,12 +388,12 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
       );
 
   Widget _field(
-    TextEditingController ctrl,
-    String label,
-    IconData icon, {
-    bool required = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) =>
+      TextEditingController ctrl,
+      String label,
+      IconData icon, {
+        bool required = false,
+        TextInputType keyboardType = TextInputType.text,
+      }) =>
       Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: TextFormField(
@@ -394,7 +401,7 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
           keyboardType: keyboardType,
           validator: required
               ? (v) =>
-                  (v == null || v.trim().isEmpty) ? '$label gerekli' : null
+          (v == null || v.trim().isEmpty) ? '$label is required' : null
               : null,
           decoration: _inputDecor(label, icon),
         ),
@@ -410,7 +417,7 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
           minLines: minLines,
           validator: required
               ? (v) =>
-                  (v == null || v.trim().isEmpty) ? '$label gerekli' : null
+          (v == null || v.trim().isEmpty) ? '$label is required' : null
               : null,
           decoration: InputDecoration(
             labelText: label,
@@ -432,57 +439,57 @@ class _CreateTourScreenState extends State<CreateTourScreen> {
       );
 
   Widget _dateTile() => GestureDetector(
-        onTap: _pickDate,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _divider),
+    onTap: _pickDate,
+    child: Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _divider),
+      ),
+      child: Row(children: [
+        const Icon(Icons.calendar_today_rounded, color: _teal, size: 18),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            _tourDate != null
+                ? '${_tourDate!.day}/${_tourDate!.month}/${_tourDate!.year}'
+                : 'Select Date',
+            style: TextStyle(
+                color:
+                _tourDate != null ? _textDark : const Color(0xFF8AABAB),
+                fontSize: 13),
           ),
-          child: Row(children: [
-            const Icon(Icons.calendar_today_rounded, color: _teal, size: 18),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _tourDate != null
-                    ? '${_tourDate!.day}/${_tourDate!.month}/${_tourDate!.year}'
-                    : 'Tarih Seç',
-                style: TextStyle(
-                    color:
-                        _tourDate != null ? _textDark : const Color(0xFF8AABAB),
-                    fontSize: 13),
-              ),
-            ),
-          ]),
         ),
-      );
+      ]),
+    ),
+  );
 
   Widget _timeTile() => GestureDetector(
-        onTap: _pickTime,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _divider),
+    onTap: _pickTime,
+    child: Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _divider),
+      ),
+      child: Row(children: [
+        const Icon(Icons.access_time_rounded, color: _teal, size: 18),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            _tourTime != null
+                ? '${_tourTime!.hour.toString().padLeft(2, '0')}:${_tourTime!.minute.toString().padLeft(2, '0')}'
+                : 'Select Time',
+            style: TextStyle(
+                color: _tourTime != null
+                    ? _textDark
+                    : const Color(0xFF8AABAB),
+                fontSize: 13),
           ),
-          child: Row(children: [
-            const Icon(Icons.access_time_rounded, color: _teal, size: 18),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _tourTime != null
-                    ? '${_tourTime!.hour.toString().padLeft(2, '0')}:${_tourTime!.minute.toString().padLeft(2, '0')}'
-                    : 'Saat Seç',
-                style: TextStyle(
-                    color: _tourTime != null
-                        ? _textDark
-                        : const Color(0xFF8AABAB),
-                    fontSize: 13),
-              ),
-            ),
-          ]),
         ),
-      );
+      ]),
+    ),
+  );
 }
