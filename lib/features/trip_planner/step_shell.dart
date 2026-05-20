@@ -178,7 +178,7 @@ class _NextButtonState extends State<_NextButton>
                               color: Colors.white, size: 18),
                         const SizedBox(width: 8),
                         Text(
-                          widget.isLastStep ? 'Planı Oluştur' : 'İleri',
+                          widget.isLastStep ? 'Create Plan': 'Next',
                           style: TextStyle(
                             color: widget.canGoNext ? Colors.white : const Color(0xFF8AABAB),
                             fontSize: 16,

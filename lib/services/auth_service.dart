@@ -15,7 +15,7 @@ class AuthService {
         return UserModel.fromMap(doc.data()!, doc.id);
       }
     } catch (e) {
-      print("Kullanıcı verisi çekilirken hata: $e");
+      print("Failed to load user data: $e");
     }
     return null;
   }

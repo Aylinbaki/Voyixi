@@ -5,44 +5,44 @@ import '../trip_planner/trip_plan_model.dart';
 import 'trip_result_model.dart';
 
 class GeminiService {
-  
+
   String get _geminiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
   String get _placesKey => dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
   static const _geminiUrl =
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-  /// Ana metod: Gemini ile plan üret → Places API ile fotoğraf/koordinat ekle
+  /// Main method: Generate plan with Gemini → Enrich with Google Places API
   Future<TripResult> generateTripPlan(TripPlanModel input) async {
-    try{
-    print('🚀 Gemini çağrısı başlıyor...');
-    print('📍 Şehir: ${input.city}, Gün: ${input.days}');
-    print('🔑 Gemini key: ${_geminiKey.isEmpty ? "(empty)" : "(set)"}');
-    
-    final rawJson = await _callGemini(input);
-    print('✅ Gemini yanıtı: $rawJson');
+    try {
+      print('🚀 Gemini call starting...');
+      print('📍 City: ${input.city}, Days: ${input.days}');
+      print('🔑 Gemini key: ${_geminiKey.isEmpty ? "(empty)" : "(set)"}');
 
-    final parsed   = _parseGeminiResponse(rawJson);
-    final dayPlans = parsed['days'] as List<DayPlan>;
-    final totalKm  = parsed['totalKm'] as double;
-    final country  = parsed['country'] as String;
-    print('📅 Parse edildi: ${dayPlans.length} gün');
+      final rawJson = await _callGemini(input);
+      print('✅ Gemini response: $rawJson');
 
-    final enriched = await _enrichWithPlaces(dayPlans, input.city);
-    print('📸 Places tamamlandı');
-    
-    return TripResult(
-      city: input.city,
-      days: input.days,
-      budget: input.budget,
-      dayPlans: enriched,
-      totalDistanceKm: totalKm,
-      country: country,
-    );
-    }catch(e,stack){
-    print('❌ HATA: $e');
-    print('📚 Stack: $stack');
-    rethrow;
-    } 
+      final parsed = _parseGeminiResponse(rawJson);
+      final dayPlans = parsed['days'] as List<DayPlan>;
+      final totalKm = parsed['totalKm'] as double;
+      final country = parsed['country'] as String;
+      print('📅 Parsed: ${dayPlans.length} days');
+
+      final enriched = await _enrichWithPlaces(dayPlans, input.city);
+      print('📸 Places enrichment completed');
+
+      return TripResult(
+        city: input.city,
+        days: input.days,
+        budget: input.budget,
+        dayPlans: enriched,
+        totalDistanceKm: totalKm,
+        country: country,
+      );
+    } catch (e, stack) {
+      print('❌ ERROR: $e');
+      print('📚 Stack: $stack');
+      rethrow;
+    }
   }
 
   Future<String> _callGemini(TripPlanModel input) async {
@@ -61,52 +61,53 @@ class GeminiService {
         ],
         'generationConfig': {
           'temperature': 0.7,
-         // 'responseMimeType': 'application/json',
+          'responseMimeType': 'application/json', // JSON zorunluluğunu aktif etmek iyi olabilir
         },
       }),
     );
 
     if (res.statusCode != 200) {
-      throw Exception('Gemini API hatası: ${res.statusCode}\n${res.body}');
+      throw Exception('Gemini API Error: ${res.statusCode}\n${res.body}');
     }
 
     final data = jsonDecode(res.body);
     return data['candidates'][0]['content']['parts'][0]['text'] as String;
   }
 
+  // ── 1. ÇEVİRİ: Gemini System Promptu İngilizceye Çevrildi
   String _buildPrompt(TripPlanModel input) {
     return '''
-Sen bir profesyonel seyahat rehberisin. Aşağıdaki bilgilere göre ${input.days} günlük ${input.city} seyahat planı oluştur.
+You are a professional travel guide. Create a ${input.days}-day travel itinerary for ${input.city} based on the following details.
 
-Bütçe: ${input.budget}
-Tercihler: ${input.preferences.join(', ')}
-Şehir: ${input.city}
+Budget: ${input.budget}
+Preferences: ${input.preferences.join(', ')}
+City: ${input.city}
 
-KURALLAR:
-- Her güne 2-4 mekan ekle. Mekanlar arası mantıklı coğrafi sıralama yap.
-- Öğle ve akşam yemekleri için restoran/kafe öner.
-- Kalabalık tahmini: sabah erken = Sakin, öğle = Yoğun, öğleden sonra = Orta, akşam = Çok Yoğun.
-- Bütçeye uygun mekanlar seç (ekonomik=ücretsiz/ucuz, orta=ücretli, lüks=premium).
-- timeSlot formatı: "HH:mm - HH:mm"
-- crowdLevel: "Sakin" | "Orta" | "Yoğun" | "Çok Yoğun"
-- Sıralamayı ise birbirine mesafelerine göre yap.
-- total_distance_km: Tüm günlerdeki mekanlar arası toplam tahmini mesafeyi km cinsinden hesapla ve JSON'a ekle.
+RULES:
+- Include 2-4 places for each day. Arrange them in a logical geographical order.
+- Recommend restaurants/cafes for lunch and dinner.
+- Crowd prediction options: early morning = "Calm", noon = "Busy", afternoon = "Moderate", evening = "Very Busy".
+- Choose places appropriate for the budget (economic = free/cheap, medium = paid/moderate, luxury = premium).
+- timeSlot format must be: "HH:mm - HH:mm"
+- crowdLevel strictly must be one of: "Calm" | "Moderate" | "Busy" | "Very Busy"
+- Sort the places based on their physical distance to one another to minimize travel time.
+- total_distance_km: Calculate the total estimated distance between all places across all days in kilometers and add it to the JSON.
 
-SADECE şu JSON formatında yanıt ver, başka hiçbir şey yazma:
-Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
+Respond ONLY in the following JSON format, do not include any other text or explanations:
+Do not use markdown formatting (such as ```json). Provide pure raw JSON.
 {
   "total_distance_km": 8.5,
-  "country": "Türkiye",
+  "country": "Turkey",
   "days": [
     {
       "day": 1,
       "places": [
         {
-          "name": "Mekan Adı",
-          "description": "Kısa açıklama (max 80 karakter)",
+          "name": "Place Name",
+          "description": "Short description (max 80 characters)",
           "timeSlot": "09:00 - 11:00",
-          "duration": "2 saat",
-          "crowdLevel": "Orta",
+          "duration": "2 hours",
+          "crowdLevel": "Moderate",
           "lat": 41.0082,
           "lng": 28.9784
         }
@@ -130,11 +131,11 @@ Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
           .toList();
 
       final totalKm = (data['total_distance_km'] as num?)?.toDouble() ?? 0.0;
-      final country = (data['country'] as String?) ?? '';  // ← YENİ
+      final country = (data['country'] as String?) ?? '';
 
-      return {'days': days, 'totalKm': totalKm, 'country':country};
+      return {'days': days, 'totalKm': totalKm, 'country': country};
     } catch (e) {
-      throw Exception('Gemini yanıtı parse edilemedi: $e\nRaw: $raw');
+      throw Exception('Failed to parse Gemini response: $e\nRaw: $raw');
     }
   }
 
@@ -159,20 +160,17 @@ Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
     return days;
   }
 
-  Future<Map<String, dynamic>?> _fetchPlaceDetails(
-      
-   
-      String name, String city) async {
-          print('📸 Places isteği: $name'); 
+  Future<Map<String, dynamic>?> _fetchPlaceDetails(String name, String city) async {
+    print('📸 Places Request: $name');
     final searchRes = await http.get(
       Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/textsearch/json'
-        '?query=${Uri.encodeComponent('$name $city')}'
-        '&key=$_placesKey',
+        '[https://maps.googleapis.com/maps/api/place/textsearch/json](https://maps.googleapis.com/maps/api/place/textsearch/json)'
+            '?query=${Uri.encodeComponent('$name $city')}'
+            '&key=$_placesKey',
       ),
     );
-      
-  print('📸 Places yanıtı: ${searchRes.statusCode} - ${searchRes.body.substring(0, 200)}');
+
+    print('📸 Places Response: ${searchRes.statusCode}');
     if (searchRes.statusCode != 200) return null;
     final searchData = jsonDecode(searchRes.body);
     final results = searchData['results'] as List?;
@@ -182,13 +180,12 @@ Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
     final placeId = first['place_id'] as String?;
     final loc = first['geometry']?['location'];
 
-    // Fotoğraf referansı varsa URL oluştur
     String? photoUrl;
     final photos = first['photos'] as List?;
     if (photos != null && photos.isNotEmpty) {
       final ref = photos[0]['photo_reference'] as String?;
       if (ref != null) {
-        photoUrl = 'https://maps.googleapis.com/maps/api/place/photo'
+        photoUrl = '[https://maps.googleapis.com/maps/api/place/photo](https://maps.googleapis.com/maps/api/place/photo)'
             '?maxwidth=600&photoreference=$ref&key=$_placesKey';
       }
     }
@@ -200,6 +197,8 @@ Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
       'lng': (loc?['lng'] as num?)?.toDouble(),
     };
   }
+
+  // ── 2. ÇEVİRİ: Alternatif Mekan İstemi (Alternative Place Prompt) İngilizceye Çevrildi
   Future<PlaceItem> getAlternativePlace({
     required String city,
     required String timeSlot,
@@ -207,17 +206,17 @@ Cevabı sadece saf JSON formatında ver, markdown (```json) kullanma.
     required List<String> excludeNames,
   }) async {
     final prompt = '''
-${city} şehrinde ${timeSlot} saatleri arasına uygun TEK BİR mekan öner.
-Bütçe: $budget
-Hariç tut: ${excludeNames.join(', ')}
+Recommend a SINGLE place suitable for the time slot ${timeSlot} in the city of ${city}.
+Budget: $budget
+Exclude the following places: ${excludeNames.join(', ')}
 
-SADECE şu JSON formatında yanıt ver:
+Respond ONLY in the following JSON format:
 {
-  "name": "Mekan Adı",
-  "description": "Kısa açıklama",
+  "name": "Place Name",
+  "description": "Short description",
   "timeSlot": "$timeSlot",
-  "duration": "X saat",
-  "crowdLevel": "Orta",
+  "duration": "X hours",
+  "crowdLevel": "Moderate",
   "lat": 0.0,
   "lng": 0.0
 }

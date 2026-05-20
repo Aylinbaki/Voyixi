@@ -18,9 +18,9 @@ void main() async {
 
   try {
     await dotenv.load(fileName: ".env");
-    print("✅ .env dosyası başarıyla yüklendi");
+    print("✅.env file loaded successfully");
   } catch (e) {
-    print("❌ .env yüklenirken hata oluştu: $e");
+    print("❌Error loading .env file: $e");
   }
  
   await Firebase.initializeApp(

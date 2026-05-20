@@ -12,7 +12,7 @@ class TourDetailScreen extends StatelessWidget {
     final places       = List<String>.from(tour['places'] ?? []);
     final city         = tour['city']         ?? '';
     final description  = tour['description']  ?? '';
-    final guideName    = (tour['guideName'] ?? 'Rehber').toString().trim();
+    final guideName    = (tour['guideName'] ?? 'Guide').toString().trim();
     final guideContact = tour['guideContact'] ?? '';
     final guideId      = tour['guideId']      ?? '';
     final maxP         = tour['maxParticipants'];
@@ -169,7 +169,7 @@ class TourDetailScreen extends StatelessWidget {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Rehber',
+                                  Text('Guide',
                                       style: TextStyle(
                                           color:
                                           Colors.white.withOpacity(0.7),
@@ -191,7 +191,7 @@ class TourDetailScreen extends StatelessWidget {
 
                         // Açıklama
                         if (description.isNotEmpty) ...[
-                          _sectionTitle('Tur Hakkında'),
+                          _sectionTitle('About the Tour'),
                           const SizedBox(height: 8),
                           Text(description,
                               style: const TextStyle(
@@ -207,7 +207,7 @@ class TourDetailScreen extends StatelessWidget {
                             const Icon(Icons.group_outlined,
                                 color: Colors.white70, size: 16),
                             const SizedBox(width: 8),
-                            Text('Maksimum $maxP katılımcı',
+                            Text('Maximum $maxP participants',
                                 style: const TextStyle(
                                     color: Colors.white70, fontSize: 13)),
                           ]),
@@ -216,7 +216,7 @@ class TourDetailScreen extends StatelessWidget {
 
                         // Gezilecek yerler
                         if (places.isNotEmpty) ...[
-                          _sectionTitle('Gezilecek Yerler'),
+                          _sectionTitle('Places to visit'),
                           const SizedBox(height: 10),
                           ...places.map((p) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
@@ -241,7 +241,7 @@ class TourDetailScreen extends StatelessWidget {
 
                         // İletişim
                         if (guideContact.isNotEmpty) ...[
-                          _sectionTitle('İletişim'),
+                          _sectionTitle('Communicate'),
                           const SizedBox(height: 10),
                           GestureDetector(
                             onTap: () =>
@@ -391,7 +391,7 @@ class _GuideSheet extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     if (about.isNotEmpty) ...[
-                      _label('Hakkında'),
+                      _label('About'),
                       const SizedBox(height: 6),
                       Text(about,
                           style: const TextStyle(
@@ -402,7 +402,7 @@ class _GuideSheet extends StatelessWidget {
                     ],
 
                     if (languages.isNotEmpty) ...[
-                      _label('Konuştuğu Diller'),
+                      _label('Languages spoken'),
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 8, runSpacing: 6,
@@ -429,7 +429,7 @@ class _GuideSheet extends StatelessWidget {
                     ],
 
                     if (previousTours.isNotEmpty) ...[
-                      _label('Önceki Turlar'),
+                      _label('Previous Tours'),
                       const SizedBox(height: 8),
                       ...previousTours.map((t) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
@@ -450,7 +450,7 @@ class _GuideSheet extends StatelessWidget {
                     ],
 
                     if (email.isNotEmpty || phone.isNotEmpty) ...[
-                      _label('İletişim'),
+                      _label('Communication'),
                       const SizedBox(height: 8),
                       if (email.isNotEmpty)
                         GestureDetector(

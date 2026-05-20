@@ -124,7 +124,7 @@ class _SaveScreenState extends State<SaveScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Favoriler',
+                  'Favorites',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 30,
@@ -167,7 +167,7 @@ class _SaveScreenState extends State<SaveScreen>
         onChanged: (v) => setState(() => _searchQuery = v),
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: 'Ara...',
+          hintText: 'Search...',
           hintStyle: TextStyle(color: Colors.white.withOpacity(0.75)),
           prefixIcon: Icon(Icons.search_rounded, color: Colors.white.withOpacity(0.80)),
           border: InputBorder.none,
@@ -212,7 +212,7 @@ class _SaveScreenState extends State<SaveScreen>
             dividerColor: Colors.transparent,
             indicatorSize: TabBarIndicatorSize.tab,
             padding: const EdgeInsets.all(4),
-            tabs: const [Tab(text: 'Rotalar'), Tab(text: 'Mekanlar')],
+            tabs: const [Tab(text: 'Routes'), Tab(text: 'Places')],
           ),
         ),
       ),
@@ -232,7 +232,7 @@ class _SaveScreenState extends State<SaveScreen>
             r.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
             r.city.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
 
-        if (routes.isEmpty) return _buildEmpty('Henüz favori rotanız yok', 'Rotaları favorilere ekleyerek burada görebilirsiniz.');
+        if (routes.isEmpty) return _buildEmpty("You don't have a favorite route yet", "You can add routes to your favorites \nand see them here.");
 
         return ListView.separated(
           padding: EdgeInsets.fromLTRB(20, 8, 20, 80 + bottomPad),
@@ -257,7 +257,7 @@ class _SaveScreenState extends State<SaveScreen>
             p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
             p.city.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
 
-        if (places.isEmpty) return _buildEmpty('Henüz favori mekanınız yok', 'Mekanları favorilere ekleyerek burada görebilirsiniz.');
+        if (places.isEmpty) return _buildEmpty("You don't have a favorite place yet", "You can add places to your favorites \nand see them here.");
 
         return ListView.separated(
           padding: EdgeInsets.fromLTRB(20, 8, 20, 80 + bottomPad),
@@ -329,7 +329,7 @@ class _SaveScreenState extends State<SaveScreen>
                         const SizedBox(width: 12),
                         Icon(Icons.calendar_today_outlined, size: 14, color: _T.gradientStart),
                         const SizedBox(width: 3),
-                        Text('${route.days} Gün • ${route.budget}',
+                        Text('${route.days} Day • ${route.budget}',
                             style: const TextStyle(color: _T.gradientStart, fontSize: 12, fontWeight: FontWeight.w600)),
                       ],
                     ),

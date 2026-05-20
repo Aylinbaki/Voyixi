@@ -109,7 +109,7 @@ class StartedRoutesScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'Rotalarım',
+            'Routes',
             style: TextStyle(
               color: Colors.white,
               fontSize: 30,
@@ -119,7 +119,7 @@ class StartedRoutesScreen extends StatelessWidget {
           ),
           if (count > 0)
             Text(
-              '$count Kayıtlı Plan',
+              '$count Recorded Plan',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.85),
                 fontSize: 12,
@@ -151,7 +151,7 @@ class StartedRoutesScreen extends StatelessWidget {
         children: [
           Icon(Icons.map_outlined, size: 64, color: _teal.withOpacity(0.3)),
           const SizedBox(height: 16),
-          const Text('Henüz kayıtlı planın yok',
+          const Text("You don't have a saved plan yet.",
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: _textDark)),
         ],
       ),
@@ -367,7 +367,7 @@ class _ModernTripCardState extends State<_ModernTripCard> {
                       const Icon(Icons.access_time_filled_rounded, size: 14, color: _teal),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.trip.days} Gün • ${widget.trip.budget}',
+                        '${widget.trip.days} Day • ${widget.trip.budget}',
                         style: const TextStyle(fontSize: 11,
                             fontWeight: FontWeight.w700, color: _textDark),
                       ),
@@ -419,14 +419,14 @@ class _ModernTripCardState extends State<_ModernTripCard> {
                   decoration: BoxDecoration(color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(10)))),
               const SizedBox(height: 20),
-              const Text('Planı Düzenle',
+              const Text('Edit the Plan',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               TextField(
                 controller: titleCtrl,
                 autofocus: true,
                 decoration: InputDecoration(
-                  labelText: 'Yeni Plan Adı',
+                  labelText: 'New Plan Name',
                   labelStyle: const TextStyle(color: _teal),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
@@ -435,7 +435,7 @@ class _ModernTripCardState extends State<_ModernTripCard> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Gezi Tarihi',
+              const Text('Travel History',
                   style: TextStyle(fontSize: 13,
                       fontWeight: FontWeight.w600, color: _textMid)),
               const SizedBox(height: 8),
@@ -468,7 +468,7 @@ class _ModernTripCardState extends State<_ModernTripCard> {
                     Text(
                       selectedDate != null
                           ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
-                          : 'Tarih seç...',
+                          : 'Choose a date...',
                       style: TextStyle(
                         color: selectedDate != null ? _textDark : Colors.grey,
                         fontSize: 14,
@@ -503,7 +503,7 @@ class _ModernTripCardState extends State<_ModernTripCard> {
                     );
                     if (context.mounted) Navigator.pop(context);
                   },
-                  child: const Text('Değişiklikleri Kaydet',
+                  child: const Text('Save Changes',
                       style: TextStyle(color: Colors.white,
                           fontWeight: FontWeight.bold)),
                 ),
@@ -520,13 +520,13 @@ class _ModernTripCardState extends State<_ModernTripCard> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Planı Sil',
+        title: const Text('Delete Plan',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('"${widget.trip.title}" rotasını silmek istediğine emin misin?'),
+        content: Text('Are you sure you want to delete the ${widget.trip.title} route?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Vazgeç', style: TextStyle(color: _textMid))),
+              child: const Text('Cancel', style: TextStyle(color: _textMid))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
@@ -536,7 +536,7 @@ class _ModernTripCardState extends State<_ModernTripCard> {
               Navigator.pop(context);
               await RoutesService().deleteTrip(widget.trip.id);
             },
-            child: const Text('Sil', style: TextStyle(color: Colors.white)),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

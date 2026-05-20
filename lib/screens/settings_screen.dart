@@ -92,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: _teal, size: 20),
           onPressed: () => Navigator.maybePop(context),
         ),
-        title: const Text('Ayarlar',
+        title: const Text('Settings',
             style: TextStyle(color: _textDark, fontWeight: FontWeight.w700)),
       ),
       body: ListView(
@@ -100,50 +100,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _profileCard(),
           const SizedBox(height: 22),
-          _sectionTitle('Hesap'),
+          _sectionTitle('ACCOUNT'),
           _card([
-            _tile(Icons.person_outline_rounded, 'Hesabım', onTap: () {}),
-            _tile(Icons.description_outlined, 'Gizlilik ve Koşullar', onTap: () {}, isLast: true),
+            _tile(Icons.person_outline_rounded, 'My Account', onTap: () {}),
+            _tile(Icons.description_outlined, 'Privacy and Terms', onTap: () {}, isLast: true),
           ]),
           const SizedBox(height: 16),
-          _sectionTitle('Tercihler'),
+          _sectionTitle('PREFERENCES'),
           _card([
             _tile(Icons.language_rounded, 'Dil',
                 trailing: Text(_language, style: const TextStyle(color: _textLight)),
                 onTap: _showLanguagePicker),
-            _tile(Icons.dark_mode_outlined, 'Karanlık Mod',
+            _tile(Icons.dark_mode_outlined, 'Dark Mode',
                 trailing: _switch(_darkMode, (v) => setState(() => _darkMode = v))),
-            _tile(Icons.headphones_rounded, 'Sesli Rehber',
+            _tile(Icons.headphones_rounded, 'Audio Guide',
                 trailing: _switch(_audioGuide, (v) => setState(() => _audioGuide = v)),
                 isLast: true),
           ]),
           const SizedBox(height: 16),
 
-          _sectionTitle('İzinler'),
+          _sectionTitle('Permissions'),
           _card([
-            _accordionHeader(Icons.shield_outlined, 'İzinler', 'permissions'),
+            _accordionHeader(Icons.shield_outlined, 'Permissions', 'permissions'),
             if (_openSection == 'permissions') ...[
               const Divider(height: 1, indent: 20, endIndent: 20, color: _divider),
-              _permRow(Icons.location_on_outlined, 'Konum', _locationPerm,
+              _permRow(Icons.location_on_outlined, 'Location', _locationPerm,
                   (v) => setState(() => _locationPerm = v)),
-              _permRow(Icons.camera_alt_outlined, 'Kamera', _cameraPerm,
+              _permRow(Icons.camera_alt_outlined, 'Camera', _cameraPerm,
                   (v) => setState(() => _cameraPerm = v)),
-              _permRow(Icons.notifications_outlined, 'Bildirimler', _notifPerm,
+              _permRow(Icons.notifications_outlined, 'Notifications', _notifPerm,
                   (v) => setState(() => _notifPerm = v), isLast: true),
             ],
           ]),
           const SizedBox(height: 16),
-          _sectionTitle('Rehberlik'),
+          _sectionTitle('Guide'),
           _card([
             // 1. DURUM: Kullanıcı zaten rehberse (Başvuru butonuna ihtiyacı yok)
             if (_userModel?.isGuide == true)
               _tile(
                 Icons.verified_user_outlined, 
-                'Voyixi Rehberisiniz', 
+                'You are a Voyixi Guide',
                 trailing: const Icon(Icons.check_circle, color: _teal, size: 20),
                 onTap: () {
                    ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(content: Text("Harika iş çıkarıyorsun rehber! Paneline ana ekrandan ulaşabilirsin."))
+                     const SnackBar(content: Text("You're doing a great job, guide! \nYou can access your panel from the main screen."))
                    );
                 },
               )
@@ -152,11 +152,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             else if (_userModel?.isPending == true)
               _tile(
                 Icons.hourglass_empty_rounded, 
-                'Başvurunuz İnceleniyor', 
-                trailing: const Text('Beklemede', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+                'Your application is being reviewed.',
+                trailing: const Text('Pending', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Başvurunuz admin ekibimiz tarafından inceleniyor. En kısa sürede döneceğiz!"))
+                    const SnackBar(content: Text("Your application is being reviewed by our administrative team. \nWe will get back to you as soon as possible!"))
                   );
                 },
               )
@@ -165,7 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             else
               _tile(
                 Icons.tour_outlined, 
-                'Rehber Ol', 
+                'Become a Guide',
                 onTap: () {
                   Navigator.push(
                     context, 
@@ -174,27 +174,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
 
-            _tile(Icons.info_outline_rounded, 'Versiyon',
+            _tile(Icons.info_outline_rounded, 'Version',
                 trailing: const Text('v1.0.0', style: TextStyle(color: _textLight)),
                 isLast: true),
           ]),
           const SizedBox(height: 16),
-          _sectionTitle('Destek'),
+          _sectionTitle('Support'),
           _card([
-            _accordionHeader(Icons.star_outline_rounded, 'Bizi Değerlendirin', 'rating'),
+            _accordionHeader(Icons.star_outline_rounded, 'Rate us', 'rating'),
             if (_openSection == 'rating') _ratingContent(),
             const Divider(height: 1, indent: 66, color: _divider),
-            _accordionHeader(Icons.mail_outline_rounded, 'Bize Ulaşın', 'contact'),
+            _accordionHeader(Icons.mail_outline_rounded, 'Contact us', 'contact'),
             if (_openSection == 'contact') _contactContent(),
             const Divider(height: 1, indent: 66, color: _divider),
-            _accordionHeader(Icons.flag_outlined, 'Sorun Bildir', 'report'),
+            _accordionHeader(Icons.flag_outlined, 'Report a Problem', 'report'),
             if (_openSection == 'report') _reportContent(),
           ]),
           const SizedBox(height: 28),
           _logoutButton(),
           const SizedBox(height: 12),
           const Center(
-            child: Text('VOYIXI • Daha iyi tur deneyimi için buradayız',
+            child: Text('VOYIXI • We are here for a better tour experience.',
                 style: TextStyle(color: _textLight, fontSize: 11)),
           ),
           const SizedBox(height: 20),
@@ -315,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // ── Açılır bölümler 
   Widget _ratingContent() {
-    const labels = ['Berbat', 'Kötü', 'Orta', 'İyi', 'Harika'];
+    const labels = ['Terrible', 'Bad', 'Average', 'Good', 'Great'];
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
       child: Column(
@@ -336,9 +336,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(labels[_rating - 1], style: const TextStyle(color: _teal, fontWeight: FontWeight.w600)),
           ],
           const SizedBox(height: 12),
-          _actionButton('Değerlendirmeyi Gönder', _rating == 0 ? null : () {
+          _actionButton('Submit Review', _rating == 0 ? null : () {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('$_rating yıldız için teşekkürler 🎉'),
+              content: Text('$_rating Thanks for the star!🎉'),
               backgroundColor: _teal,
               behavior: SnackBarBehavior.floating,
             ));
@@ -371,8 +371,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _actionButton('Mail Uygulamasını Aç',
-              () => _openMail(subject: 'Uygulama Hakkında')),
+          _actionButton('Open the Mail app.',
+              () => _openMail(subject: 'About the Application')),
         ],
       ),
     );
@@ -388,7 +388,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             maxLines: 4,
             maxLength: 500,
             decoration: InputDecoration(
-              hintText: 'Sorununuzu buraya yazın...',
+              hintText: 'Write your problem here...',
               hintStyle: const TextStyle(color: _textLight, fontSize: 13),
               filled: true,
               fillColor: _teal.withOpacity(0.05),
@@ -407,10 +407,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          _actionButton('Gönder', () async {
+          _actionButton('Send', () async {
             final text = _reportCtrl.text.trim();
             if (text.isEmpty) return;
-            await _openMail(subject: 'Sorun Bildirimi', body: text);
+            await _openMail(subject: 'Report a Problem', body: text);
             _reportCtrl.clear();
             setState(() => _openSection = '');
           }),
@@ -440,12 +440,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context: context,
         builder: (_) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Çıkış Yap', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: const Text('Hesabınızdan çıkmak istediğinize emin misiniz?'),
+          title: const Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text('Are you sure you want to log out of your account?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal', style: TextStyle(color: _textLight)),
+              child: const Text('Cancel', style: TextStyle(color: _textLight)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade400, elevation: 0),
@@ -454,13 +454,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 await FirebaseAuth.instance.signOut();
                 if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
               },
-              child: const Text('Çıkış Yap', style: TextStyle(color: Colors.white)),
+              child: const Text('Log Out', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
       ),
       icon: Icon(Icons.logout_rounded, color: Colors.red.shade400),
-      label: Text('Çıkış Yap', style: TextStyle(color: Colors.red.shade400, fontWeight: FontWeight.w700)),
+      label: Text('Log Out', style: TextStyle(color: Colors.red.shade400, fontWeight: FontWeight.w700)),
       style: OutlinedButton.styleFrom(
         side: BorderSide(color: Colors.red.shade200),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -470,7 +470,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
   void _showLanguagePicker() {
-    final langs = ['Türkçe', 'English', 'Deutsch', 'Français', 'Español'];
+    final langs = ['Türkçe', 'English'];
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -486,7 +486,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             const Align(
               alignment: Alignment.centerLeft,
-              child: Text('Dil Seçin',
+              child: Text('Select Language',
                   style: TextStyle(color: _textDark, fontWeight: FontWeight.bold, fontSize: 17)),
             ),
             ...langs.map((lang) => ListTile(

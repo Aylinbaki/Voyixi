@@ -112,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                   const SizedBox(height: 18),
                   const Text(
-                    'Yeni Anı Ekle',
+                    'Add New Memory',
                     style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: _T.gradientStart,),
                   ),
                   const SizedBox(height: 18),
@@ -138,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           Icon(Icons.add_a_photo_outlined,
                               color: _T.gradientStart, size: 36),
                           SizedBox(height: 8),
-                          Text('Fotoğraf Ekle',
+                          Text('Add Photo',
                               style:
                               TextStyle(color: _T.gradientStart)),
                         ],
@@ -151,16 +151,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                   ),
                   const SizedBox(height: 14),
-                  _sheetField(titleCtrl, 'Başlık (Örn: Ayasofya Gezisi)'),
+                  _sheetField(titleCtrl, 'Title (e.g.: Ayasofya Gezisi)'),
                   const SizedBox(height: 10),
-                  _sheetField(noteCtrl, 'Neler yaşadın?', maxLines: 3),
+                  _sheetField(noteCtrl, 'What are your memories?', maxLines: 3),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       const Icon(Icons.calendar_today_outlined,
                           size: 15, color: _T.gradientStart),
                       const SizedBox(width: 6),
-                      Text('Tarih: $formattedDate',
+                      Text('Date: $formattedDate',
                           style: const TextStyle(
                               color: _T.gradientStart, fontSize: 13)),
                     ],
@@ -193,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                       alignment: Alignment.center,
                       child: const Text(
-                        'Notu Kaydet',
+                        'Save Note',
                         style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
                     ),
                   ),
@@ -263,13 +263,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                   const SizedBox(height: 18),
                   const Text(
-                    'Anıyı Düzenle',
+                    'Edit the memory',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _T.gradientStart),
                   ),
                   const SizedBox(height: 14),
-                  _sheetField(titleCtrl, 'Başlık'),
+                  _sheetField(titleCtrl, 'Title'),
                   const SizedBox(height: 10),
-                  _sheetField(noteCtrl, 'Neler yaşadın?', maxLines: 3),
+                  _sheetField(noteCtrl, 'What are your memories?', maxLines: 3),
                   const SizedBox(height: 20),
                   GestureDetector(
 
@@ -294,7 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                       alignment: Alignment.center,
                       child: const Text(
-                        'Değişiklikleri Kaydet',
+                        'Save Changes',
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -422,7 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ),
           const Text(
-            'Profil',
+            'Profile',
             style: TextStyle(
               color: Colors.white, fontSize: 30,
               fontWeight: FontWeight.bold, letterSpacing: 1.2,
@@ -460,7 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       child: _actionButton(
-        label: 'Not Ekle',
+        label: 'Add Note',
         icon: Icons.note_add_outlined,
         onPressed: _showAddNoteSheet,
       ),
@@ -592,10 +592,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _statBox(countryCount.toString(), 'Ülke', Icons.location_on_outlined),
-            _statBox(museum.toString(),       'Müze', Icons.account_balance_outlined),
-            _statBox(kmStr,                   'Toplam km', Icons.near_me_outlined),
-            _statBox(cityCount.toString(),    'Şehir', Icons.map_outlined),
+            _statBox(countryCount.toString(), 'Country', Icons.location_on_outlined),
+            _statBox(museum.toString(),       'Museum', Icons.account_balance_outlined),
+            _statBox(kmStr,                   'Total km', Icons.near_me_outlined),
+            _statBox(cityCount.toString(),    'City', Icons.map_outlined),
           ],
         );
       },
@@ -650,9 +650,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           child: Row(
             children: [
-              _toggleItem('Biten Geziler', isSavedTripsSelected,
+              _toggleItem('Completed Trips', isSavedTripsSelected,
                       () => setState(() => isSavedTripsSelected = true)),
-              _toggleItem('Notlar', !isSavedTripsSelected,
+              _toggleItem('Notes', !isSavedTripsSelected,
                       () => setState(() => isSavedTripsSelected = false)),
             ],
           ),
@@ -715,7 +715,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 padding: EdgeInsets.all(40),
                 child: Center(
                   child: Text(
-                      'Henüz tamamladığın bir gezi yok',
+                      "You haven't completed a single trip yet",
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ),
@@ -738,7 +738,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   },
                   child: _tripCard(
                     city: trip.title,
-                    days: '${trip.days} Gün',
+                    days: '${trip.days} Day',
                     image: trip.imageUrl ?? 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600',
                   ),
                 ),
@@ -832,7 +832,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               return const Padding(
                 padding: EdgeInsets.all(40),
                 child: Center(
-                  child: Text('Henüz bir anı eklememişsin.',
+                  child: Text("You haven't added a memory yet.",
                       style: TextStyle(color: Colors.white70, fontSize: 14)),
                 ),
               );

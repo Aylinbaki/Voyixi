@@ -142,17 +142,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildEditField('İsim Soyisim', _nameController),
+                  _buildEditField('Name-Surname', _nameController),
                   const SizedBox(height: 18),
                   _buildEditField(
-                    'E-posta',
+                    'E-mail',
                     TextEditingController(text: user?.email ?? ''),
                     enabled: false,
                   ),
                   const SizedBox(height: 18),
-                  _buildEditField('Ülke', _countryController),
+                  _buildEditField('Country', _countryController),
                   const SizedBox(height: 18),
-                  _buildEditField('Şehir', _cityController),
+                  _buildEditField('City', _cityController),
                 ],
               ),
             ),
@@ -179,7 +179,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Profil başarıyla güncellendi!'),
+                          content: Text('Profile updated successfully!'),
                           backgroundColor: _teal,
                           behavior: SnackBarBehavior.floating,
                         ),
@@ -189,7 +189,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Hata oluştu: $e')),
+                        SnackBar(content: Text('An error occurred: $e')),
                       );
                     }
                   }
@@ -203,7 +203,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
                 child: const Text(
-                  'Güncelle',
+                  'Update',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
