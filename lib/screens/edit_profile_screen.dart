@@ -55,7 +55,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: const Color.fromARGB(255, 225, 239, 239),
       appBar: AppBar(
         title: const Text(
-          'Profili Düzenle',
+          'Edit Profile',
           style: TextStyle(color: Color(0xFF1A2E2E), fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color.fromARGB(255, 225, 239, 239),
