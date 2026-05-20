@@ -43,7 +43,7 @@ class _Step1DestinationState extends State<Step1Destination> {
   Widget build(BuildContext context) {
     return StepShell(
       icon: Icons.location_on_rounded,
-      title: 'Nereye gitmek\nistiyorsunuz?',
+      title: 'Where do you want to go?',
       canGoNext: widget.plan.city.isNotEmpty,
       onNext: widget.onNext,
       child: Column(
@@ -53,7 +53,7 @@ class _Step1DestinationState extends State<Step1Destination> {
           TextField(
             controller: _ctrl,
             decoration: InputDecoration(
-              hintText: 'Şehir adı yazın...',
+              hintText: 'Write the city name....',
               hintStyle: const TextStyle(color: Color(0xFF8AABAB)),
               prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF00BFA5)),
               filled: true,
@@ -73,7 +73,7 @@ class _Step1DestinationState extends State<Step1Destination> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Popüler Şehirler',
+          const Text('Popular Cities',
               style: TextStyle(color: Color(0xFF4A6060), fontSize: 13,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),

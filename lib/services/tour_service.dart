@@ -85,7 +85,7 @@ class TourService {
     );
 
     if (suggestions.isEmpty) {
-      throw NearbyPlacesFetchException('Gemini yer önerisi döndürmedi.');
+      throw NearbyPlacesFetchException('Gemini did not return any place recommendations.');
     }
 
     // 3. Her yer için Places API'den detay çek
@@ -96,7 +96,7 @@ class TourService {
     final validPlaces = places.whereType<Map<String, dynamic>>().toList();
 
     if (validPlaces.isEmpty) {
-      throw NearbyPlacesFetchException('Yerler için detay alınamadı.');
+      throw NearbyPlacesFetchException('Failed to load place details.');
     }
 
     return validPlaces;
@@ -126,7 +126,7 @@ class TourService {
       // Timeout'ta last known location'ı dene
       final last = await Geolocator.getLastKnownPosition();
       if (last != null) return last;
-      throw NearbyPlacesFetchException('Konum alınamadı: $e');
+      throw NearbyPlacesFetchException('Failed to get location: $e');
     }
   }
 
@@ -140,14 +140,14 @@ class TourService {
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent';
 
     final prompt = '''
-Sen bir seyahat asistanısın.
-Koordinatlar: enlem $lat, boylam $lng
+You are a travel assistant.
+Coordinates: latitude $lat, longitude $lng
 
-Bu koordinatlara yakın, turistler için ilgi çekici 4 yer öner.
-Sadece aşağıdaki JSON formatında yanıt ver, başka hiçbir şey yazma:
-{"places": ["Yer Adı 1", "Yer Adı 2", "Yer Adı 3", "Yer Adı 4"]}
+Recommend 4 interesting places for tourists near these coordinates.
+Respond ONLY in the following JSON format, do not write anything else:
+{"places": ["Place Name 1", "Place Name 2", "Place Name 3", "Place Name 4"]}
 
-Yer isimlerini Google Maps'te aranabilecek şekilde yaz (örn: "Topkapı Sarayı, İstanbul").
+Write the place names in English so that they can be easily searched on Google Maps (e.g., "Topkapi Palace, Istanbul").
 ''';
 
     final res = await http.post(
@@ -169,7 +169,7 @@ Yer isimlerini Google Maps'te aranabilecek şekilde yaz (örn: "Topkapı Sarayı
     ).timeout(const Duration(seconds: 15));
 
     if (res.statusCode != 200) {
-      throw NearbyPlacesFetchException('Gemini API hatası: ${res.statusCode}');
+      throw NearbyPlacesFetchException('Gemini API error: ${res.statusCode}');
     }
 
     final data = jsonDecode(res.body);

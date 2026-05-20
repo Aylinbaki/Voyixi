@@ -4,18 +4,18 @@ import '../step_shell.dart';
 import '../../trip_result/trip_result_screen.dart';
 
 const _prefItems = [
-  ('🏛️', 'Tarih ve Kültür'),
-  ('🍽️', 'Yemek ve Lezzet'),
-  ('🌿', 'Doğa ve Manzara'),
-  ('🛍️', 'Alışveriş'),
-  ('🎭', 'Gece Hayatı'),
-  ('🏔️', 'Macera'),
+  ('🏛️', 'History and \nCulture'),
+  ('🍽️', 'Food and \nDelights'),
+  ('🌿', 'Nature and \nScenery'),
+  ('🛍️', 'Shopping'),
+  ('🎭', 'Nightlife'),
+  ('🏔️', 'Adventure'),
 ];
 
 const _budgets = [
-  ('💰', 'Ekonomik', 'Hesaplı seçenekler', 'ekonomik'),
-  ('💵', 'Orta', 'Dengeli bütçe', 'orta'),
-  ('💎', 'Lüks', 'Premium deneyim', 'lüks'),
+  ('💰', 'Economical', 'Budget-friendly options', 'economical'),
+  ('💵', 'Medium', 'Balanced budget', 'medium'),
+  ('💎', 'Luxury', 'Premium experience', 'luxury'),
 ];
 
 class Step3Preferences extends StatefulWidget {
@@ -64,7 +64,7 @@ class _Step3PreferencesState extends State<Step3Preferences> {
   Widget build(BuildContext context) {
     return StepShell(
       icon: Icons.favorite_rounded,
-      title: 'Son birkaç\ntercih!',
+      title: 'Last few choices!',
       canGoNext: _canGenerate,
       onNext: _generate,
       isLastStep: true,
@@ -72,7 +72,7 @@ class _Step3PreferencesState extends State<Step3Preferences> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Seyahat Tercihleriniz',
+          const Text('Your Travel Preferences',
               style: TextStyle(color: Color(0xFF4A6060), fontSize: 13,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
@@ -118,7 +118,7 @@ class _Step3PreferencesState extends State<Step3Preferences> {
             }).toList(),
           ),
           const SizedBox(height: 24),
-          const Text('Bütçe Tercihiniz',
+          const Text('Your Budget Preference',
               style: TextStyle(color: Color(0xFF4A6060), fontSize: 13,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),

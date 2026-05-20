@@ -21,7 +21,7 @@ class RoutesService {
     DateTime? tripDate,
     DateTime? startDate,
   }) async {
-    if (_uid == null) throw Exception('Kullanıcı giriş yapmamış');
+    if (_uid == null) throw Exception('User is not logged in');
 
     //Aynı şehir ve gün sayısına sahip aktif bir plan var mı?
     final existing = await _tripsRef
@@ -184,38 +184,37 @@ class RoutesService {
           .expand((d) => d.places).take(5).map((p) => p.name).join(', ');
 
       final prompt =
-          '${result.days} günlük ${result.city} gezisi için '
-          '${result.budget} bütçeyle $places gibi yerleri kapsayan '
-          'bir seyahat planı. 3 cümleyi geçmeyecek şekilde Türkçe özet yaz.';
+          'A travel itinerary for a ${result.days}-day trip to ${result.city} '
+          'with a budget of ${result.budget}, covering places like $places. '
+          'Write a brief summary in English, not exceeding 3 sentences.';
 
       final res = await http.post(
         Uri.parse('$url?key=$key'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'contents': [ {  'parts': [{'text': prompt}]}
-          ],
+          'contents': [ { 'parts': [{'text': prompt}]} ],
           'generationConfig': {'temperature': 0.5, 'maxOutputTokens': 150},
         }),
       ).timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data['candidates'][0]['content']['parts'][0]['text']
-            as String;
+        return data['candidates'][0]['content']['parts'][0]['text'] as String;
       }
     } catch (_) {}
-    return '${result.days} günlük ${result.city} gezisi, '
-        '${result.budget} bütçe ile planlandı.';
+
+    // 3. ÇEVİRİ: İnternet hatası durumunda dönecek fallback mesajı İngilizce yapıldı
+    return 'A ${result.days}-day trip to ${result.city} planned with a budget of ${result.budget}.';
   }
 
-  // ── Places API ile şehir görseli 
+  // ── Places API City Image
   Future<String?> _fetchCityImage(String city) async {
     try {
       final key = dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
       final res = await http.get(Uri.parse(
         'https://maps.googleapis.com/maps/api/place/textsearch/json'
-        '?query=${Uri.encodeComponent(city)}'
-        '&key=$key',
+            '?query=${Uri.encodeComponent(city)}'
+            '&key=$key',
       )).timeout(const Duration(seconds: 10));
 
       if (res.statusCode != 200) return null;

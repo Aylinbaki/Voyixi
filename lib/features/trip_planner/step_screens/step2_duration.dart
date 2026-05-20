@@ -27,7 +27,7 @@ class _Step2DurationState extends State<Step2Duration> {
 
     return StepShell(
       icon: Icons.calendar_month_rounded,
-      title: 'Kaç günlük seyahat\nplanlıyorsunuz?',
+      title: 'How many days \nare you planning your trip?',
       canGoNext: true,
       onNext: widget.onNext,
       child: Column(
@@ -60,7 +60,7 @@ class _Step2DurationState extends State<Step2Duration> {
                     ),
                     const Padding(
                       padding: EdgeInsets.only(bottom: 12, left: 6),
-                      child: Text('gün',
+                      child: Text('day',
                           style: TextStyle(fontSize: 20, color: Color(0xFF4A6060),
                               fontWeight: FontWeight.w500)),
                     ),
@@ -113,7 +113,7 @@ class _Step2DurationState extends State<Step2Duration> {
           // Hızlı seçim çipleri
           const Align(
             alignment: Alignment.centerLeft,
-            child: Text('Hızlı Seçim',
+            child: Text('Quick Selection',
                 style: TextStyle(color: Color(0xFF4A6060), fontSize: 13,
                     fontWeight: FontWeight.w600)),
           ),
@@ -134,7 +134,7 @@ class _Step2DurationState extends State<Step2Duration> {
                     border: Border.all(
                         color: sel ? const Color(0xFF00BFA5) : const Color(0xFFCCE8E5)),
                   ),
-                  child: Text('$d gün',
+                  child: Text('$d day',
                       style: TextStyle(
                         color: sel ? Colors.white : const Color(0xFF4A6060),
                         fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
@@ -162,9 +162,9 @@ class _Step2DurationState extends State<Step2Duration> {
       );
 
   String _durationLabel(int d) {
-    if (d == 1) return 'Günübirlik kaçamak';
-    if (d <= 3) return 'Kısa tatil';
-    if (d <= 7) return 'Haftalık gezi';
-    return 'Uzun tatil';
+    if (d == 1) return 'A day trip';
+    if (d <= 3) return 'Short holiday';
+    if (d <= 7) return 'Week trip';
+    return 'Long holiday';
   }
 }

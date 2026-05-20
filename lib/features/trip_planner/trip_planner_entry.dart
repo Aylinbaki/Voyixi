@@ -35,7 +35,7 @@ class TripPlannerEntry extends StatelessWidget {
                         children: [
                           Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF4A6060), size: 18),
                           SizedBox(width: 4),
-                          Text('Ana Sayfa', style: TextStyle(color: Color(0xFF4A6060), fontSize: 14)),
+                          Text('Home', style: TextStyle(color: Color(0xFF4A6060), fontSize: 14)),
                         ],
                       ),
                     ),
@@ -60,7 +60,7 @@ class TripPlannerEntry extends StatelessWidget {
                     Icon(Icons.auto_awesome, color: Color(0xFF00BFA5), size: 15),
                     SizedBox(width: 6),
                     Text(
-                      'AI destekli akıllı seyahat planlayıcı',
+                      'AI-powered smart travel planner',
                       style: TextStyle(color: Color(0xFF00897B), fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -75,28 +75,28 @@ class TripPlannerEntry extends StatelessWidget {
                     ),
                     children: [
                       TextSpan(
-                        text: 'Hayallerinizdeki\n',style: TextStyle(color: Color(0xFF1A2E2E)),
+                        text: 'Plan Your\n',style: TextStyle(color: Color(0xFF1A2E2E)),
                       ),
                       TextSpan(
-                        text: 'Seyahati ',style: TextStyle(color: Color(0xFF1A2E2E)),
+                        text: 'Dream ',style: TextStyle(color: Color(0xFF1A2E2E)),
                       ),
                       TextSpan(
-                        text: 'Planlayın',style: TextStyle(color: Color(0xFF00BFA5)),
+                        text: 'Trip',style: TextStyle(color: Color(0xFF00BFA5)),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Yapay zeka destekli planlayıcımız ile tercihlerinize ve bütçenize uygun, gün gün özel seyahat rotaları oluşturun.',
+                  'Create personalized day-by-day travel itineraries to suit your preferences and budget with our AI-powered planner.',
                   style: TextStyle(color: Color(0xFF4A6060),fontSize: 15,height: 1.6,
                   ),
                 ),
                 const SizedBox(height: 36),
                 ...[
-                  (Icons.location_on_outlined, 'Kişiselleştirilmiş Rotalar'),
-                  (Icons.public_rounded, 'Dünya Geneli Destinasyonlar'),
-                  (Icons.auto_awesome_rounded, 'AI Önerileri'),
+                  (Icons.location_on_outlined, 'Personalized Routes'),
+                  (Icons.public_rounded, 'Worldwide Destinations'),
+                  (Icons.auto_awesome_rounded, 'AI Suggestions'),
                 ].map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -134,7 +134,7 @@ class TripPlannerEntry extends StatelessWidget {
                 ),
                 const Spacer(flex: 3),
                 _AnimatedButton(
-                  label: 'Seyahate Başla',
+                  label: 'Start your journey',
                   icon: Icons.rocket_launch_rounded,
                   onTap: () => Navigator.push(
                     context,
@@ -144,7 +144,7 @@ class TripPlannerEntry extends StatelessWidget {
                 const SizedBox(height: 12),
                 const Center(
                   child: Text(
-                    'Hemen başlayın, planınızı dakikalar içinde oluşturun',
+                    'Start now, create your plan in minute',
                     style: TextStyle(color: Color(0xFF8AABAB), fontSize: 12),
                   ),
                 ),

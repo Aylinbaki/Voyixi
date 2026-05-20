@@ -85,7 +85,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
         final museumCount = _result!.dayPlans
             .expand((d) => d.places)
             .where((p) =>
-        p.name.toLowerCase().contains('müze') ||
+        p.name.toLowerCase().contains('museum') ||
             p.name.toLowerCase().contains('museum'))
             .length;
 
@@ -101,7 +101,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Plan kaydedildi! ✅'),
+            content: Text('The plan has been saved! ✅'),
             backgroundColor: Color(0xFF00BFA5),
             behavior: SnackBarBehavior.floating,
           ),
@@ -111,7 +111,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Kayıt hatası: $e'),
+            content: Text('Recording error: $e'),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
           ),
@@ -158,7 +158,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
             child: OutlinedButton.icon(
               onPressed: _savePlan,
               icon: const Icon(Icons.bookmark_rounded, size: 18),
-              label: const Text('Planı Kaydet'),
+              label: const Text('Save the plan'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF00BFA5),
                 side: const BorderSide(color: Color(0xFF00BFA5)),
@@ -200,7 +200,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
                 }
               },
               icon: const Icon(Icons.explore_rounded, size: 18),
-              label: const Text('Geziye Başla'),
+              label: const Text('Start your trip'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00BFA5),
                 foregroundColor: Colors.white,
@@ -236,7 +236,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
               color: Colors.white, size: 56),
           const SizedBox(height: 24),
           Text(
-            'VOYİXİ ile ${widget.plan.city} planınız\nhazırlanıyor...',
+            'Your ${widget.plan.city} plan is being prepared \nwith VOYIXI.',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -247,7 +247,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${widget.plan.days} gün • ${widget.plan.budget}',
+            '${widget.plan.days} Day • ${widget.plan.budget}',
             style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 40),
@@ -269,7 +269,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
             const Icon(Icons.error_outline_rounded,
                 color: Color(0xFF00BFA5), size: 56),
             const SizedBox(height: 16),
-            const Text('Plan oluşturulamadı',
+            const Text('Failed to create plan',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Text(_error,
@@ -279,7 +279,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
             ElevatedButton.icon(
               onPressed: _generate,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Tekrar Dene'),
+              label: const Text('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00BFA5),
                 foregroundColor: Colors.white,
@@ -339,7 +339,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${r.city} Seyahat Planınız',
+                              '${r.city} Travel Plan',
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -347,7 +347,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${r.days} Gün • ${_budgetLabel(r.budget)}',
+                              '${r.days} Day • ${_budgetLabel(r.budget)}',
                               style: const TextStyle(
                                   color: Colors.white70, fontSize: 13),
                             ),
@@ -368,7 +368,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
                             Icon(Icons.refresh_rounded,
                                 color: Colors.white, size: 16),
                             SizedBox(width: 6),
-                            Text('Yeniden\nPlanla',
+                            Text('Replan',
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,
@@ -392,7 +392,7 @@ class _TripResultScreenState extends State<TripResultScreen> {
                 const Padding(
                   padding: EdgeInsets.only(left: 4, bottom: 10),
                   child: Text(
-                    'Seyahat Rotanız',
+                    'Your Travel Route',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -444,8 +444,8 @@ class _TripResultScreenState extends State<TripResultScreen> {
   }
 
   String _budgetLabel(String b) => switch (b) {
-        'ekonomik' => 'Ekonomik Bütçe',
-        'lüks' => 'Lüks Bütçe',
-        _ => 'Orta Bütçe',
+        'Economic' => 'Economic Budget',
+        'Luxury' => 'Luxury Budget',
+        _ => 'Medium Budget',
       };
 }

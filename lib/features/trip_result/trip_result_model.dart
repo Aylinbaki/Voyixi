@@ -42,7 +42,7 @@ class PlaceItem {
     description: j['description'] ?? '',
     timeSlot: j['timeSlot'] ?? '',
     duration: j['duration'] ?? '',
-    crowdLevel: j['crowdLevel'] ?? 'Orta',
+    crowdLevel: j['crowdLevel'] ?? 'Moderate',
     lat: (j['lat'] as num?)?.toDouble(),
     lng: (j['lng'] as num?)?.toDouble(),
     placeId: j['placeId'],

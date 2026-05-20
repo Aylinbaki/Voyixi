@@ -46,7 +46,7 @@ class _TripPlannerFlowState extends State<TripPlannerFlow> {
               SizedBox(width: 16),
               Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF4A6060), size: 18),
               SizedBox(width: 4),
-              Text('Geri Dön', style: TextStyle(color: Color(0xFF4A6060), fontSize: 14)),
+              Text('Back', style: TextStyle(color: Color(0xFF4A6060), fontSize: 14)),
             ],
           ),
         ),

@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 1. Arama sorgusu için değişken
   String _searchQuery = "";
-  String _selectedBudget = "Hepsi";
+  String _selectedBudget = "All";
   late Future<List<Map<String, dynamic>>> _nearbyFuture;
 
   User? get _currentUser => FirebaseAuth.instance.currentUser;
@@ -173,9 +173,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Merhaba, $_userName!',
+                          Text('Hello, $_userName!',
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
-                          const Text('Tekrar hoş geldin', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          const Text('Welcome again!', style: TextStyle(color: Colors.white70, fontSize: 12)),
                         ],
                       ),
                     ],
@@ -188,14 +188,14 @@ class _HomeScreenState extends State<HomeScreen> {
               if (user != null) ...[
       if (user.isAdmin)
         _buildRoleTile(
-          title: "Admin Paneli",
+          title: "Admin Panel",
           icon: Icons.admin_panel_settings,
           color: Colors.redAccent,
           onTap: () => Navigator.pushNamed(context, '/adminPanel'),
         ),
       if (user.isGuide)
   _buildRoleTile(
-    title: "Rehber Paneli",
+    title: "Guide Panel",
     icon: Icons.explore,
     color: const Color(0xFF00BFA5),
     onTap: () => showGuidePanel(context), 
@@ -204,17 +204,17 @@ class _HomeScreenState extends State<HomeScreen> {
         user.isPending 
           ? const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text("Başvurunuz Değerlendiriliyor...", style: TextStyle(color: Colors.white60)),
+              child: Text("Your application is being reviewed...", style: TextStyle(color: Colors.white60)),
             )
           : _buildRoleTile(
-              title: "Rehber Ol",
+              title: "Become a Guide",
               icon: Icons.directions_walk,
               color: const Color(0xFF00BFA5),
               onTap: () => Navigator.pushNamed(context, '/guideApply'),
             ),
     ],
               const SizedBox(height: 16),
-              const Text('Bir Sonraki\nMaceraya Hazır mısın?',
+              const Text('Are you ready\n For the next adventure?',
                   style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, height: 1.3)),
               const SizedBox(height: 16),
               // Arama Çubuğu
@@ -231,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextField(
                         controller: _searchCtrl,
                         decoration: const InputDecoration(
-                          hintText: 'Tur ara...',
+                          hintText: 'Tour search...',
                           prefixIcon: Icon(Icons.search, color: Color(0xFF9E9E9E), size: 20),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 12),
@@ -286,9 +286,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Bütçeye Göre Filtrele', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Filter by Budget', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const Divider(),
-                  ...['Hepsi', 'Düşük', 'Orta', 'Yüksek'].map((budget) => ListTile(
+                  ...['All', 'Low', 'Medium', 'High'].map((budget) => ListTile(
                     title: Text(budget),
                     leading: Icon(Icons.payments_outlined, color: _selectedBudget == budget ? Colors.green : Colors.grey),
                     trailing: _selectedBudget == budget ? const Icon(Icons.check, color: Colors.green) : null,
@@ -329,7 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text('Popüler Turlar',
+          child: Text('Popular Tours',
               style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
@@ -357,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         .toString()
                         .toLowerCase()
                         .contains(_searchQuery);
-                final filterMatch = _selectedBudget == 'Hepsi' ||
+                final filterMatch = _selectedBudget == 'All' ||
                     (tour['city'] ?? '')
                         .toString()
                         .toLowerCase() ==
@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               if (filteredTours.isEmpty) {
                 return const Center(
-                    child: Text('Eşleşen tur bulunamadı.',
+                    child: Text('No matching rounds were found.',
                         style: TextStyle(color: Colors.white70)));
               }
               return ListView.builder(
@@ -499,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Tur Planlarım',
+              const Text('My Tour Plans',
                   style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -507,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> {
               GestureDetector(
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const StartedRoutesScreen())),
-                child: const Text('Tümünü Gör',
+                child: const Text('See all',
                     style: TextStyle(
                         color: Color(0xFFB7F1B9),
                         fontWeight: FontWeight.w600,
@@ -573,13 +573,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final String statusLabel;
     final Color statusColor;
     if (trip.isActive) {
-      statusLabel = 'Devam Ediyor';
+      statusLabel = 'Ongoing';
       statusColor = const Color(0xFF4CAF50);
     } else if (trip.isUpcoming) {
-      statusLabel = 'Yaklaşıyor';
+      statusLabel = 'Approaching';
       statusColor = const Color(0xFFFFA726);
     } else {
-      statusLabel = '${trip.days} Gün';
+      statusLabel = '${trip.days} Day';
       statusColor = const Color(0xFF4CAF50);
     }
 
@@ -702,7 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          '$completedCount/${trip.days} Gün',
+                          '$completedCount/${trip.days} Day',
                           style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 11,
@@ -755,13 +755,13 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(Icons.add_circle_outline, color: Colors.white70, size: 32),
               SizedBox(height: 8),
-              Text('Yeni Tur Planla',
+              Text('Plan a New Tour',
                   style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 15)),
               SizedBox(height: 4),
-              Text('Henüz aktif planın yok',
+              Text("You don't have an active plan yet.",
                   style: TextStyle(color: Colors.white60, fontSize: 12)),
             ],
           ),
@@ -778,7 +778,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text('Civarını Keşfet!',
+          child: Text('Explore your surroundings!',
               style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
@@ -798,7 +798,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       CircularProgressIndicator(color: Colors.white),
                       SizedBox(height: 12),
-                      Text('Çevrendeki yerler aranıyor...',
+                      Text('Searching locations in your area...',
                           style:
                           TextStyle(color: Colors.white70, fontSize: 13)),
                     ],
@@ -816,7 +816,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return _buildNearbyInfoCard(
                 icon: Icons.search_off_rounded,
-                message: 'Çevrenizde önerilecek yer bulunamadı.',
+                message: 'No places to recommend were found in your area.',
                 showRetry: true,
                 onRetry: () {
                   setState(() {
@@ -855,7 +855,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (error is LocationPermissionDeniedException) {
       return _buildNearbyInfoCard(
         icon: Icons.location_off_rounded,
-        message: 'Konum izni verilmedi.\nYakın yerleri görmek için izin ver.',
+        message: 'Location permission denied.\nGive permission to view nearby locations.',
         showRetry: true,
         // İzin tekrar istemek için butona tıklayınca future'ı yenile
         onRetry: () {
@@ -870,18 +870,18 @@ class _HomeScreenState extends State<HomeScreen> {
       return _buildNearbyInfoCard(
         icon: Icons.location_disabled_rounded,
         message:
-        'Konum izni kalıcı olarak reddedildi.\nTelefon ayarlarından izin ver.',
+        'Location permission has been permanently denied.\nAllow it through phone settings.',
         showRetry: false,
         // Ayarlar sayfasını aç
         onRetry: () => Geolocator.openAppSettings(),
-        retryLabel: 'Ayarları Aç',
+        retryLabel: 'Open Settings',
       );
     }
 
     // Genel hata (internet yok, API hatası vs.)
     return _buildNearbyInfoCard(
       icon: Icons.wifi_off_rounded,
-      message: 'Yerler yüklenemedi.\nİnternet bağlantını kontrol et.',
+      message: 'The locations could not be loaded. Check your internet connection.',
       showRetry: true,
       onRetry: () {
         setState(() {
@@ -896,7 +896,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required String message,
     required bool showRetry,
     VoidCallback? onRetry,
-    String retryLabel = 'Tekrar Dene',
+    String retryLabel = 'Try again',
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1096,9 +1096,9 @@ class _FavoriteButtonState extends State<FavoriteButton> {
         title: widget.tour['city'] ?? 'Voyixi Turu',
         city: widget.tour['city'] ?? '',
         days: int.tryParse(widget.tour['days']?.toString().split(' ').first ?? '1') ?? 1,
-        budget: 'Orta', // Varsayılan veya Firestore'dan gelen bütçe
+        budget: 'Medium', // Varsayılan veya Firestore'dan gelen bütçe
         imageUrl: widget.tour['image'],
-        summary: '${widget.tour['city']} bölgesinde harika bir popüler tur.',
+        summary: 'A great and popular tour in the ${widget.tour['city']} region.',
       ));
     } else {
       // Favoriden Çıkar
