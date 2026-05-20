@@ -58,11 +58,11 @@ class bottomNav extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _navItem(context, Icons.home_rounded, "Ana Sayfa", 0),
-                  _navItem(context, Icons.map_outlined, "Rotalar", 1),
+                  _navItem(context, Icons.home_rounded, "Home", 0),
+                  _navItem(context, Icons.map_outlined, "Routes", 1),
                   const Expanded(child: SizedBox()),
-                  _navItem(context, Icons.favorite_border, "Favoriler", 2),
-                  _navItem(context, Icons.person_outline, "Profil", 3),
+                  _navItem(context, Icons.favorite_border, "Favorites", 2),
+                  _navItem(context, Icons.person_outline, "Profile", 3),
                 ],
               ),
               Positioned(
