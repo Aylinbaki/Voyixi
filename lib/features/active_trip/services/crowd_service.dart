@@ -9,37 +9,38 @@ import 'package:http/http.dart' as http;
 enum CrowdLevel { quiet, moderate, busy, veryBusy, closed }
 
 extension CrowdLevelExt on CrowdLevel {
+  // 1. ÇEVİRİ: Kalabalık durum etiketleri İngilizce yapıldı
   String get label => switch (this) {
-        CrowdLevel.quiet => 'Sakin',
-        CrowdLevel.moderate => 'Orta',
-        CrowdLevel.busy => 'Yoğun',
-        CrowdLevel.veryBusy => 'Çok Yoğun',
-        CrowdLevel.closed => 'Kapalı',
-      };
+    CrowdLevel.quiet => 'Calm',
+    CrowdLevel.moderate => 'Moderate',
+    CrowdLevel.busy => 'Busy',
+    CrowdLevel.veryBusy => 'Very Busy',
+    CrowdLevel.closed => 'Closed',
+  };
 
   Color get color => switch (this) {
-        CrowdLevel.quiet => const Color(0xFF4CAF50),
-        CrowdLevel.moderate => const Color(0xFFF9A825),
-        CrowdLevel.busy => const Color(0xFFEF6C00),
-        CrowdLevel.veryBusy => const Color(0xFFE53935),
-        CrowdLevel.closed => const Color(0xFF78909C),
-      };
+    CrowdLevel.quiet => const Color(0xFF4CAF50),
+    CrowdLevel.moderate => const Color(0xFFF9A825),
+    CrowdLevel.busy => const Color(0xFFEF6C00),
+    CrowdLevel.veryBusy => const Color(0xFFE53935),
+    CrowdLevel.closed => const Color(0xFF78909C),
+  };
 
   Color get bgColor => switch (this) {
-        CrowdLevel.quiet => const Color(0xFFE8F5E9),
-        CrowdLevel.moderate => const Color(0xFFFFF8E1),
-        CrowdLevel.busy => const Color(0xFFFFF3E0),
-        CrowdLevel.veryBusy => const Color(0xFFFFEBEE),
-        CrowdLevel.closed => const Color(0xFFECEFF1),
-      };
+    CrowdLevel.quiet => const Color(0xFFE8F5E9),
+    CrowdLevel.moderate => const Color(0xFFFFF8E1),
+    CrowdLevel.busy => const Color(0xFFFFF3E0),
+    CrowdLevel.veryBusy => const Color(0xFFFFEBEE),
+    CrowdLevel.closed => const Color(0xFFECEFF1),
+  };
 
   IconData get icon => switch (this) {
-        CrowdLevel.quiet => Icons.sentiment_very_satisfied_rounded,
-        CrowdLevel.moderate => Icons.sentiment_satisfied_rounded,
-        CrowdLevel.busy => Icons.sentiment_dissatisfied_rounded,
-        CrowdLevel.veryBusy => Icons.sentiment_very_dissatisfied_rounded,
-        CrowdLevel.closed => Icons.lock_outline_rounded,
-      };
+    CrowdLevel.quiet => Icons.sentiment_very_satisfied_rounded,
+    CrowdLevel.moderate => Icons.sentiment_satisfied_rounded,
+    CrowdLevel.busy => Icons.sentiment_dissatisfied_rounded,
+    CrowdLevel.veryBusy => Icons.sentiment_very_dissatisfied_rounded,
+    CrowdLevel.closed => Icons.lock_outline_rounded,
+  };
 }
 
 class CrowdService {
@@ -79,7 +80,7 @@ class CrowdService {
         placeId: placeId,
         fallbackLevel: fallbackLevel,
       );
-      
+
       // Çekilen veriyi zaman damgasıyla belleğe yaz
       _cache[key] = (result.$1, DateTime.now(), result.$2);
       return result;
@@ -103,9 +104,9 @@ class CrowdService {
     final res = await http.get(
       Uri.parse(
         'https://maps.googleapis.com/maps/api/place/details/json'
-        '?place_id=$id'
-        '&fields=current_opening_hours,user_ratings_total,rating,business_status'
-        '&key=$_key',
+            '?place_id=$id'
+            '&fields=current_opening_hours,user_ratings_total,rating,business_status'
+            '&key=$_key',
       ),
     ).timeout(const Duration(seconds: 8));
 
@@ -121,7 +122,8 @@ class CrowdService {
     final businessStatus = result['business_status'] as String?;
     if (businessStatus == 'CLOSED_TEMPORARILY' ||
         businessStatus == 'CLOSED_PERMANENTLY') {
-      return (CrowdLevel.closed, 'Geçici Kapalı');
+      // 2. ÇEVİRİ: Geçici kapalı durumu İngilizce yapıldı
+      return (CrowdLevel.closed, 'Temporarily Closed');
     }
 
     // Çalışma saatleri ve güncel açıklık kontrolü
@@ -131,11 +133,12 @@ class CrowdService {
 
       // Eğer mekan o an kapalıysa bir sonraki açılış saatini ayıkla
       if (!isOpenNow) {
-        String nextOpenTime = 'Kapalı';
+        // 'Kapalı' -> 'Closed'
+        String nextOpenTime = 'Closed';
         try {
           final now = DateTime.now();
           // Google Haritalar haftayı Pazar gününden başlatır (0 = Pazar, 1 = Pazartesi...)
-          final currentWeekday = now.weekday == 7 ? 0 : now.weekday; 
+          final currentWeekday = now.weekday == 7 ? 0 : now.weekday;
           final periods = openingHours['periods'] as List?;
 
           if (periods != null) {
@@ -145,14 +148,15 @@ class CrowdService {
               if (open != null && open['day'] == currentWeekday) {
                 final timeStr = open['time'] as String?; // Örn: Google'dan "0900" gelir
                 if (timeStr != null && timeStr.length == 4) {
-                  nextOpenTime = 'Açılış: ${timeStr.substring(0, 2)}:${timeStr.substring(2)}';
+                  // 3. ÇEVİRİ: Gelecek açılış saati metin şablonu İngilizce yapıldı
+                  nextOpenTime = 'Opens at ${timeStr.substring(0, 2)}:${timeStr.substring(2)}';
                   break;
                 }
               }
             }
           }
         } catch (_) {
-          nextOpenTime = 'Kapalı';
+          nextOpenTime = 'Closed';
         }
         return (CrowdLevel.closed, nextOpenTime);
       }
@@ -164,7 +168,7 @@ class CrowdService {
       (result['rating'] as num?)?.toDouble() ?? 3.0,
       openingHours,
     );
-    
+
     return (estimatedLevel, null);
   }
 
@@ -172,8 +176,8 @@ class CrowdService {
     final res = await http.get(
       Uri.parse(
         'https://maps.googleapis.com/maps/api/place/textsearch/json'
-        '?query=${Uri.encodeComponent('$name $city')}'
-        '&key=$_key',
+            '?query=${Uri.encodeComponent('$name $city')}'
+            '&key=$_key',
       ),
     ).timeout(const Duration(seconds: 8));
 
@@ -185,10 +189,10 @@ class CrowdService {
   }
 
   CrowdLevel _estimateFromTimeAndRating(
-    int totalRatings,
-    double rating,
-    dynamic currentHours,
-  ) {
+      int totalRatings,
+      double rating,
+      dynamic currentHours,
+      ) {
     final now = DateTime.now();
     final hour = now.hour;
     final weekday = now.weekday;
@@ -215,12 +219,13 @@ class CrowdService {
     return CrowdLevel.values[total];
   }
 
+  // 4. ÇEVİRİ: Fallback metin ayrıştırıcısı yeni İngilizce veri standartlarına göre güncellendi
   CrowdLevel _parseFallback(String? level) => switch (level) {
-        'Sakin' => CrowdLevel.quiet,
-        'Yoğun' => CrowdLevel.busy,
-        'Çok Yoğun' => CrowdLevel.veryBusy,
-        _ => CrowdLevel.moderate,
-      };
+    'Calm' => CrowdLevel.quiet,
+    'Busy' => CrowdLevel.busy,
+    'Very Busy' => CrowdLevel.veryBusy,
+    _ => CrowdLevel.moderate,
+  };
 
   /// Manuel olarak önbelleği temizlemek (örn: sayfayı aşağı kaydırıp yenileyince) gerekirse tetiklenebilir.
   void clearCache() {

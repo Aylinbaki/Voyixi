@@ -1,3 +1,5 @@
+// lib/features/active_trip/widgets/review_sheet.dart
+
 import 'package:flutter/material.dart';
 
 class ReviewSheet extends StatefulWidget {
@@ -25,7 +27,8 @@ class _ReviewSheetState extends State<ReviewSheet> {
   static const _textDark = Color(0xFF1A2E2E);
   static const _textMid = Color(0xFF4A6060);
 
-  final _labels = ['', 'Berbat', 'Kötü', 'İyi', 'Çok İyi', 'Harika!'];
+  // 1. ÇEVİRİ: Yıldız puanlama etiketleri İngilizce yapıldı
+  final _labels = ['', 'Terrible', 'Bad', 'Good', 'Very Good', 'Excellent!'];
 
   @override
   void initState() {
@@ -78,7 +81,8 @@ class _ReviewSheetState extends State<ReviewSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Değerlendirme',
+                  // 2. ÇEVİRİ: Panel başlığı İngilizce yapıldı
+                  const Text('Review',
                       style: TextStyle(fontSize: 17,
                           fontWeight: FontWeight.w800, color: _textDark)),
                   Text(widget.placeName,
@@ -126,15 +130,16 @@ class _ReviewSheetState extends State<ReviewSheet> {
             maxLines: 3,
             maxLength: 300,
             decoration: InputDecoration(
-              hintText: 'Deneyiminizi paylaşın... (isteğe bağlı)',
+              // 3. ÇEVİRİ: Input placeholder / ipucu metni İngilizce yapıldı
+              hintText: 'Share your experience... (optional)',
               hintStyle:
-                  TextStyle(color: Colors.grey[400], fontSize: 13),
+              TextStyle(color: Colors.grey[400], fontSize: 13),
               filled: true,
               fillColor: const Color(0xFFF0FAFA),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide:
-                    BorderSide(color: Colors.grey[200]!),
+                BorderSide(color: Colors.grey[200]!),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -143,7 +148,7 @@ class _ReviewSheetState extends State<ReviewSheet> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide:
-                    const BorderSide(color: _teal, width: 1.5),
+                const BorderSide(color: _teal, width: 1.5),
               ),
               counterStyle: TextStyle(color: Colors.grey[400], fontSize: 11),
             ),
@@ -155,9 +160,9 @@ class _ReviewSheetState extends State<ReviewSheet> {
             child: ElevatedButton(
               onPressed: _rating == 0
                   ? null : () {
-                      widget.onSave(_rating, _ctrl.text.trim());
-                      Navigator.pop(context);
-                    },
+                widget.onSave(_rating, _ctrl.text.trim());
+                Navigator.pop(context);
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: _teal,
                 disabledBackgroundColor: Colors.grey[200],
@@ -166,7 +171,8 @@ class _ReviewSheetState extends State<ReviewSheet> {
                     borderRadius: BorderRadius.circular(14)),
                 elevation: 0,
               ),
-              child: const Text('Değerlendirmeyi Kaydet',
+              // 4. ÇEVİRİ: Kaydetme butonu İngilizce yapıldı
+              child: const Text('Save Review',
                   style: TextStyle(color: Colors.white,fontWeight: FontWeight.w700,fontSize: 15)),
             ),
           ),

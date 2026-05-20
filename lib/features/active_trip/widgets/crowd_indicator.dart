@@ -123,9 +123,9 @@ class _CrowdIndicatorState extends State<CrowdIndicator> {
       );
 
   CrowdLevel _parseFallback(String level) => switch (level) {
-        'Sakin' => CrowdLevel.quiet,
-        'Yoğun' => CrowdLevel.busy,
-        'Çok Yoğun' => CrowdLevel.veryBusy,
+        'Calm' => CrowdLevel.quiet,
+        'Busy' => CrowdLevel.busy,
+        'Very Busy' => CrowdLevel.veryBusy,
         _ => CrowdLevel.moderate,
       };
 }

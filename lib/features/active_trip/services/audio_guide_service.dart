@@ -1,3 +1,5 @@
+// lib/features/active_trip/services/audio_guide_service.dart
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -46,11 +48,11 @@ class AudioGuideService {
 
       if (cachedFile != null) {
         // Cache'de var — direkt kullan, API çağrısı yok
-        debugPrint(' Cache\'den oynatılıyor: $placeName');
+        debugPrint(' Playing from cache: $placeName');
         audioFile = cachedFile;
       } else {
         // Cache'de yok — üret ve kaydet
-        debugPrint('🔊 Yeni ses üretiliyor: $placeName');
+        debugPrint('🔊 Generating new audio: $placeName');
 
         // 1. Gemini'den metin al
         final text = await _generateText(
@@ -79,7 +81,7 @@ class AudioGuideService {
       });
     } catch (e) {
       _isPlaying = false;
-      debugPrint('❌ AudioGuide hatası: $e');
+      debugPrint('❌ AudioGuide error: $e');
       onError?.call();
     }
   }
@@ -120,7 +122,7 @@ class AudioGuideService {
     return file;
   }
 
-  // Tüm cache'i temizle (isteğe bağlı — ayarlar sayfasından çağrılabilir)
+  // Tüm cache'i temizle
   Future<void> clearCache() async {
     try {
       final dir = await getTemporaryDirectory();
@@ -131,7 +133,7 @@ class AudioGuideService {
       for (final f in files) {
         await f.delete();
       }
-      debugPrint('🗑️ Ses cache temizlendi');
+      debugPrint('🗑️ Audio guide cache cleared');
     } catch (_) {}
   }
 
@@ -141,23 +143,23 @@ class AudioGuideService {
     required String city,
     required String description,
   }) async {
-    
+
     const url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
+    // 1. ÇEVİRİ: Sesli rehber prompt kuralları tamamen İngilizceye çekildi
     final prompt =
-        'Sen bir profesyonel sesli tur rehberisin. '
-        '"$placeName" ($city) hakkında turistlere yönelik '
-        'sesli anlatım için kısa, akıcı ve ilgi çekici bir metin yaz.\n\n'
-        'Ek bilgi: $description\n\n'
-        'KURALLAR:\n'
-        '- Kesinlikle 300 karakteri geçme\n'
-        '- Doğal konuşma dili kullan, liste yapma\n'
-        '- Türkçe yaz\n'
-        '- Burayı gezme konusunda tavsiyler ver \n'
-        '- 1-2 ilginç tarihsel veya kültürel bilgi ver';
-        '- merhaba hoşgeldiniz gibi hiç bir girizgah başlama direkt bilgi ver';
-        
+        'You are a professional audio tour guide. '
+        'Write a short, fluent, and engaging audio narration for tourists about "$placeName" in $city.\n\n'
+        'Additional context: $description\n\n'
+        'RULES:\n'
+        '- Strictly do not exceed 300 characters.\n'
+        '- Use a natural, spoken conversational tone; do not make lists.\n'
+        '- Write in English.\n'
+        '- Provide advice or tips on touring this specific place.\n'
+        '- Include 1 or 2 interesting historical or cultural facts.\n'
+        '- Do not start with any introduction like "Hello", "Welcome", or greeting phrases; dive directly into the facts.';
+
 
     final res = await http.post(
       Uri.parse('$url?key=$_geminiKey'),
@@ -176,20 +178,21 @@ class AudioGuideService {
     ).timeout(const Duration(seconds: 30));
 
     if (res.statusCode != 200) {
-      throw Exception('Gemini hatası: ${res.statusCode}');
+      throw Exception('Gemini error: ${res.statusCode}');
     }
 
     final data = jsonDecode(res.body);
     final finishReason = data['candidates'][0]['finishReason'];
-    debugPrint(' Gemini Durma Nedini: $finishReason');
+    debugPrint(' Gemini Stop Reason: $finishReason');
     if (finishReason == 'SAFETY') {
-  debugPrint(' Güvenlik filtresine takıldı');
-} else if (finishReason == 'MAX_TOKENS') {
-  debugPrint(' Token yetmedi');
-}
+      debugPrint(' Flagged by safety filter');
+    } else if (finishReason == 'MAX_TOKENS') {
+      debugPrint(' Exceeded max tokens');
+    }
+
     final text =
-        data['candidates'][0]['content']['parts'][0]['text'] as String;
-    debugPrint('🤖 Gemini Metni: $text');
+    data['candidates'][0]['content']['parts'][0]['text'] as String;
+    debugPrint('🤖 Gemini Text: $text');
     return text.length > 300 ? '${text.substring(0, 297)}...' : text;
   }
 
@@ -203,15 +206,15 @@ class AudioGuideService {
     ).timeout(const Duration(seconds: 10));
 
     if (tokenRes.statusCode != 200) {
-      throw Exception('Azure token hatası: ${tokenRes.statusCode}');
+      throw Exception('Azure token error: ${tokenRes.statusCode}');
     }
 
     final token = tokenRes.body;
 
-    // SSML
+    // 2. ÇEVİRİ & GÜNCELLEME: TTS ses dili ve yapısı Amerikan İngilizcesine (en-US-AvaNeural) geçirildi
     final ssml = '''
-<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="tr-TR">
-  <voice name="tr-TR-EmelNeural">
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
+  <voice name="en-US-AvaNeural">
     <prosody rate="-5%" pitch="0%">
       ${_escapeXml(text)}
     </prosody>
@@ -231,7 +234,7 @@ class AudioGuideService {
     ).timeout(const Duration(seconds: 30));
 
     if (ttsRes.statusCode != 200) {
-      throw Exception('Azure TTS hatası: ${ttsRes.statusCode}');
+      throw Exception('Azure TTS error: ${ttsRes.statusCode}');
     }
 
     return ttsRes.bodyBytes;

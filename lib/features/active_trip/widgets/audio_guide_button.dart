@@ -1,3 +1,5 @@
+// lib/features/active_trip/widgets/audio_guide_button.dart
+
 import 'package:flutter/material.dart';
 import '../services/audio_guide_service.dart';
 
@@ -85,9 +87,10 @@ class _AudioGuideButtonState extends State<AudioGuideButton>
             _playing = false;
           });
           _pulseCtrl.stop();
+          // 1. ÇEVİRİ: Sesli rehber hata uyarısı İngilizce yapıldı
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Sesli rehber yüklenemedi'),
+              content: Text('Failed to load audio guide'),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -122,16 +125,17 @@ class _AudioGuideButtonState extends State<AudioGuideButton>
             borderRadius: BorderRadius.circular(12),
             boxShadow: _playing
                 ? [BoxShadow(
-                    color: widget.color.withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3))]
+                color: widget.color.withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 3))]
                 : [],
           ),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             _icon(),
             const SizedBox(width: 6),
             Text(
-              _playing ? 'Durdur' : 'Sesli Rehber',
+              // 2. ÇEVİRİ: Geniş buton metinleri İngilizce yapıldı
+              _playing ? 'Stop' : 'Audio Guide',
               style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -163,7 +167,8 @@ class _AudioGuideButtonState extends State<AudioGuideButton>
             _icon(),
             const SizedBox(height: 2),
             Text(
-              _playing ? 'Dur' : 'Sesli\nRehber',
+              // 3. ÇEVİRİ: Küçük buton metinleri İngilizce yapıldı
+              _playing ? 'Stop' : 'Audio\nGuide',
               textAlign: TextAlign.center,
               style: const TextStyle(
                   color: Colors.white,
