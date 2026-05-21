@@ -65,7 +65,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchCtrl.addListener(() {
       setState(() => _searchQuery = _searchCtrl.text.toLowerCase());
     });
-    _nearbyFuture = TourService().getNearbyPlaces();
+    _refreshNearbyPlaces();
+  }
+
+  void _refreshNearbyPlaces() {
+    setState(() {
+      _nearbyFuture = TourService().getNearbyPlaces();
+    });
   }
   Future<void> _loadUserData() async {
     if (_currentUser != null) {
@@ -798,7 +804,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       CircularProgressIndicator(color: Colors.white),
                       SizedBox(height: 12),
-                      Text('Searching locations in your area...',
+                      Text('Finding places near you...',
                           style:
                           TextStyle(color: Colors.white70, fontSize: 13)),
                     ],
@@ -818,11 +824,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.search_off_rounded,
                 message: 'No places to recommend were found in your area.',
                 showRetry: true,
-                onRetry: () {
-                  setState(() {
-                    _nearbyFuture = TourService().getNearbyPlaces();
-                  });
-                },
+                onRetry: _refreshNearbyPlaces,
               );
             }
 
@@ -858,11 +860,7 @@ class _HomeScreenState extends State<HomeScreen> {
         message: 'Location permission denied.\nGive permission to view nearby locations.',
         showRetry: true,
         // İzin tekrar istemek için butona tıklayınca future'ı yenile
-        onRetry: () {
-          setState(() {
-            _nearbyFuture = TourService().getNearbyPlaces();
-          });
-        },
+        onRetry: _refreshNearbyPlaces,
       );
     }
 
@@ -871,23 +869,53 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: Icons.location_disabled_rounded,
         message:
         'Location permission has been permanently denied.\nAllow it through phone settings.',
-        showRetry: false,
-        // Ayarlar sayfasını aç
+        showRetry: true,
         onRetry: () => Geolocator.openAppSettings(),
         retryLabel: 'Open Settings',
       );
     }
 
-    // Genel hata (internet yok, API hatası vs.)
+    if (error is LocationServiceDisabledException) {
+      return _buildNearbyInfoCard(
+        icon: Icons.gps_off_rounded,
+        message:
+        'Location services are turned off.\nEnable GPS to discover nearby places.',
+        showRetry: true,
+        onRetry: () => Geolocator.openLocationSettings(),
+        retryLabel: 'Open Location Settings',
+      );
+    }
+
+    if (error is NearbyPlacesFetchException) {
+      return _buildNearbyInfoCard(
+        icon: Icons.cloud_off_rounded,
+        message: error.message,
+        showRetry: true,
+        onRetry: _refreshNearbyPlaces,
+      );
+    }
+
+    // Ağ / DNS hataları
+    final errText = error.toString().toLowerCase();
+    if (errText.contains('socket') ||
+        errText.contains('host') ||
+        errText.contains('network')) {
+      return _buildNearbyInfoCard(
+        icon: Icons.wifi_off_rounded,
+        message:
+        'Network error while loading nearby places.\n'
+        'Check Wi‑Fi/mobile data, then tap Try again.',
+        showRetry: true,
+        onRetry: _refreshNearbyPlaces,
+      );
+    }
+
+    // Bilinmeyen hata
     return _buildNearbyInfoCard(
-      icon: Icons.wifi_off_rounded,
-      message: 'The locations could not be loaded. Check your internet connection.',
+      icon: Icons.error_outline_rounded,
+      message: 'Could not load nearby places.\n$error',
       showRetry: true,
-      onRetry: () {
-        setState(() {
-          _nearbyFuture = TourService().getNearbyPlaces();
-        });
-      },
+      onRetry: _refreshNearbyPlaces,
     );
   }
 

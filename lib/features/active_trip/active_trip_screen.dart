@@ -8,6 +8,8 @@ import 'widgets/active_trip_map.dart';
 import '../../widgets/navigation_bar.dart';
 import 'widgets/audio_guide_button.dart';
 import '../../features/routes/routes_service.dart';
+import 'services/crowd_service.dart';
+import 'services/places_photo_service.dart';
 
 
 const _dayColors = [
@@ -43,12 +45,12 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     final result = <({PlaceItem place, int dayIdx, int placeIdx})>[];
     for (int d = 0; d < widget.tripResult.dayPlans.length; d++) {
       for (int p = 0;
-      p < widget.tripResult.dayPlans[d].places.length;
-      p++) {
+          p < widget.tripResult.dayPlans[d].places.length;
+          p++) {
         result.add((
-        place: widget.tripResult.dayPlans[d].places[p],
-        dayIdx: d,
-        placeIdx: p,
+          place: widget.tripResult.dayPlans[d].places[p],
+          dayIdx: d,
+          placeIdx: p,
         ));
       }
     }
@@ -61,7 +63,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
 
   TripPlaceState _stateOf(int dayIdx, int placeIdx) =>
       _states.firstWhere(
-            (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx,
+        (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx,
         orElse: () => TripPlaceState(dayIdx: dayIdx, placeIdx: placeIdx),
       );
 
@@ -70,10 +72,13 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     super.initState();
     _initStates();
   }
+  
 
   Future<void> _initStates() async {
+    await _enrichMissingPhotos();
+
     final saved =
-    await ActiveTripService().loadProgress(widget.savedTrip.id);
+        await ActiveTripService().loadProgress(widget.savedTrip.id);
 
     if (saved.isNotEmpty) {
       setState(() { _states = saved; _loading = false; });
@@ -94,7 +99,33 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     }
   }
 
+  /// Firebase'de photoUrl boş kalan veya hiç kaydedilmemiş mekanları tamamlar.
+  Future<void> _enrichMissingPhotos() async {
+    final photoService = PlacesPhotoService();
+    var updated = false;
+
+    for (final day in widget.tripResult.dayPlans) {
+      for (var i = 0; i < day.places.length; i++) {
+        final place = day.places[i];
+        if (place.hasPhoto) continue;
+
+        final url = await photoService.fetchPhotoUrl(
+          name: place.name,
+          city: widget.savedTrip.city,
+          placeId: place.placeId,
+        );
+        if (url != null) {
+          day.places[i] = place.copyWith(photoUrl: url);
+          updated = true;
+        }
+      }
+    }
+
+    if (updated && mounted) setState(() {});
+  }
+
   void _completePlace(int dayIdx, int placeIdx) {
+    CrowdService().clearCache();
     setState(() {
       final idx = _states.indexWhere(
               (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx);
@@ -123,7 +154,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
   void _saveReview(int dayIdx, int placeIdx, int rating, String review) {
     setState(() {
       final idx = _states.indexWhere(
-              (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx);
+          (s) => s.dayIdx == dayIdx && s.placeIdx == placeIdx);
       if (idx != -1) {
         _states[idx].rating = rating;
         _states[idx].review = review;
@@ -166,13 +197,13 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         ],
       ),
       bottomNavigationBar: const bottomNav(selectedIndex: 1),
-    );
+    ); 
   }
 
   // ── App Bar ──────────────────────────────────────────────────────────────
   SliverAppBar _buildAppBar(BuildContext context) {
     final progress =
-    _totalCount > 0 ? _completedCount / _totalCount : 0.0;
+        _totalCount > 0 ? _completedCount / _totalCount : 0.0;
 
     return SliverAppBar(
       pinned: true,
@@ -306,7 +337,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
 
     final cp = current.first;
     final place =
-    widget.tripResult.dayPlans[cp.dayIdx].places[cp.placeIdx];
+        widget.tripResult.dayPlans[cp.dayIdx].places[cp.placeIdx];
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -335,6 +366,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+<<<<<<< Updated upstream
             children: [
               // 4. ÇEVİRİ: Şimdi neredesiniz başlığı İngilizce yapıldı
               const Text('Where are you now?',
@@ -345,18 +377,29 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                       fontSize: 17,
                       fontWeight: FontWeight.w800)),
               Text('${place.timeSlot} • ${place.duration}',
+=======
+              children: [
+            const Text('Şimdi Neredesiniz?',
+                style: TextStyle(color: Colors.white70, fontSize: 11)),
+            Text(place.name,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800)),
+            Text('${place.timeSlot} • ${place.duration}',
+>>>>>>> Stashed changes
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
-        ),
-        AudioGuideButton(
-          placeName: place.name,
-          city: widget.savedTrip.city,
-          description: place.description,
-          compact: true, // küçük buton modu
-        ),
-      ],
+          AudioGuideButton(
+            placeName: place.name,
+            city: widget.savedTrip.city,
+            description: place.description,
+            compact: true, // küçük buton modu
+          ),
+        ],
       ),
     );
   }

@@ -32,35 +32,45 @@ class StartedRoutesScreen extends StatelessWidget {
             colors: [Color(0xFF0DA3A3), Color(0xFFB8F0F0)],
           ),
         ),
-        child: StreamBuilder<List<SavedTrip>>(
-          stream: RoutesService().getTrips(),
-          builder: (context, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(
-                  child: CircularProgressIndicator(color: _teal));
-            }
-            final trips = snap.data ?? [];
+        // StartedRoutesScreen.dart içindeki StreamBuilder'ın build fonksiyonu:
 
-            return CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                _buildSliverHeader(context, trips.length),
-                if (trips.isEmpty)
-                  SliverFillRemaining(child: _buildEmptyState())
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                            (context, i) => _ModernTripCard(trip: trips[i]),
-                        childCount: trips.length,
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
+child: StreamBuilder<List<SavedTrip>>(
+  stream: RoutesService().getTrips(),
+  builder: (context, snap) {
+    if (snap.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator(color: _teal));
+    }
+    
+    final trips = snap.data ?? [];
+
+    // 🛡️ MÜHENDİSLİK LOG HATI: Veri geldiği anda terminale döküyoruz
+    debugPrint('🔎 DEBUG - Firestore\'dan Toplam ${trips.length} plan geldi.');
+    for (var trip in trips) {
+      debugPrint('📍 Rota Başlığı: ${trip.title}');
+      debugPrint('🖼️ Rota Kapak Linki: "${trip.imageUrl}"');
+      debugPrint('----------------------------------------');
+    }
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        _buildSliverHeader(context, trips.length),
+        if (trips.isEmpty)
+          SliverFillRemaining(child: _buildEmptyState())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => _ModernTripCard(trip: trips[i]),
+                childCount: trips.length,
+              ),
+            ),
+          ),
+      ],
+    );
+  },
+),
       ),
     );
   }
@@ -236,17 +246,46 @@ class _ModernTripCardState extends State<_ModernTripCard> {
             // Üst Bölüm: Görsel ve Cam Efekti Şehir Etiketi
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  child: SizedBox(
-                    height: 170,
-                    width: double.infinity,
-                    child: widget.trip.imageUrl != null
-                        ? Image.network(widget.trip.imageUrl!, fit: BoxFit.cover)
-                        : Container(color: _teal.withOpacity(0.1),
-                        child: const Icon(Icons.image, color: _teal)),
-                  ),
+                // StartedRoutesScreen.dart içindeki _ModernTripCardState sınıfının ilgili kısmı:
+
+ClipRRect(
+  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+  child: SizedBox(
+    height: 170,
+    width: double.infinity,
+    child: widget.trip.imageUrl != null && widget.trip.imageUrl!.isNotEmpty
+        ? Image.network(
+            // 🛡️ ÇİFT KATMANLI KORUMA: Veritabanında eski parantezli URL kalmışsa anında temizler
+            widget.trip.imageUrl!.contains('](')
+                ? widget.trip.imageUrl!.split('](')[1].replaceAll(')', '').trim()
+                : widget.trip.imageUrl!.replaceAll('[', '').replaceAll(']', '').trim(),
+            fit: BoxFit.cover,
+            cacheWidth: 400, // Devasa şehir fotoğraflarını râmde sadece 400px genişliğinde tutarak GPU'yu korur
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  color: _teal,
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                      : null,
                 ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              debugPrint('⚠️ Route Card Image load error: $error');
+              return Container(
+                color: _teal.withOpacity(0.1),
+                child: const Icon(Icons.broken_image_rounded, color: _teal, size: 32),
+              );
+            },
+          )
+        : Container(
+            color: _teal.withOpacity(0.1),
+            child: const Icon(Icons.image, color: _teal, size: 32),
+          ),
+  ),
+),
 
                 // Şehir Etiketi (Glassmorphism)
                 Positioned(

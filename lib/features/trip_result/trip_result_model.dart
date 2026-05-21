@@ -37,6 +37,18 @@ class PlaceItem {
     placeId: placeId ?? this.placeId,
   );
 
+  /// Firestore / Gemini'den gelen ham URL'i görüntülenebilir hale getirir.
+  String? get resolvedPhotoUrl {
+    final raw = photoUrl?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    if (raw.contains('](')) {
+      return raw.split('](')[1].replaceAll(')', '').trim();
+    }
+    return raw.replaceAll('[', '').replaceAll(']', '').trim();
+  }
+
+  bool get hasPhoto => resolvedPhotoUrl != null && resolvedPhotoUrl!.isNotEmpty;
+
   factory PlaceItem.fromJson(Map<String, dynamic> j) => PlaceItem(
     name: j['name'] ?? '',
     description: j['description'] ?? '',
@@ -45,13 +57,16 @@ class PlaceItem {
     crowdLevel: j['crowdLevel'] ?? 'Moderate',
     lat: (j['lat'] as num?)?.toDouble(),
     lng: (j['lng'] as num?)?.toDouble(),
-    placeId: j['placeId'],
+    photoUrl: j['photoUrl'] as String?,
+    placeId: j['placeId'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
     'name': name, 'description': description, 'timeSlot': timeSlot,
     'duration': duration, 'crowdLevel': crowdLevel,
-    'lat': lat, 'lng': lng, 'placeId': placeId,
+    'lat': lat, 'lng': lng,
+    'photoUrl': photoUrl,
+    'placeId': placeId,
   };
 }
 

@@ -15,62 +15,73 @@ class RoutesService {
       _db.collection('users').doc(_uid).collection('saved_trips');
 
   // ── 1. Planı kaydet 
-  Future<String> saveTrip({
-    required TripResult result,
-    required String title,
-    DateTime? tripDate,
-    DateTime? startDate,
-  }) async {
-    if (_uid == null) throw Exception('User is not logged in');
+Future<String> saveTrip({
+  required TripResult result,
+  required String title,
+  DateTime? tripDate,
+  DateTime? startDate,
+}) async {
+  if (_uid == null) throw Exception('User is not logged in');
 
-    //Aynı şehir ve gün sayısına sahip aktif bir plan var mı?
-    final existing = await _tripsRef
-        .where('city', isEqualTo: result.city)
-        .where('title', isEqualTo: title)
-        .limit(1)
-        .get();
+  // 🚨 ESKİ KATI KONTROL KALDIRILDI: 
+  // Artık duplicate kontrolü yapmıyoruz, kullanıcı aynı şehre istediği kadar gidebilir!
 
-    if (existing.docs.isNotEmpty) {
-      throw Exception('DUPLICATE');
-    }
+  // Dinamik Başlık: Kullanıcının turları karışmasın diye sonuna tarih ekliyoruz
+  final now = DateTime.now();
+  final formattedDate = "${now.day}.${now.month}.${now.year}";
+  final dynamicTitle = "$title ($formattedDate)"; // Örn: İstanbul Seyahati (20.5.2026)
 
-    // Gemini 
-    final summary = await _generateSummary(result);
+  // Gemini Özet üretimi (Yeni dinamik başlıkla besleniyor)
+  final summary = await _generateSummary(result);
 
-    // Places API görsel
-    final imageUrl = await _fetchCityImage(result.city);
+  // Places API görsel
+  final imageUrl = await _fetchCityImage(result.city);
 
-    // DayPlan'ları Map'e çevir
-    final dayPlansMap = result.dayPlans.map((day) => {
-      'day': day.dayNumber,
-      'places': day.places.map((p) => p.toJson()).toList(),
-    }).toList();
-    final resolvedStart = startDate ?? tripDate;
-    final resolvedEnd = resolvedStart != null
-        ? resolvedStart.add(Duration(days: result.days - 1))
-        : null;
+  // DayPlan'ları Map'e çevir
+  // lib/features/routes/routes_service.dart içindeki saveTrip metodunun ilgili kısmı:
 
-    final docRef = _tripsRef.doc();
-    final trip = SavedTrip(
-      id: docRef.id,
-      title: title,
-      city: result.city,
-      days: result.days,
-      budget: result.budget,
-      preferences: [], 
-      summary: summary,
-      imageUrl: imageUrl,
-      tripDate: tripDate,
-      startDate: resolvedStart,
-      endDate: resolvedEnd,
-      completionRate: 0.0,
-      dayPlans: dayPlansMap,
-      createdAt: DateTime.now(),
-    );
+  // DayPlan'ları Map'e çevirirken tüm zenginleştirilmiş alanları zorunlu olarak dahil ediyoruz
+  final dayPlansMap = result.dayPlans.map((day) => {
+    'day': day.dayNumber,
+    'places': day.places.map((p) => {
+      'name': p.name,
+      'description': p.description,
+      'timeSlot': p.timeSlot,
+      'duration': p.duration,
+      'crowdLevel': p.crowdLevel,
+      'lat': p.lat,
+      'lng': p.lng,
+      'photoUrl': p.photoUrl, // 🛡️ KORUMA: Google Places'tan gelen fotoğraf URL'ini veritabanına kilitler
+      'placeId': p.placeId,   // 🛡️ KORUMA: İleride CrowdService'in kotayı sömürmesini engelleyecek ID
+    }).toList(),
+  }).toList();
+  
+  final resolvedStart = startDate ?? tripDate;
+  final resolvedEnd = resolvedStart != null
+      ? resolvedStart.add(Duration(days: result.days - 1))
+      : null;
 
-    await docRef.set(trip.toMap());
-    return docRef.id;
-  }
+  final docRef = _tripsRef.doc();
+  final trip = SavedTrip(
+    id: docRef.id,
+    title: dynamicTitle, // Düzenlenen dinamik başlık basıldı
+    city: result.city,
+    days: result.days,
+    budget: result.budget,
+    preferences: [], 
+    summary: summary,
+    imageUrl: imageUrl,
+    tripDate: tripDate,
+    startDate: resolvedStart,
+    endDate: resolvedEnd,
+    completionRate: 0.0,
+    dayPlans: dayPlansMap,
+    createdAt: DateTime.now(),
+  );
+
+  await docRef.set(trip.toMap());
+  return docRef.id;
+}
 
   //Tüm planları getir 
   Stream<List<SavedTrip>> getTrips() {

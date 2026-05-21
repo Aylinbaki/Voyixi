@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../trip_result/trip_result_model.dart';
 import '../../trip_result/widgets/place_detail_sheet.dart';
 import '../active_trip_state_model.dart';
-import '../services/crowd_service.dart';
 import 'audio_guide_button.dart';
 import 'crowd_indicator.dart';
 import 'review_sheet.dart';
@@ -134,16 +133,48 @@ class ActivePlaceCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // Fotoğraf
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
+<<<<<<< Updated upstream
                           width: 76, height: 76,
                           child: place.photoUrl != null
                               ? Image.network(place.photoUrl!,
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
                                   _placeholder())
+=======
+                          width: 76,
+                          height: 76,
+                          child: place.hasPhoto
+                              ? Image.network(
+                                  place.resolvedPhotoUrl!,
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 150,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: dayColor,
+                                          value: loadingProgress.expectedTotalBytes != null
+                                              ? loadingProgress.cumulativeBytesLoaded /
+                                                  loadingProgress.expectedTotalBytes!
+                                              : null,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    debugPrint(
+                                        '⚠️ ActivePlaceCard image error (${place.name}): $error');
+                                    return _placeholder();
+                                  },
+                                )
+>>>>>>> Stashed changes
                               : _placeholder(),
                         ),
                       ),
@@ -184,12 +215,12 @@ class ActivePlaceCard extends StatelessWidget {
 
                     // Kalabalık: aktif mekan için gerçek zamanlı, diğerleri statik
                     if (_isCurrent)
-                      CrowdIndicator(
-                        placeName: place.name,
-                        city: city,
-                        placeId: place.placeId,
-                        fallbackLevel: place.crowdLevel,
-                      )
+  CrowdIndicator(
+    placeName: place.name,
+    city: city,
+    placeId: place.placeId, // 🔴 İŞTE BURASI!
+    fallbackLevel: place.crowdLevel,
+  )
                     else
                       _staticCrowdChip(place.crowdLevel),
                   ]),

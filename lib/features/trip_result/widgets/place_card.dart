@@ -118,19 +118,39 @@ class _PlaceCardState extends State<PlaceCard> {
                   const SizedBox(width: 12),
                   // Fotoğraf
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      width: 80, height: 80,
-                      child: widget.place.photoUrl != null
-                          ? Image.network(
-                        widget.place.photoUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _placeholderImage(widget.dayColor),
-                      )
-                          : _placeholderImage(widget.dayColor),
-                    ),
+  borderRadius: BorderRadius.circular(12),
+  child: SizedBox(
+    width: 80,
+    height: 80,
+    child: widget.place.hasPhoto
+        ? Image.network(
+            widget.place.resolvedPhotoUrl!,
+            fit: BoxFit.cover,
+            cacheWidth: 200,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: widget.dayColor,
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                        : null,
                   ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              debugPrint('⚠️ Image load error: $error');
+              return _placeholderImage(widget.dayColor);
+            },
+          )
+        : _placeholderImage(widget.dayColor),
+  ),
+),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
