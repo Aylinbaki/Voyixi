@@ -136,14 +136,6 @@ class ActivePlaceCard extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
-<<<<<<< Updated upstream
-                          width: 76, height: 76,
-                          child: place.photoUrl != null
-                              ? Image.network(place.photoUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _placeholder())
-=======
                           width: 76,
                           height: 76,
                           child: place.hasPhoto
@@ -174,7 +166,6 @@ class ActivePlaceCard extends StatelessWidget {
                                     return _placeholder();
                                   },
                                 )
->>>>>>> Stashed changes
                               : _placeholder(),
                         ),
                       ),

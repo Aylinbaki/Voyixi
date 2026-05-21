@@ -366,7 +366,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-<<<<<<< Updated upstream
+
             children: [
               // 4. ÇEVİRİ: Şimdi neredesiniz başlığı İngilizce yapıldı
               const Text('Where are you now?',
@@ -377,17 +377,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                       fontSize: 17,
                       fontWeight: FontWeight.w800)),
               Text('${place.timeSlot} • ${place.duration}',
-=======
-              children: [
-            const Text('Şimdi Neredesiniz?',
-                style: TextStyle(color: Colors.white70, fontSize: 11)),
-            Text(place.name,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800)),
-            Text('${place.timeSlot} • ${place.duration}',
->>>>>>> Stashed changes
+
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],

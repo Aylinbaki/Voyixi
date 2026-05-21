@@ -149,7 +149,7 @@ class AudioGuideService {
 
     // 1. ÇEVİRİ: Sesli rehber prompt kuralları tamamen İngilizceye çekildi
     final prompt =
-<<<<<<< Updated upstream
+
         'You are a professional audio tour guide. '
         'Write a short, fluent, and engaging audio narration for tourists about "$placeName" in $city.\n\n'
         'Additional context: $description\n\n'
@@ -161,20 +161,6 @@ class AudioGuideService {
         '- Include 1 or 2 interesting historical or cultural facts.\n'
         '- Do not start with any introduction like "Hello", "Welcome", or greeting phrases; dive directly into the facts.';
 
-=======
-        'Sen bir profesyonel sesli tur rehberisin. '
-        '"$placeName" ($city) hakkında turistlere yönelik '
-        'sesli anlatım için kısa, akıcı ve ilgi çekici bir metin yaz.\n\n'
-        'Ek bilgi: $description\n\n'
-        'KURALLAR:\n'
-        '- 5 cümleyi geçme\n'
-        '- Doğal konuşma dili kullan, liste yapma\n'
-        '- Türkçe yaz\n'
-        '- Burayı gezme konusunda tavsiyler ver \n'
-        '- 1-2 ilginç tarihsel veya kültürel bilgi ver';
-        '- merhaba hoşgeldiniz gibi hiç bir girizgah başlama direkt bilgi ver';
-        
->>>>>>> Stashed changes
 
     final res = await http.post(
       Uri.parse('$url?key=$_geminiKey'),
