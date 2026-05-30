@@ -43,11 +43,10 @@ child: StreamBuilder<List<SavedTrip>>(
     
     final trips = snap.data ?? [];
 
-    // 🛡️ MÜHENDİSLİK LOG HATI: Veri geldiği anda terminale döküyoruz
     debugPrint('🔎 DEBUG - Firestore\'dan Toplam ${trips.length} plan geldi.');
     for (var trip in trips) {
-      debugPrint('📍 Rota Başlığı: ${trip.title}');
-      debugPrint('🖼️ Rota Kapak Linki: "${trip.imageUrl}"');
+      debugPrint(' Rota Başlığı: ${trip.title}');
+      debugPrint(' Rota Kapak Linki: "${trip.imageUrl}"');
       debugPrint('----------------------------------------');
     }
 
@@ -255,12 +254,11 @@ ClipRRect(
     width: double.infinity,
     child: widget.trip.imageUrl != null && widget.trip.imageUrl!.isNotEmpty
         ? Image.network(
-            // 🛡️ ÇİFT KATMANLI KORUMA: Veritabanında eski parantezli URL kalmışsa anında temizler
             widget.trip.imageUrl!.contains('](')
                 ? widget.trip.imageUrl!.split('](')[1].replaceAll(')', '').trim()
                 : widget.trip.imageUrl!.replaceAll('[', '').replaceAll(']', '').trim(),
             fit: BoxFit.cover,
-            cacheWidth: 400, // Devasa şehir fotoğraflarını râmde sadece 400px genişliğinde tutarak GPU'yu korur
+            cacheWidth: 400, 
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Center(
@@ -273,7 +271,7 @@ ClipRRect(
               );
             },
             errorBuilder: (context, error, stackTrace) {
-              debugPrint('⚠️ Route Card Image load error: $error');
+              debugPrint(' Route Card Image load error: $error');
               return Container(
                 color: _teal.withOpacity(0.1),
                 child: const Icon(Icons.broken_image_rounded, color: _teal, size: 32),

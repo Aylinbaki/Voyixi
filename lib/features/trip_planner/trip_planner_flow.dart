@@ -11,7 +11,7 @@ class TripPlannerFlow extends StatefulWidget {
 }
 
 class _TripPlannerFlowState extends State<TripPlannerFlow> {
-  int _step = 0; // 0, 1, 2
+  int _step = 0; 
   final _plan = TripPlanModel();
 
   void _next() {

@@ -16,7 +16,7 @@ class UserService {
     }, SetOptions(merge: true));
   }
 
-  // Profil bilgilerini güncelle (city, country, name)
+  // Profil bilgilerini güncelle 
   Future<void> updateProfile({
     required String uid,
     required String name,

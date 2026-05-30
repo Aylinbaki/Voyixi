@@ -4,8 +4,6 @@ import '../active_trip_state_model.dart';
 
 class ActiveTripService {
   final _db = FirebaseFirestore.instance;
-  
-
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
 
   DocumentReference<Map<String, dynamic>> _ref(String tripId) => _db

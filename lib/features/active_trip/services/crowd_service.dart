@@ -122,7 +122,6 @@ class CrowdService {
 
     if (businessStatus == 'CLOSED_TEMPORARILY' ||
         businessStatus == 'CLOSED_PERMANENTLY') {
-      // 2. ÇEVİRİ: Geçici kapalı durumu İngilizce yapıldı
       return (CrowdLevel.closed, 'Temporarily Closed');
 
     }

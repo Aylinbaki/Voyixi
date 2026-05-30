@@ -23,7 +23,7 @@ class _RoutesWidget extends State<RoutesWidget> {
   void initState() {
     super.initState();
     // Varsayılan başlık
-    _titleCtrl.text = '${widget.result.city} Seyahati';
+    _titleCtrl.text = '${widget.result.city} Trip';
   }
 
   @override
@@ -137,7 +137,7 @@ class _RoutesWidget extends State<RoutesWidget> {
           TextField(
             controller: _titleCtrl,
             decoration: InputDecoration(
-              hintText: '${widget.result.city} Seyahati',
+              hintText: '${widget.result.city} Trip',
               hintStyle: const TextStyle(color: Color(0xFF8AABAB)),
               filled: true,
               fillColor: const Color(0xFFF0FAFA),

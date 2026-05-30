@@ -32,11 +32,9 @@
       _generate();
     }
 
-   // 🛡️ MÜHENDİSLİK KORUMASI: Aynı anda mükerrer istek atılmasını engelleyen kilit bayrağı
   bool _isGenerating = false;
 
   Future<void> _generate() async {
-    // Eğer arkada halihazırda bir istek koşturuluyorsa, yeni gelen istekleri doğrudan blokla!
     if (_isGenerating) return; 
 
     setState(() {
@@ -82,7 +80,7 @@
       try {
         await RoutesService().saveTrip(
           result: _result!,
-          title: '${_result!.city} Seyahati',
+          title: '${_result!.city} Travel Plan',
           tripDate: DateTime.now(),
         );
       } catch (_) {}
@@ -94,7 +92,7 @@
         // 1. Mevcut trip kaydetme — değişmedi
         await RoutesService().saveTrip(
           result: _result!,
-          title: '${_result!.city} Seyahati',
+          title: '${_result!.city} Travel Plan',
           tripDate: DateTime.now(),
         );
 
@@ -194,7 +192,6 @@
               child: ElevatedButton.icon(
                 // Geziye Başla onPressed:
                 onPressed: () async {
-                  await _savePlan();
 
                   final id = await showModalBottomSheet<String>(
                     context: context,
@@ -236,7 +233,6 @@
       );
     }
 
-    // ── Yükleniyor görünümü
   Widget _buildLoading() {
     return Container(
       width: double.infinity,

@@ -10,14 +10,12 @@ class TripPlanModel {
     this.preferences = const [],
     this.budget = '',
   });
- 
   Map<String, dynamic> toMap() => {
         'city': city,
         'days': days,
         'preferences': preferences,
         'budget': budget,
       };
- 
   @override
   String toString() => 'TripPlan(city: $city, days: $days, '
       'preferences: $preferences, budget: $budget)';

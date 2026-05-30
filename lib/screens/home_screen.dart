@@ -3,15 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
-import 'settings_screen.dart';
-import 'profile_screen.dart';
-import 'save_screen.dart';
 import 'tour_detail_screen.dart';
 import '../features/trip_planner/trip_planner_entry.dart';
 import '../services/favorites_service.dart';
-import '../services/user_service.dart';
 import '../services/tour_service.dart';
-import '../features/routes/routes_service.dart'; // Rotalar için
+import '../features/routes/routes_service.dart'; 
 import '../features/active_trip/active_trip_screen.dart';
 import '../features/routes/routes_screen.dart';
 import '../features/routes/routes_model.dart';
@@ -32,15 +28,25 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
-  // kullanıcı rolü öğrenme için
   final AuthService _authService = AuthService();
   UserModel? _userModel;
-
-  // 1. Arama sorgusu için değişken
   String _searchQuery = "";
   String _selectedBudget = "All";
-  late Future<List<Map<String, dynamic>>> _nearbyFuture;
+  bool _isSearching = false; 
+  
+  final List<String> _travelFacts = [
+  "Did you know? Paris has only one single stop sign in the entire city.",
+  "The Great Wall of China is not completely continuous; it consists of multiple walls built over centuries.",
+  "With over 800 languages spoken, Papua New Guinea is the most linguistically diverse country on Earth.",
+  "Venice has 118 small islands connected by over 400 bridges.",
+  "Japan has over 6,800 islands, and is one of the world's most mountainous countries.",
+  "The world's longest commercial flight takes nearly 19 hours, traveling from Singapore to New York.",
+  "Iceland grows about 5 centimeters wider each year because of its moving tectonic plates."
+];
 
+String _currentFact = "";
+
+  late Future<List<Map<String, dynamic>>> _nearbyFuture;
   User? get _currentUser => FirebaseAuth.instance.currentUser;
 
   String get _userName {
@@ -56,16 +62,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String? get _userPhotoUrl => _currentUser?.photoURL;
-
+  // init---------------------------------------------------------------------------------
   @override
   void initState() {
     super.initState();
+    _nearbyFuture = TourService().getNearbyPlaces();
     _loadUserData();
-    // 2. Arama çubuğunu dinlemeye başladık
-    _searchCtrl.addListener(() {
-      setState(() => _searchQuery = _searchCtrl.text.toLowerCase());
-    });
+   _searchCtrl.addListener(() {
+  setState(() {
+    _searchQuery = _searchCtrl.text.toLowerCase();
+    _isSearching = _searchCtrl.text.isNotEmpty;
+  });
+});
     _refreshNearbyPlaces();
+    if (_travelFacts.isNotEmpty) {
+    _currentFact = _travelFacts[DateTime.now().microsecondsSinceEpoch % _travelFacts.length];
+  }
   }
 
   void _refreshNearbyPlaces() {
@@ -76,20 +88,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadUserData() async {
     if (_currentUser != null) {
       final data = await _authService.getUserData(_currentUser!.uid);
-      if (mounted) { // Widget hala ekrandaysa durumu güncelle
+      if (mounted) { 
         setState(() {
           _userModel = data;
         });
       }
     }
   }
-
+//dispose------------------------------------------------------------------------------------
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
   }
-
+//----------------------!!BUILD!!------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
@@ -100,7 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
       extendBody: true,
       body: Stack(
         children: [
-          // Arkaplan Gradient
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -120,25 +131,27 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildHeader(context),
                 const SizedBox(height: 20),
-                _buildPopularTours(),
-                const SizedBox(height: 24),
-                _buildTourPlans(),
-                const SizedBox(height: 24),
-                _buildNearbySection(),
+                if (_isSearching) ...[
+                  _buildSearchResults(),
+                  const SizedBox(height: 24),
+                ] else ...[
+                  _buildPopularTours(),
+                  const SizedBox(height: 24),
+                  _buildTourPlans(),
+                  const SizedBox(height: 24),
+                  _buildNearbySection(),
+                  _buildTravelTrivia(_currentFact),
+                ],
                 SizedBox(height: 100 + bottomPadding),
               ],
             ),
           ),
-          // Navigasyon Bar
-          const Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: bottomNav(selectedIndex: 0)
-          ),
+          const Positioned( bottom: 0,left: 0,right: 0,child: bottomNav(selectedIndex: 0),),
         ],
       ),
     );
   }
-
+// Build parts header------------------------------------------------------------------------
   Widget _buildHeader(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
     final user = _userModel;
@@ -188,37 +201,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SettingsButton(),
                 ],
-                
               ),
               const Divider(color: Colors.white24, height: 32),
               if (user != null) ...[
-      if (user.isAdmin)
-        _buildRoleTile(
-          title: "Admin Panel",
-          icon: Icons.admin_panel_settings,
-          color: Colors.redAccent,
-          onTap: () => Navigator.pushNamed(context, '/adminPanel'),
-        ),
-      if (user.isGuide)
-  _buildRoleTile(
-    title: "Guide Panel",
-    icon: Icons.explore,
-    color: const Color(0xFF00BFA5),
-    onTap: () => showGuidePanel(context), 
-  ),
-      if (!user.isAdmin && !user.isGuide)
-        user.isPending 
-          ? const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text("Your application is being reviewed...", style: TextStyle(color: Colors.white60)),
-            )
-          : _buildRoleTile(
-              title: "Become a Guide",
-              icon: Icons.directions_walk,
-              color: const Color(0xFF00BFA5),
-              onTap: () => Navigator.pushNamed(context, '/guideApply'),
-            ),
-    ],
+                if (user.isAdmin)
+                  _buildRoleTile(
+                    title: "Admin Panel",
+                    icon: Icons.admin_panel_settings,
+                    color: Colors.redAccent,
+                    onTap: () => Navigator.pushNamed(context, '/adminPanel'),
+                  ),
+                if (user.isGuide)
+                  _buildRoleTile(
+                    title: "Guide Panel",
+                    icon: Icons.explore,
+                    color: const Color(0xFF00BFA5),
+                    onTap: () => showGuidePanel(context),
+                  ),
+                if (!user.isAdmin && !user.isGuide)
+                  user.isPending
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text(
+                            "Your application is being reviewed...",
+                            style: TextStyle(color: Colors.white60),
+                          ),
+                        )
+                      : _buildRoleTile(
+                          title: "Become a Guide",
+                          icon: Icons.directions_walk,
+                          color: const Color(0xFF00BFA5),
+                          onTap: () =>
+                              Navigator.pushNamed(context, '/guideApply'),
+                        ),
+              ],
               const SizedBox(height: 16),
               const Text('Are you ready\n For the next adventure?',
                   style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, height: 1.3)),
@@ -256,21 +272,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 3. Filtreleme Butonu
+  // 3. Filter Butonu
   Widget _filterButton() {
     return GestureDetector(
       onTap: () => _showFilterOptions(),
       child: Container(
-        width: 48,
-        height: 48,
+        width: 48,height: 48,
         decoration: BoxDecoration(
           color: const Color(0xFF4CAF50),
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF4CAF50).withOpacity(0.4),
-                blurRadius: 10,
-                offset: const Offset(0, 4)
+                color: const Color(0xFF4CAF50).withOpacity(0.4),blurRadius: 10,offset: const Offset(0, 4)
             )
           ],
         ),
@@ -285,35 +298,56 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
-        return StatefulBuilder( // Menü içinde anlık seçim değişimi için
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Filter by Budget', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const Divider(),
-                  ...['All', 'Low', 'Medium', 'High'].map((budget) => ListTile(
-                    title: Text(budget),
-                    leading: Icon(Icons.payments_outlined, color: _selectedBudget == budget ? Colors.green : Colors.grey),
-                    trailing: _selectedBudget == budget ? const Icon(Icons.check, color: Colors.green) : null,
-                    onTap: () {
-                      setState(() => _selectedBudget = budget); // Ana ekranı yenile
-                      Navigator.pop(context);
-                    },
-                  )),
-                ],
-              ),
-            );
-          },
+        return SafeArea(
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Budget Filter',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Divider(),
+                    ...['All', 'Free'].map(
+                      (budget) => ListTile(
+                        title: Text(budget),
+                        leading: Icon(
+                          budget == 'Free'
+                              ? Icons.money_off_rounded
+                              : Icons.payments_outlined,
+                          color: _selectedBudget == budget
+                              ? const Color(0xFF00BFA5)
+                              : Colors.grey,
+                        ),
+                        trailing: _selectedBudget == budget
+                            ? const Icon(Icons.check, color: Color(0xFF00BFA5))
+                            : null,
+                        onTap: () {
+                          setState(() => _selectedBudget = budget);
+                          
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );
   }
+
   Widget _buildAvatar() {
     return Container(
-      width: 44, height: 44,
+      width: 44,height: 44,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),
@@ -321,27 +355,31 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: ClipOval(
         child: _userPhotoUrl != null
-            ? Image.network(_userPhotoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const _DefaultAvatarIcon())
+            ? Image.network(
+                _userPhotoUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const _DefaultAvatarIcon(),
+              )
             : const _DefaultAvatarIcon(),
       ),
     );
   }
 
-  // 1. POPÜLER TURLAR (Firebase)
-  //Rehber/admin Firebase console'dan bu collection'a tur ekler.
+
   Widget _buildPopularTours() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text('Popular Tours',
+          child: Text('Guided Tours',
               style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
         ),
         const SizedBox(height: 14),
+
         SizedBox(
           height: 185,
           child: StreamBuilder<List<Map<String, dynamic>>>(
@@ -354,21 +392,15 @@ class _HomeScreenState extends State<HomeScreen> {
               final tours = snapshot.data ?? [];
 
               final filteredTours = tours.where((tour) {
-                final cityMatch = _searchQuery.isEmpty ||
-                    (tour['city'] ?? '')
-                        .toString()
-                        .toLowerCase()
-                        .contains(_searchQuery) ||
-                    (tour['title'] ?? '')
-                        .toString()
-                        .toLowerCase()
-                        .contains(_searchQuery);
+                final cityMatch =
+                    _searchQuery.isEmpty ||
+                    (tour['city'] ?? '').toString().toLowerCase().contains(_searchQuery,)
+                     ||
+                    (tour['title'] ?? '').toString().toLowerCase().contains(_searchQuery,);
                 final filterMatch = _selectedBudget == 'All' ||
-                    (tour['city'] ?? '')
-                        .toString()
-                        .toLowerCase() ==
-                        _selectedBudget.toLowerCase();
-                return cityMatch && filterMatch;
+                    (tour['budget'] ?? '').toString().toLowerCase() == _selectedBudget.toLowerCase();
+
+                return cityMatch && filterMatch; 
               }).toList();
 
               if (filteredTours.isEmpty) {
@@ -391,7 +423,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Guide tour kartı — title, city, price, guideName, tourDate gösterir
   Widget _buildTourCard(Map<String, dynamic> tour) {
     final title = (tour['title'] as String? ?? '').trim();
     final city  = (tour['city']  as String? ?? '').trim();
@@ -447,11 +478,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              // Alt bilgi: sadece başlık + konum
               Positioned(
-                bottom: 10,
-                left: 10,
-                right: 10,
+                bottom: 10,left: 10,right: 10,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -493,9 +521,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  // 2. TUR PLANLARIM (Kullanıcın Rotaları)
-  //1 plan gösteriyoruz: aktif olan veya en yakın
   Widget _buildTourPlans() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,9 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CircularProgressIndicator(color: Colors.white)),
               );
             }
-
             final trip = snapshot.data;
-
             if (trip == null) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -564,9 +587,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Aktif veya yaklaşan plan kartı — başlama tarihi + bitirme oranı gösterir
   Widget _buildUpcomingTripCard(SavedTrip trip) {
-    // Tarih formatı: "15 Mayıs 2026"
     final dateFormat = DateFormat('d MMMM yyyy', 'tr_TR');
     final startStr = trip.startDate != null
         ? dateFormat.format(trip.startDate!)
@@ -574,8 +595,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final endStr = trip.endDate != null
         ? dateFormat.format(trip.endDate!)
         : null;
-
-    // Durum etiketi: Aktif mi, Yaklaşıyor mu?
     final String statusLabel;
     final Color statusColor;
     if (trip.isActive) {
@@ -607,7 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Arkaplan resmi
+//------------Arkaplan resmi
             Image.network(
               trip.imageUrl ??
                   'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600',
@@ -615,7 +634,7 @@ class _HomeScreenState extends State<HomeScreen> {
               errorBuilder: (_, __, ___) =>
                   Container(color: Colors.grey[400]),
             ),
-            // Karartma
+//-------------- Karartma
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -628,11 +647,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // İçerik
+//--------------- İçerik
             Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
+              bottom: 0,left: 0,right: 0,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                 child: Column(
@@ -642,7 +659,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Şehir adı
+//-------------------------- Şehir adı
                         Expanded(
                           child: Text(
                             trip.title,
@@ -653,7 +670,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        // Durum etiketi
+//------------------------ Durum etiketi
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
@@ -669,7 +686,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    // Tarih satırı
+//--------------------- Tarih satırı
                     if (startStr != null) ...[
                       const SizedBox(height: 4),
                       Row(
@@ -678,9 +695,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: Colors.white70, size: 12),
                           const SizedBox(width: 4),
                           Text(
-                            endStr != null
-                                ? '$startStr – $endStr'
-                                : startStr,
+                            endStr != null ? '$startStr – $endStr': startStr,
                             style: const TextStyle(
                                 color: Colors.white70, fontSize: 11),
                           ),
@@ -688,10 +703,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                     const SizedBox(height: 10),
-                    // Tamamlanma oranı
-                    // Neden LinearProgressIndicator?
-                    // Kullanıcı "Devam Ediyor" planında kaç yeri işaretlediğini
-                    // görsel olarak anlasın. completionRate 0.0–1.0 arası float.
+//-------------------- completion rate
                     Row(
                       children: [
                         Expanded(
@@ -722,17 +734,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             // Sağ üst ok ikonu
             Positioned(
-              top: 14,
-              right: 14,
+              top: 14,right: 14,
               child: Container(
-                width: 34,
-                height: 34,
+                width: 34,height: 34,
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.north_east,
-                    color: Colors.white, size: 18),
+                child: const Icon(Icons.north_east,color: Colors.white, size: 18),
               ),
             ),
           ],
@@ -849,7 +858,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ],
-    );
+    );  
   }
 
   // Hata tipine göre doğru mesajı seç
@@ -975,108 +984,225 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildNearbyCard(Map<String, dynamic> place) {
     final rating = (place['rating'] as num?)?.toDouble() ?? 0.0;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.10),
-              blurRadius: 8,
-              offset: const Offset(0, 3))
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.network(
-              place['image'] ?? '',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                color: Colors.grey[300],
-                child: const Icon(Icons.image_not_supported,
-                    color: Colors.grey, size: 40),
+    // 🎯 MÜHENDİSLİK DOKUNUŞU: Kartın tamamını tıklanabilir yapmak için GestureDetector ile sarmaladık
+    return GestureDetector(
+      onTap: () {
+        final id = place['placeId'] as String? ?? '';
+        if (id.isNotEmpty) {
+          debugPrint('🗺️ [UI] Launching Google Maps for placeId: $id');
+          TourService.launchGoogleMaps(id);
+        } else {
+          debugPrint('⚠️ [UI] Cannot launch Google Maps: placeId is empty');
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.10),
+                blurRadius: 8,
+                offset: const Offset(0, 3))
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                place['image'] ?? '',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.image_not_supported,
+                      color: Colors.grey, size: 40),
+                ),
               ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.72)
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.72)
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 10, left: 10, right: 10,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      place['name'] ?? '',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (rating > 0) ...[
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rounded,
+                              color: Color(0xFFFFC107), size: 12),
+                          const SizedBox(width: 3),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 10,
-              left: 10,
-              right: 10,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    place['name'] ?? '',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (rating > 0) ...[
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rounded,
-                            color: Color(0xFFFFC107), size: 12),
-                        const SizedBox(width: 3),
-                        Text(
-                          rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-  Widget _buildRoleTile({
-  required String title,
-  required IconData icon,
-  required Color color,
-  required VoidCallback onTap,
-}) {
-  return ListTile(
-    onTap: onTap,
-    leading: Icon(icon, color: color),
-    title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-    trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-    contentPadding: EdgeInsets.zero,
-  );
-}
 
-Widget _buildStatusTile(String message) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Text(
-      message,
-      style: const TextStyle(color: Colors.white60, fontStyle: FontStyle.italic),
-    ),
-  );
-}
+  Widget _buildRoleTile({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: color),
+      title: Text(title,
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold)),
+      trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildSearchResults() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          key: ValueKey('search_header_$_searchQuery'),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Results for "$_searchQuery"',
+            style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70),
+          ),
+        ),
+        const SizedBox(height: 12),
+        StreamBuilder<List<Map<String, dynamic>>>(
+          stream: TourService().getPopularTours(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                  child: CircularProgressIndicator(color: Colors.white));
+            }
+
+            final tours = snapshot.data ?? [];
+            final results = tours.where((tour) {
+              final matchesSearch =
+                  (tour['title'] ?? '').toString().toLowerCase().contains(
+                        _searchQuery,
+                      ) ||
+                  (tour['city'] ?? '').toString().toLowerCase().contains(
+                        _searchQuery,
+                      );
+              final matchesBudget = _selectedBudget == 'All' ||
+                  (tour['budget'] ?? '').toString().toLowerCase() ==
+                      _selectedBudget.toLowerCase();
+              return matchesSearch && matchesBudget;
+            }).toList();
+            if (results.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text('No matching tours found with these filters.',
+                    style: TextStyle(color: Colors.white60)),
+              );
+            }
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: results.length,
+              itemBuilder: (_, i) => _buildSearchResultTile(results[i]),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchResultTile(Map<String, dynamic> tour) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => TourDetailScreen(tour: tour)),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Row(children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: Image.network(
+                tour['imageUrl'] ?? '',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: const Color(0xFF0DA3A3).withOpacity(0.4),
+                  child: const Icon(Icons.tour_outlined,
+                      color: Colors.white54, size: 24),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(tour['title'] ?? tour['city'] ?? 'Tur',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14)),
+                const SizedBox(height: 3),
+                Text(tour['city'] ?? '',
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 12)),
+              ],
+            ),
+          ),
+          const Icon(Icons.arrow_forward_ios_rounded,
+              color: Colors.white54, size: 14),
+        ]),
+      ),
+    );
+  }
 }
 
 
@@ -1121,7 +1247,7 @@ class _FavoriteButtonState extends State<FavoriteButton> {
       // Favoriye Ekle
       await FavoritesService.addFavoriteRoute(FavoriteRoute(
         routeId: tourId,
-        title: widget.tour['city'] ?? 'Voyixi Turu',
+        title: widget.tour['city'] ?? 'Voyixi Tour',
         city: widget.tour['city'] ?? '',
         days: int.tryParse(widget.tour['days']?.toString().split(' ').first ?? '1') ?? 1,
         budget: 'Medium', // Varsayılan veya Firestore'dan gelen bütçe
@@ -1155,5 +1281,55 @@ class _FavoriteButtonState extends State<FavoriteButton> {
       ),
     );
   }
-  
+}
+
+//  Fonksiyonun içine dışarıdan bilgiyi paslamak için (String fact) ekledik
+Widget _buildTravelTrivia(String fact) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+    child: CustomPaint(
+      painter: _LCornerPainter(),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.auto_awesome_outlined, color: Colors.white70, size: 20),
+            const SizedBox(height: 10),
+            Text(
+              fact.isNotEmpty ? fact : "Discover the world with Voyixi!",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _LCornerPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.35)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    const double length = 14.0;
+    canvas.drawPath(Path()..moveTo(0, length)..lineTo(0, 0)..lineTo(length, 0), paint);
+    canvas.drawPath(Path()..moveTo(size.width - length, 0)..lineTo(size.width, 0)..lineTo(size.width, length), paint);
+    canvas.drawPath(Path()..moveTo(0, size.height - length)..lineTo(0, size.height)..lineTo(length, size.height), paint);
+    canvas.drawPath(Path()..moveTo(size.width - length, size.height)..lineTo(size.width, size.height)..lineTo(size.width, size.height - length), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

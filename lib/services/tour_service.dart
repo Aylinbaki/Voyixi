@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class LocationPermissionDeniedException implements Exception {}
 class LocationPermissionPermanentlyDeniedException implements Exception {}
@@ -71,7 +72,7 @@ class TourService {
     }
   }
 
-  /// GPS + Google Places (rota kaydetmede çalışan textsearch API'si).
+  /// GPS + Google Places 
   Future<List<Map<String, dynamic>>> getNearbyPlaces() async {
     debugPrint('📍 [Nearby] Starting…');
 
@@ -88,7 +89,7 @@ class TourService {
 
     final errors = <String>[];
 
-    for (final label in ['textsearch', 'nearbysearch']) {
+    for (final label in ['nearbysearch', 'textsearch']) {
       try {
         final places = label == 'textsearch'
             ? await _fetchNearbyTextSearch(
@@ -102,7 +103,7 @@ class TourService {
 
         if (places.isNotEmpty) {
           debugPrint('📍 [Nearby] OK via $label (${places.length} places)');
-          return places.take(4).toList();
+          return places.take(6).toList(); 
         }
         errors.add('$label: no results');
       } on NearbyPlacesFetchException catch (e) {
@@ -138,7 +139,6 @@ class TourService {
       throw LocationPermissionPermanentlyDeniedException();
     }
 
-    // Önce hızlı son bilinen konum (Samsung'da GPS timeout'unu önler)
     final last = await Geolocator.getLastKnownPosition();
     if (last != null) {
       debugPrint('📍 [Nearby] Using last known position');
@@ -147,8 +147,8 @@ class TourService {
 
     try {
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low,
-        timeLimit: const Duration(seconds: 20),
+        desiredAccuracy: LocationAccuracy.medium, 
+        timeLimit: const Duration(seconds: 15),
       );
     } catch (e) {
       throw NearbyPlacesFetchException(
@@ -157,7 +157,6 @@ class TourService {
     }
   }
 
-  /// Rota görsellerinde çalışan endpoint — konum + yarıçap ile arama.
   Future<List<Map<String, dynamic>>> _fetchNearbyTextSearch({
     required double lat,
     required double lng,
@@ -166,13 +165,14 @@ class TourService {
       'https://maps.googleapis.com/maps/api/place/textsearch/json'
       '?query=${Uri.encodeComponent('tourist attractions')}'
       '&location=$lat,$lng'
-      '&radius=8000'
+      '&radius=5000' 
       '&key=$_placesKey',
     )).timeout(const Duration(seconds: 15));
 
     return _parsePlacesResponse(res);
   }
 
+  /// Doğrudan çevre araması 
   Future<List<Map<String, dynamic>>> _fetchNearbyLegacySearch({
     required double lat,
     required double lng,
@@ -180,8 +180,8 @@ class TourService {
     final res = await http.get(Uri.parse(
       'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
       '?location=$lat,$lng'
-      '&radius=5000'
-      '&type=tourist_attraction'
+      '&radius=5000' // 
+      '&tourist_attraction'
       '&key=$_placesKey',
     )).timeout(const Duration(seconds: 15));
 
@@ -204,8 +204,12 @@ class TourService {
     final results = data['results'] as List? ?? [];
     final places = <Map<String, dynamic>>[];
 
-    for (final raw in results.take(8)) {
+    for (final raw in results.take(20)) { // Süzgeç payı bu oluyo
       final place = raw as Map<String, dynamic>;
+      
+      final name = place['name'] as String? ?? '';
+      if (name.isEmpty) continue;
+
       final photos = place['photos'] as List?;
       final photoRef = photos != null && photos.isNotEmpty
           ? photos[0]['photo_reference'] as String?
@@ -215,12 +219,11 @@ class TourService {
               '?maxwidth=600&photoreference=$photoRef&key=$_placesKey'
           : '';
 
-      places.add({
-        'name': (place['name'] as String? ?? '').split(',').first.trim(),
+      places.add({  
+        'name': name.split(',').first.trim(),
         'image': imageUrl,
         'rating': (place['rating'] as num?)?.toDouble() ?? 0.0,
-        'address':
-            place['vicinity'] ?? place['formatted_address'] ?? '',
+        'address': place['vicinity'] ?? place['formatted_address'] ?? '',
         'placeId': place['place_id'] ?? '',
       });
     }
@@ -244,6 +247,28 @@ class TourService {
       return list.isEmpty ? null : list.first;
     } catch (_) {
       return null;
+    }
+  }
+  static Future<void> launchGoogleMaps(String placeId) async {
+    if (placeId.isEmpty) return;
+
+    // Google'ın resmi ve evrensel harita yönlendirme şeması (Place ID ile nokta atışı açar)
+    final Uri googleMapsUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=Google&query_place_id=$placeId',
+    );
+
+    try {
+      // Önce telefonda harici bir uygulama (Google Maps) bu URL'i açabiliyor mu diye bakar
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(
+          googleMapsUrl,
+          mode: LaunchMode.externalApplication, // Uygulamayı harici olarak açmaya zorlar
+        );
+      } else {
+        debugPrint('Could not launch Google Maps URL: $googleMapsUrl');
+      }
+    } catch (e) {
+      debugPrint('Error launching Google Maps: $e');
     }
   }
 }

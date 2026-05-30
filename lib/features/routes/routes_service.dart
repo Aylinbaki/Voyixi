@@ -14,7 +14,6 @@ class RoutesService {
   CollectionReference<Map<String, dynamic>> get _tripsRef =>
       _db.collection('users').doc(_uid).collection('saved_trips');
 
-  // ── 1. Planı kaydet 
 Future<String> saveTrip({
   required TripResult result,
   required String title,
@@ -23,24 +22,10 @@ Future<String> saveTrip({
 }) async {
   if (_uid == null) throw Exception('User is not logged in');
 
-  // 🚨 ESKİ KATI KONTROL KALDIRILDI: 
-  // Artık duplicate kontrolü yapmıyoruz, kullanıcı aynı şehre istediği kadar gidebilir!
-
-  // Dinamik Başlık: Kullanıcının turları karışmasın diye sonuna tarih ekliyoruz
   final now = DateTime.now();
-  final formattedDate = "${now.day}.${now.month}.${now.year}";
-  final dynamicTitle = "$title ($formattedDate)"; // Örn: İstanbul Seyahati (20.5.2026)
-
-  // Gemini Özet üretimi (Yeni dinamik başlıkla besleniyor)
+  final dynamicTitle = "$title"; 
   final summary = await _generateSummary(result);
-
-  // Places API görsel
   final imageUrl = await _fetchCityImage(result.city);
-
-  // DayPlan'ları Map'e çevir
-  // lib/features/routes/routes_service.dart içindeki saveTrip metodunun ilgili kısmı:
-
-  // DayPlan'ları Map'e çevirirken tüm zenginleştirilmiş alanları zorunlu olarak dahil ediyoruz
   final dayPlansMap = result.dayPlans.map((day) => {
     'day': day.dayNumber,
     'places': day.places.map((p) => {
@@ -51,8 +36,8 @@ Future<String> saveTrip({
       'crowdLevel': p.crowdLevel,
       'lat': p.lat,
       'lng': p.lng,
-      'photoUrl': p.photoUrl, // 🛡️ KORUMA: Google Places'tan gelen fotoğraf URL'ini veritabanına kilitler
-      'placeId': p.placeId,   // 🛡️ KORUMA: İleride CrowdService'in kotayı sömürmesini engelleyecek ID
+      'photoUrl': p.photoUrl, 
+      'placeId': p.placeId,  
     }).toList(),
   }).toList();
   
@@ -64,7 +49,7 @@ Future<String> saveTrip({
   final docRef = _tripsRef.doc();
   final trip = SavedTrip(
     id: docRef.id,
-    title: dynamicTitle, // Düzenlenen dinamik başlık basıldı
+    title: dynamicTitle, 
     city: result.city,
     days: result.days,
     budget: result.budget,
@@ -83,7 +68,6 @@ Future<String> saveTrip({
   return docRef.id;
 }
 
-  //Tüm planları getir 
   Stream<List<SavedTrip>> getTrips() {
     if (_uid == null) return Stream.value([]);
     return _tripsRef
@@ -186,13 +170,26 @@ Future<String> saveTrip({
   }
 
   // özet
-  Future<String> _generateSummary(TripResult result) async {
+Future<String> _generateSummary(TripResult result) async {
     try {
       final key = dotenv.env['GEMINI_API_KEY'] ?? '';
       const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-      final places = result.dayPlans
-          .expand((d) => d.places).take(5).map((p) => p.name).join(', ');
+      String places = '';
+      try {
+        if (result.dayPlans != null && result.dayPlans.isNotEmpty) {
+          places = result.dayPlans
+              .where((d) => d != null && d.places != null)
+              .expand((d) => d.places)
+              .take(5)
+              .map((p) => p != null ? p.name.toString() : '')
+              .where((name) => name.isNotEmpty)
+              .join(', ');
+        }
+      } catch (innerError) {
+        print('⚠️ Voyixi Veri Hatası (places işlenemedi): $innerError'); // 💡 print yapıldı
+        places = result.city;
+      }
 
       final prompt =
           'A travel itinerary for a ${result.days}-day trip to ${result.city} '
@@ -203,18 +200,33 @@ Future<String> saveTrip({
         Uri.parse('$url?key=$key'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'contents': [ { 'parts': [{'text': prompt}]} ],
-          'generationConfig': {'temperature': 0.5, 'maxOutputTokens': 150},
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.4,
+            'maxOutputTokens': 200
+          }
         }),
       ).timeout(const Duration(seconds: 15));
 
+      print('🤖 VOYIXI AI STATUS: ${res.statusCode}'); // 💡 print yapıldı
+
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data['candidates'][0]['content']['parts'][0]['text'] as String;
+        final aiText = data['candidates'][0]['content']['parts'][0]['text'] as String;
+        return aiText.trim();
+      } else {
+        print('❌ VOYIXI AI REFUSAL: ${res.body}'); // 💡 print yapıldı
       }
-    } catch (_) {}
+    } catch (e) {
+      print('💥 VOYIXI SERVICE CRASHED: $e'); // 💡 print yapıldı
+    }
 
-    // 3. ÇEVİRİ: İnternet hatası durumunda dönecek fallback mesajı İngilizce yapıldı
     return 'A ${result.days}-day trip to ${result.city} planned with a budget of ${result.budget}.';
   }
 

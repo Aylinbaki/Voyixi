@@ -11,15 +11,14 @@ class bottomNav extends StatelessWidget {
   const bottomNav({super.key, required this.selectedIndex});
 
   void _handleNavigation(BuildContext context, int index) {
-    // Eğer kullanıcı Rotalar (index 1) butonuna bastıysa,
-    // detay sayfasında olsa bile 'zorla' Rotalar ana listesine gönder.
+    // detay sayfasında olsa bile Rotalar ana listesine döncek.
     if (index == 1) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const StartedRoutesScreen()),
             (route) => false,
       );
-      return; // Fonksiyonun geri kalanını çalıştırma
+      return; 
     }
     if (index == selectedIndex) return;
 
@@ -30,8 +29,6 @@ class bottomNav extends StatelessWidget {
       case 3: target = const ProfileScreen(); break;
       default: target = const HomeScreen();
     }
-
-    // Tüm geçmiş sayfaları silerek yeni sayfaya gider
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => target),
