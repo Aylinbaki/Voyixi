@@ -3,8 +3,8 @@ import '../trip_plan_model.dart';
 import '../step_shell.dart';
 
 const _popularCities = [
-  'İstanbul', 'Paris', 'Roma', 'Barcelona', 'Amsterdam',
-  'Prag', 'Viyana', 'Budapeşte', 'Atina', 'Lizbon', 'Berlin', 'Londra',
+  'Istanbul', 'Paris', 'Rome', 'Barcelona', 'Amsterdam',
+'Prague', 'Vienna', 'Budapest', 'Athens', 'Lisbon', 'Berlin', 'London',
 ];
 
 class Step1Destination extends StatefulWidget {

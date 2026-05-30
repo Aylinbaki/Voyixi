@@ -50,65 +50,64 @@ class CrowdService {
 
   String get _key => dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
 
-  // Cache: placeId/key → (CrowdLevel, FetchTime, SpecialStatusText)
+  // Olay güdümlü bellek (Sadece mekan değişene kadar veriyi kilitler)
   final Map<String, (CrowdLevel, DateTime, String?)> _cache = {};
 
-  /// Belirli bir mekanın anlık kalabalık seviyesini veya kapalılık durumunu tek seferlik çeker.
-  /// Son 5 dakika içinde istek atıldıysa, ağ tüketimini önlemek için önbellekteki taze veriyi döner.
+  /// Belirli bir mekanın kalabalık seviyesini tek seferlik çeker.
+  /// Zaman kontrolü kaldırılmıştır. Sadece mekan değiştiğinde tetiklenip 1 kere update eder.
   Future<(CrowdLevel, String?)> getCrowdLevel({
     required String placeName,
     required String city,
     String? placeId,
     String? fallbackLevel,
   }) async {
-    final key = placeId ?? '${city}_$placeName';
+    final cacheKey = placeId ?? '${city}_$placeName'.toLowerCase().replaceAll(' ', '_');
 
-    // 1. KONTROL: Cache taze mi?
-    if (_cache.containsKey(key)) {
-      final cachedData = _cache[key]!;
-      final lastFetch = cachedData.$2;
-      if (DateTime.now().difference(lastFetch) < const Duration(minutes: 5)) {
-        return (cachedData.$1, cachedData.$3); // Önbellekten taze veriyi fırlat
-      }
+    // 1. KONTROL: Bellekte bu mekan zaten var mı? Sayfa her setState olduğunda API'ye gitmeyi engeller.
+    if (_cache.containsKey(cacheKey)) {
+      final cachedData = _cache[cacheKey]!;
+      return (cachedData.$1, cachedData.$3);
     }
 
-    // 2. KONTROL: Cache yoksa veya eskiyse Google Places API'ye çık
+    // 2. KONTROL: Eğer placeId yoksa bütçeyi korumak için Google'a gitme, yerel heuristiği çalıştır.
+    if (placeId == null || placeId.isEmpty) {
+      debugPrint('⚠️ CrowdService: placeId eksik, yerel motor çalışıyor: $placeName');
+      final localEstimate = _estimateLocalHeuristic(fallbackLevel);
+      _cache[cacheKey] = (localEstimate, DateTime.now(), null);
+      return (localEstimate, null);
+    }
+
+    // 3. KONTROL: Olay tetiklendiyse Google Places API'den tam 1 kere güncel durumu çek
     try {
-      final result = await _fetchCrowdLevel(
-        placeName: placeName,
-        city: city,
+      final result = await _fetchCrowdLevelFromGoogle(
         placeId: placeId,
         fallbackLevel: fallbackLevel,
       );
 
-      // Çekilen veriyi zaman damgasıyla belleğe yaz
-      _cache[key] = (result.$1, DateTime.now(), result.$2);
+      
+      // Çekilen veriyi zamandan bağımsız olarak belleğe sabitle
+      _cache[cacheKey] = (result.$1, DateTime.now(), result.$2);
       return result;
     } catch (e) {
-      // Herhangi bir ağ hatasında veya zaman aşımında Gemini fallback değerini döndür
+      debugPrint('❌ CrowdService API hatası: $e');
       return (_parseFallback(fallbackLevel), null);
     }
   }
 
-  Future<(CrowdLevel, String?)> _fetchCrowdLevel({
-    required String placeName,
-    required String city,
-    String? placeId,
+  Future<(CrowdLevel, String?)> _fetchCrowdLevelFromGoogle({
+    required String placeId,
     String? fallbackLevel,
   }) async {
-    // placeId yoksa önce text search endpoint'i ile ID buluyoruz
-    final id = placeId ?? await _findPlaceId(placeName, city);
-    if (id == null) return (_parseFallback(fallbackLevel), null);
-
-    // Place Details endpoint'inden gerekli alanları kısıtlı seçerek çekiyoruz (Maliyet optimizasyonu)
+    // Sadece açılış saatlerini ve iş durumunu isteyerek ağ maliyetini minimuma indirdik (FinOps)
     final res = await http.get(
       Uri.parse(
         'https://maps.googleapis.com/maps/api/place/details/json'
-            '?place_id=$id'
-            '&fields=current_opening_hours,user_ratings_total,rating,business_status'
-            '&key=$_key',
+
+        '?place_id=$placeId'
+        '&fields=current_opening_hours,business_status'
+        '&key=$_key',
       ),
-    ).timeout(const Duration(seconds: 8));
+    ).timeout(const Duration(seconds: 5));
 
     if (res.statusCode != 200) return (_parseFallback(fallbackLevel), null);
 
@@ -118,20 +117,20 @@ class CrowdService {
     final result = data['result'] as Map<String, dynamic>?;
     if (result == null) return (_parseFallback(fallbackLevel), null);
 
-    // İşletme kalıcı veya geçici olarak kapalıysa direkt kapalı bilgisini dön
+    // İşletmenin kalıcı/geçici kapalılık kontrolü
     final businessStatus = result['business_status'] as String?;
+
     if (businessStatus == 'CLOSED_TEMPORARILY' ||
         businessStatus == 'CLOSED_PERMANENTLY') {
-      // 2. ÇEVİRİ: Geçici kapalı durumu İngilizce yapıldı
       return (CrowdLevel.closed, 'Temporarily Closed');
+
     }
 
-    // Çalışma saatleri ve güncel açıklık kontrolü
+    // Çalışma saatleri ve canlı açıklık kontrolü
     final openingHours = result['current_opening_hours'] as Map<String, dynamic>?;
     if (openingHours != null) {
       final bool isOpenNow = openingHours['open_now'] ?? true;
 
-      // Eğer mekan o an kapalıysa bir sonraki açılış saatini ayıkla
       if (!isOpenNow) {
         // 'Kapalı' -> 'Closed'
         String nextOpenTime = 'Closed';
@@ -144,9 +143,8 @@ class CrowdService {
           if (periods != null) {
             for (var period in periods) {
               final open = period['open'] as Map<String, dynamic>?;
-              // Bugünün açılış saatini bul
               if (open != null && open['day'] == currentWeekday) {
-                final timeStr = open['time'] as String?; // Örn: Google'dan "0900" gelir
+                final timeStr = open['time'] as String?;
                 if (timeStr != null && timeStr.length == 4) {
                   // 3. ÇEVİRİ: Gelecek açılış saati metin şablonu İngilizce yapıldı
                   nextOpenTime = 'Opens at ${timeStr.substring(0, 2)}:${timeStr.substring(2)}';
@@ -155,68 +153,33 @@ class CrowdService {
               }
             }
           }
-        } catch (_) {
-          nextOpenTime = 'Closed';
-        }
+        } catch (_) {}
         return (CrowdLevel.closed, nextOpenTime);
       }
     }
 
-    // Mekan şu an açıksa yorum sayısına ve saate bağlı heuristik tahmin motorunu çalıştır
-    final estimatedLevel = _estimateFromTimeAndRating(
-      result['user_ratings_total'] as int? ?? 0,
-      (result['rating'] as num?)?.toDouble() ?? 3.0,
-      openingHours,
-    );
-
-    return (estimatedLevel, null);
+    // Mekan açıksa API kotasını korumak için yerel saat heuristiği kullan
+    return (_estimateLocalHeuristic(fallbackLevel), null);
   }
 
-  Future<String?> _findPlaceId(String name, String city) async {
-    final res = await http.get(
-      Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/textsearch/json'
-            '?query=${Uri.encodeComponent('$name $city')}'
-            '&key=$_key',
-      ),
-    ).timeout(const Duration(seconds: 8));
-
-    if (res.statusCode != 200) return null;
-    final data = jsonDecode(res.body);
-    final results = data['results'] as List?;
-    if (results == null || results.isEmpty) return null;
-    return results[0]['place_id'] as String?;
-  }
-
-  CrowdLevel _estimateFromTimeAndRating(
-      int totalRatings,
-      double rating,
-      dynamic currentHours,
-      ) {
+  /// Gemini fallback + günün saati ile kalabalık tahmini (API kotası harcamaz).
+  CrowdLevel _estimateLocalHeuristic(String? fallbackLevel) {
     final now = DateTime.now();
     final hour = now.hour;
-    final weekday = now.weekday;
-    final isWeekend = weekday >= 6;
+    final isWeekend = now.weekday >= 6;
 
-    // Popülarite taban skoru (Yorum sayısı yoğunluğu)
-    int baseScore;
-    if (totalRatings < 500) baseScore = 0;
-    else if (totalRatings < 2000) baseScore = 1;
-    else if (totalRatings < 10000) baseScore = 2;
-    else baseScore = 3;
+    final base = _parseFallback(fallbackLevel);
+    int index = base.index;
 
-    // Günün saat dilimine göre yoğunluk değişimi
-    int timeBonus = 0;
-    if (hour >= 10 && hour <= 13) timeBonus = 1;
-    else if (hour >= 14 && hour <= 17) timeBonus = 1;
-    else if (hour >= 18 && hour <= 20) timeBonus = 1;
-    else if (hour < 9 || hour > 20) timeBonus = -1;
+    if (hour >= 12 && hour <= 16) {
+      index += 1;
+    } else if (hour < 9 || hour > 21) {
+      index -= 2;
+    }
 
-    // Hafta sonu çarpanı
-    if (isWeekend) timeBonus += 1;
+    if (isWeekend) index += 1;
 
-    final total = (baseScore + timeBonus).clamp(0, 3);
-    return CrowdLevel.values[total];
+    return CrowdLevel.values[index.clamp(0, 3)];
   }
 
   // 4. ÇEVİRİ: Fallback metin ayrıştırıcısı yeni İngilizce veri standartlarına göre güncellendi
@@ -227,8 +190,9 @@ class CrowdService {
     _ => CrowdLevel.moderate,
   };
 
-  /// Manuel olarak önbelleği temizlemek (örn: sayfayı aşağı kaydırıp yenileyince) gerekirse tetiklenebilir.
+  /// Mekan değişim anlarında hafızayı sıfırlayıp yeni istek atılmasını tetikler.
   void clearCache() {
     _cache.clear();
+    debugPrint('🗑️ CrowdService önbelleği olay tetiklenmesiyle sıfırlandı.');
   }
 }

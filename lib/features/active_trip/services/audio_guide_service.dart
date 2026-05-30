@@ -149,6 +149,7 @@ class AudioGuideService {
 
     // 1. ÇEVİRİ: Sesli rehber prompt kuralları tamamen İngilizceye çekildi
     final prompt =
+
         'You are a professional audio tour guide. '
         'Write a short, fluent, and engaging audio narration for tourists about "$placeName" in $city.\n\n'
         'Additional context: $description\n\n'

@@ -194,7 +194,6 @@ class TripMapState extends State<TripMap> {
         height: 260,
         child: Stack(
           children: [
-            // ── Scroll çakışmasını önlemek için EagerGestureRecognizer ──
             RawGestureDetector(
               gestures: {
                 // Harita üzerindeki tüm pan/drag event'lerini harita alır,

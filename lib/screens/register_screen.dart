@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'terms_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -84,7 +84,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ── LOGO ──────────────────────────────────────────────────────────────────
   Widget _logo() {
     return Column(
       children: [
@@ -134,7 +133,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ── FORM ALANLARI ─────────────────────────────────────────────────────────
   Widget _nameField() {
     return TextFormField(
       controller: _nameCtrl,
@@ -201,6 +199,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (!RegExp(r'^(?=.*[A-Z])(?=.*\d).+$').hasMatch(v)) {
           return 'Must contain uppercase letter and number';
         }
+        if(v.contains(_nameCtrl.text)){
+          return 'password cannot contain name';
+
+        }
+      
         return null;
       },
     );
@@ -237,7 +240,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ── DECORATION HELPER ─────────────────────────────────────────────────────
   InputDecoration _decoration({
     required String hint,
     required IconData icon,
@@ -265,7 +267,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ── TERMS & CONDITIONS ────────────────────────────────────────────────────
   Widget _termsRow() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -286,7 +287,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         const SizedBox(width: 10),
         Expanded(
-          //  RichText: "Terms of Service" ve "Privacy Policy" linkleri tıklanabilir olacak
           child: RichText(
             text: TextSpan(
               style: const TextStyle(color: _muted, fontSize: 12),
@@ -300,7 +300,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
-                      // TODO: terms sayfasına git veya webview aç
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TermsScreen()),
+                      );
                     },
                 ),
                 const TextSpan(text: ' and '),
@@ -312,7 +315,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
-                      // TODO: privacy sayfasına git veya webview aç
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TermsScreen()),
+                      );
                     },
                 ),
               ],

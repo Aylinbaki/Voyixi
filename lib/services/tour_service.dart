@@ -1,22 +1,26 @@
 import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
-// Neden özel exception sınıfları?
-// home_screen'de hata tipine göre farklı mesaj göstermek istiyoruz.
 class LocationPermissionDeniedException implements Exception {}
 class LocationPermissionPermanentlyDeniedException implements Exception {}
 class NearbyPlacesFetchException implements Exception {
   final String message;
   NearbyPlacesFetchException(this.message);
+  @override
+  String toString() => message;
 }
 
 class TourService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Popüler turlar
+  String get _placesKey => dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
+
   Stream<List<Map<String, dynamic>>> getPopularTours() {
     return _db
         .collection('guide_tours')
@@ -29,7 +33,6 @@ class TourService {
         final data = doc.data();
         String? imageUrl = data['imageUrl'] as String?;
 
-        // imageUrl null ise city'ye göre Places API'den çek
         if (imageUrl == null || imageUrl.isEmpty) {
           imageUrl = await _fetchCityImage(data['city'] ?? '');
         }
@@ -37,22 +40,20 @@ class TourService {
         tours.add({
           'id': doc.id,
           ...data,
-          'imageUrl': imageUrl, // null olsa bile override et
+          'imageUrl': imageUrl,
         });
       }
       return tours;
     });
   }
-  // imageUrl null olabilir — city adıyla Places API'den görsel çekiyoruz.
-  // ── Places API ile şehir görseli ────────────────────────────────────
+
   Future<String?> _fetchCityImage(String city) async {
     if (city.isEmpty) return null;
     try {
-      final key = dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
       final res = await http.get(Uri.parse(
         'https://maps.googleapis.com/maps/api/place/textsearch/json'
             '?query=${Uri.encodeComponent(city)}'
-            '&key=$key',
+            '&key=$_placesKey',
       )).timeout(const Duration(seconds: 8));
 
       if (res.statusCode != 200) return null;
@@ -65,168 +66,209 @@ class TourService {
       if (ref == null) return null;
 
       return 'https://maps.googleapis.com/maps/api/place/photo'
-          '?maxwidth=600&photoreference=$ref&key=$key';
+          '?maxwidth=600&photoreference=$ref&key=$_placesKey';
     } catch (_) {
       return null;
     }
   }
 
-  // ── Civarı Keşfet: GPS → Gemini → Places zinciri ────────────────────
-  // Hata durumunda fallback değil exception fırlatıyoruz.
-  // home_screen bu exception'ı yakalayıp duruma özel mesaj gösterir.
+  /// GPS + Google Places 
   Future<List<Map<String, dynamic>>> getNearbyPlaces() async {
-    // 1. Konum al — izin yoksa exception fırlat
+    debugPrint('📍 [Nearby] Starting…');
+
+    if (_placesKey.isEmpty) {
+      throw NearbyPlacesFetchException(
+        'GOOGLE_PLACES_API_KEY is missing from .env',
+      );
+    }
+
     final position = await _getLocation();
-
-    // 2. Gemini'dan 4 yer önerisi al
-    final suggestions = await _askGeminiForPlaces(
-      lat: position.latitude,
-      lng: position.longitude,
+    debugPrint(
+      '📍 [Nearby] GPS ${position.latitude}, ${position.longitude}',
     );
 
-    if (suggestions.isEmpty) {
-      throw NearbyPlacesFetchException('Gemini did not return any place recommendations.');
+    final errors = <String>[];
+
+    for (final label in ['nearbysearch', 'textsearch']) {
+      try {
+        final places = label == 'textsearch'
+            ? await _fetchNearbyTextSearch(
+                lat: position.latitude,
+                lng: position.longitude,
+              )
+            : await _fetchNearbyLegacySearch(
+                lat: position.latitude,
+                lng: position.longitude,
+              );
+
+        if (places.isNotEmpty) {
+          debugPrint('📍 [Nearby] OK via $label (${places.length} places)');
+          return places.take(6).toList(); 
+        }
+        errors.add('$label: no results');
+      } on NearbyPlacesFetchException catch (e) {
+        errors.add('$label: ${e.message}');
+        debugPrint('📍 [Nearby] $label failed: ${e.message}');
+      } catch (e) {
+        errors.add('$label: $e');
+        debugPrint('📍 [Nearby] $label error: $e');
+      }
     }
 
-    // 3. Her yer için Places API'den detay çek
-    final places = await Future.wait(
-      suggestions.map((name) => _fetchPlaceDetails(name)),
+    throw NearbyPlacesFetchException(
+      errors.isEmpty
+          ? 'No nearby places found.'
+          : errors.join(' | '),
     );
-
-    final validPlaces = places.whereType<Map<String, dynamic>>().toList();
-
-    if (validPlaces.isEmpty) {
-      throw NearbyPlacesFetchException('Failed to load place details.');
-    }
-
-    return validPlaces;
   }
 
-  // ── 1. Konum al ──────────────────────────────────────────────────────
   Future<Position> _getLocation() async {
-    LocationPermission permission = await Geolocator.checkPermission();
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw const LocationServiceDisabledException();
+    }
 
+    var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         throw LocationPermissionDeniedException();
       }
     }
-
     if (permission == LocationPermission.deniedForever) {
       throw LocationPermissionPermanentlyDeniedException();
     }
 
+    final last = await Geolocator.getLastKnownPosition();
+    if (last != null) {
+      debugPrint('📍 [Nearby] Using last known position');
+      return last;
+    }
+
     try {
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low,  // medium → low
-        timeLimit: const Duration(seconds: 30), // 10 → 30 saniye
+        desiredAccuracy: LocationAccuracy.medium, 
+        timeLimit: const Duration(seconds: 15),
       );
     } catch (e) {
-      // Timeout'ta last known location'ı dene
-      final last = await Geolocator.getLastKnownPosition();
-      if (last != null) return last;
-      throw NearbyPlacesFetchException('Failed to get location: $e');
+      throw NearbyPlacesFetchException(
+        'GPS timeout. Enable location and try again outdoors. ($e)',
+      );
     }
   }
 
-  // ── 2. Gemini'dan yer önerileri ──────────────────────────────────────
-  Future<List<String>> _askGeminiForPlaces({
+  Future<List<Map<String, dynamic>>> _fetchNearbyTextSearch({
     required double lat,
     required double lng,
   }) async {
-    final key = dotenv.env['GEMINI_API_KEY'] ?? '';
-    const url =
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent';
+    final res = await http.get(Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/textsearch/json'
+      '?query=${Uri.encodeComponent('tourist attractions')}'
+      '&location=$lat,$lng'
+      '&radius=5000' 
+      '&key=$_placesKey',
+    )).timeout(const Duration(seconds: 15));
 
-    final prompt = '''
-You are a travel assistant.
-Coordinates: latitude $lat, longitude $lng
-
-Recommend 4 interesting places for tourists near these coordinates.
-Respond ONLY in the following JSON format, do not write anything else:
-{"places": ["Place Name 1", "Place Name 2", "Place Name 3", "Place Name 4"]}
-
-Write the place names in English so that they can be easily searched on Google Maps (e.g., "Topkapi Palace, Istanbul").
-''';
-
-    final res = await http.post(
-      Uri.parse('$url?key=$key'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'contents': [
-          {
-            'parts': [
-              {'text': prompt}
-            ]
-          }
-        ],
-        'generationConfig': {
-          'temperature': 0.4,
-          'maxOutputTokens': 200,
-        },
-      }),
-    ).timeout(const Duration(seconds: 15));
-
-    if (res.statusCode != 200) {
-      throw NearbyPlacesFetchException('Gemini API error: ${res.statusCode}');
-    }
-
-    final data = jsonDecode(res.body);
-    final text =
-    data['candidates'][0]['content']['parts'][0]['text'] as String;
-
-    final cleaned =
-    text.replaceAll('```json', '').replaceAll('```', '').trim();
-    final parsed = jsonDecode(cleaned);
-    final placesList = parsed['places'] as List?;
-    if (placesList == null) return [];
-
-    return placesList.map((e) => e.toString()).toList();
+    return _parsePlacesResponse(res);
   }
 
-  // ── 3. Places API'den tek yer detayı ────────────────────────────────
+  /// Doğrudan çevre araması 
+  Future<List<Map<String, dynamic>>> _fetchNearbyLegacySearch({
+    required double lat,
+    required double lng,
+  }) async {
+    final res = await http.get(Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+      '?location=$lat,$lng'
+      '&radius=5000' // 
+      '&tourist_attraction'
+      '&key=$_placesKey',
+    )).timeout(const Duration(seconds: 15));
+
+    return _parsePlacesResponse(res);
+  }
+
+  List<Map<String, dynamic>> _parsePlacesResponse(http.Response res) {
+    if (res.statusCode != 200) {
+      throw NearbyPlacesFetchException('HTTP ${res.statusCode}');
+    }
+
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    final status = data['status'] as String? ?? 'UNKNOWN';
+    if (status != 'OK') {
+      if (status == 'ZERO_RESULTS') return [];
+      final detail = data['error_message'] as String? ?? '';
+      throw NearbyPlacesFetchException('$status $detail'.trim());
+    }
+
+    final results = data['results'] as List? ?? [];
+    final places = <Map<String, dynamic>>[];
+
+    for (final raw in results.take(20)) { // Süzgeç payı bu oluyo
+      final place = raw as Map<String, dynamic>;
+      
+      final name = place['name'] as String? ?? '';
+      if (name.isEmpty) continue;
+
+      final photos = place['photos'] as List?;
+      final photoRef = photos != null && photos.isNotEmpty
+          ? photos[0]['photo_reference'] as String?
+          : null;
+      final imageUrl = photoRef != null
+          ? 'https://maps.googleapis.com/maps/api/place/photo'
+              '?maxwidth=600&photoreference=$photoRef&key=$_placesKey'
+          : '';
+
+      places.add({  
+        'name': name.split(',').first.trim(),
+        'image': imageUrl,
+        'rating': (place['rating'] as num?)?.toDouble() ?? 0.0,
+        'address': place['vicinity'] ?? place['formatted_address'] ?? '',
+        'placeId': place['place_id'] ?? '',
+      });
+    }
+
+    return places;
+  }
+
   Future<Map<String, dynamic>?> _fetchPlaceDetails(String placeName) async {
     try {
-      final key = dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
-
       final searchRes = await http.get(
         Uri.parse(
           'https://maps.googleapis.com/maps/api/place/textsearch/json'
               '?query=${Uri.encodeComponent(placeName)}'
-              '&key=$key',
+              '&key=$_placesKey',
         ),
       ).timeout(const Duration(seconds: 10));
 
       if (searchRes.statusCode != 200) return null;
 
-      final searchData = jsonDecode(searchRes.body);
-      final results = searchData['results'] as List?;
-      if (results == null || results.isEmpty) return null;
-
-      final place = results[0];
-      final photos = place['photos'] as List?;
-      final photoRef = photos != null && photos.isNotEmpty
-          ? photos[0]['photo_reference']
-          : null;
-
-      final imageUrl = photoRef != null
-          ? 'https://maps.googleapis.com/maps/api/place/photo'
-          '?maxwidth=600&photoreference=$photoRef&key=$key'
-          : null;
-
-      final shortName =
-      (place['name'] as String? ?? placeName).split(',').first.trim();
-
-      return {
-        'name': shortName,
-        'image': imageUrl ?? '',
-        'rating': (place['rating'] as num?)?.toDouble() ?? 0.0,
-        'address': place['formatted_address'] ?? '',
-        'placeId': place['place_id'] ?? '',
-      };
-    } catch (e) {
+      final list = _parsePlacesResponse(searchRes);
+      return list.isEmpty ? null : list.first;
+    } catch (_) {
       return null;
+    }
+  }
+  static Future<void> launchGoogleMaps(String placeId) async {
+    if (placeId.isEmpty) return;
+
+    // Google'ın resmi ve evrensel harita yönlendirme şeması (Place ID ile nokta atışı açar)
+    final Uri googleMapsUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=Google&query_place_id=$placeId',
+    );
+
+    try {
+      // Önce telefonda harici bir uygulama (Google Maps) bu URL'i açabiliyor mu diye bakar
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(
+          googleMapsUrl,
+          mode: LaunchMode.externalApplication, // Uygulamayı harici olarak açmaya zorlar
+        );
+      } else {
+        debugPrint('Could not launch Google Maps URL: $googleMapsUrl');
+      }
+    } catch (e) {
+      debugPrint('Error launching Google Maps: $e');
     }
   }
 }

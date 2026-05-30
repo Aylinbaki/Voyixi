@@ -41,7 +41,7 @@ class TripPlannerEntry extends StatelessWidget {
                     ),
                   ),
                   Image.asset(
-                    "assets/images/app_logo_planpage.png",
+                    "assets/images/app_logo_plan.png",
                     height: 70, 
                     fit: BoxFit.contain,
                   ),

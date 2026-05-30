@@ -89,7 +89,7 @@ RULES:
 - Crowd prediction options: early morning = "Calm", noon = "Busy", afternoon = "Moderate", evening = "Very Busy".
 - Choose places appropriate for the budget (economic = free/cheap, medium = paid/moderate, luxury = premium).
 - timeSlot format must be: "HH:mm - HH:mm"
-- crowdLevel strictly must be one of: "Calm" | "Moderate" | "Busy" | "Very Busy"
+- Make an estimate based on the time you set the location. crowdLevel strictly must be one of: "Calm" | "Moderate" | "Busy" | "Very Busy"
 - Sort the places based on their physical distance to one another to minimize travel time.
 - total_distance_km: Calculate the total estimated distance between all places across all days in kilometers and add it to the JSON.
 
@@ -106,7 +106,7 @@ Do not use markdown formatting (such as ```json). Provide pure raw JSON.
           "name": "Place Name",
           "description": "Short description (max 80 characters)",
           "timeSlot": "09:00 - 11:00",
-          "duration": "2 hours",
+          "duration": "2 h 30m",
           "crowdLevel": "Moderate",
           "lat": 41.0082,
           "lng": 28.9784
@@ -127,8 +127,8 @@ Do not use markdown formatting (such as ```json). Provide pure raw JSON.
       final data = jsonDecode(cleaned) as Map<String, dynamic>;
 
       final days = (data['days'] as List)
-          .map((d) => DayPlan.fromJson(d as Map<String, dynamic>))
-          .toList();
+        .map((d) => DayPlan.fromJson(d as Map<String, dynamic>))
+        .toList();
 
       final totalKm = (data['total_distance_km'] as num?)?.toDouble() ?? 0.0;
       final country = (data['country'] as String?) ?? '';
@@ -164,7 +164,7 @@ Do not use markdown formatting (such as ```json). Provide pure raw JSON.
     print('📸 Places Request: $name');
     final searchRes = await http.get(
       Uri.parse(
-        '[https://maps.googleapis.com/maps/api/place/textsearch/json](https://maps.googleapis.com/maps/api/place/textsearch/json)'
+              'https://maps.googleapis.com/maps/api/place/textsearch/json'
             '?query=${Uri.encodeComponent('$name $city')}'
             '&key=$_placesKey',
       ),
@@ -183,12 +183,11 @@ Do not use markdown formatting (such as ```json). Provide pure raw JSON.
     String? photoUrl;
     final photos = first['photos'] as List?;
     if (photos != null && photos.isNotEmpty) {
-      final ref = photos[0]['photo_reference'] as String?;
-      if (ref != null) {
-        photoUrl = '[https://maps.googleapis.com/maps/api/place/photo](https://maps.googleapis.com/maps/api/place/photo)'
-            '?maxwidth=600&photoreference=$ref&key=$_placesKey';
-      }
-    }
+  final ref = photos[0]['photo_reference'] as String?;
+  if (ref != null) {
+    photoUrl = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=$ref&key=$_placesKey';
+  }
+}
 
     return {
       'placeId': placeId,

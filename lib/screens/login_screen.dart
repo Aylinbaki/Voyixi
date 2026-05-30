@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey            = GlobalKey<FormState>();
   final _emailCtrl          = TextEditingController();
   final _passwordCtrl       = TextEditingController();
+  
   bool  _hidePassword       = true;
   bool  _rememberMe         = false;
   bool  _isLoading          = false;
@@ -160,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
         icon: Icons.lock_outline_rounded,
         suffix: IconButton(
           icon: Icon(
-            _hidePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            _hidePassword ? Icons .visibility_off_outlined : Icons.visibility_outlined,
             color: _muted,
             size: 20,
           ),

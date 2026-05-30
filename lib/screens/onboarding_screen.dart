@@ -119,7 +119,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Already have account?
                   GestureDetector(
                     onTap: () {
                       Navigator.pushReplacementNamed(context, "/login");
@@ -144,12 +143,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       controller: _controller,
                       count: 4,
                       effect: const ExpandingDotsEffect(
-                        dotHeight: 8,
-                        dotWidth: 8,
-                        expansionFactor: 3,
-                        spacing: 6,
-                        dotColor: Colors.white38,
-                        activeDotColor: Colors.white,
+                        dotHeight: 8,dotWidth: 8,expansionFactor: 3,spacing: 6,dotColor: Colors.white38,activeDotColor: Colors.white,
                       ),
                     ),
                   ),
@@ -215,6 +209,7 @@ class OnboardPage extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
+           const SizedBox(height: 10),
           ],
         ),
       ),

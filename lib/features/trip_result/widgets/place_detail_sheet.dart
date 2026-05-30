@@ -32,11 +32,11 @@ class PlaceDetailSheet extends StatelessWidget {
                 controller: ctrl,
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
                 children: [
-                  if (place.photoUrl != null)
+                  if (place.hasPhoto)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: Image.network(
-                        place.photoUrl!,
+                        place.resolvedPhotoUrl!,
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,

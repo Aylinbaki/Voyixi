@@ -17,6 +17,9 @@ class TourDetailScreen extends StatelessWidget {
     final guideId      = tour['guideId']      ?? '';
     final maxP         = tour['maxParticipants'];
     final imageUrl     = tour['imageUrl']     ?? '';
+    final price        = tour['price']        ?? 'Free'; 
+final tourDate     = tour['tourDate']     ?? '';     
+final tourTime     = tour['tourTime']     ?? '';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -200,6 +203,49 @@ class TourDetailScreen extends StatelessWidget {
                                   height: 1.6)),
                           const SizedBox(height: 24),
                         ],
+
+                       if (tourDate.isNotEmpty)
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.calendar_today_rounded, color: Color(0xFF00BFA5), size: 14),
+          const SizedBox(width: 6),
+          Text(
+            // 💡 Burası o çirkin uzun tarihi sadece "2026-05-28" olarak kırpar!
+            tourDate.toString().contains('T') 
+                ? tourDate.toString().split('T').first 
+                : tourDate.toString(),
+            style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    
+    // ⏰ Time Etiketi
+    if (tourTime.isNotEmpty)
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.access_time_rounded, color: Color(0xFF00BFA5), size: 14),
+          const SizedBox(width: 6),
+          Text(
+            'Time: $tourTime', // İngilizce etiketlendirdik
+            style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+
+    // 💰 Price Etiketi
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.sell_outlined, color: Color(0xFF00BFA5), size: 14),
+        const SizedBox(width: 6),
+        Text(
+          price.toString().toLowerCase() == 'free' ? 'Price: Free' : 'Price: \$$price',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+      ],
+    ),
 
                         // Max katılımcı
                         if (maxP != null) ...[

@@ -3,11 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'edit_profile_screen.dart';
-import '../features/admin/admin_panel_screen.dart';
-import '../features/guide/panel/guide_panel.dart';
 import '../features/guide/application/guide_application_screen.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
+import 'terms_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import '../features/admin/admin_panel_screen.dart';
 
 const _teal = Color(0xFF00BFA5);
 const _tealDark = Color(0xFF00897B);
@@ -26,30 +27,21 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   UserModel? _userModel; 
-  
-  
-
   bool _audioGuide = true;
-  bool _darkMode = false;
   bool _locationPerm = true;
-  bool _cameraPerm = false;
-  bool _notifPerm = true;
-
   String _openSection = ''; 
   int _rating = 0;
-  String _language = 'Türkçe';
+  String _language = 'English';
   final _reportCtrl = TextEditingController();
   User? get _user => FirebaseAuth.instance.currentUser;
   String get _name => _user?.displayName ?? _user?.email?.split('@').first ?? 'Kullanıcı';
   String get _email => _user?.email ?? '';
   String? get _photo => _user?.photoURL;
 
-
-
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // Sayfa açılırken rolleri kontrol et
+    _loadUserData(); 
   }
   Future<void> _loadUserData() async {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -79,7 +71,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,19 +91,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _profileCard(),
           const SizedBox(height: 22),
-          _sectionTitle('ACCOUNT'),
+          _sectionTitle('Terms'),
           _card([
-            _tile(Icons.person_outline_rounded, 'My Account', onTap: () {}),
-            _tile(Icons.description_outlined, 'Privacy and Terms', onTap: () {}, isLast: true),
+            _tile(Icons.description_outlined, 'Privacy and Terms', onTap: () { Navigator.push(
+                context,
+                MaterialPageRoute(builder:(_)=>const TermsScreen()),
+              );
+              }, isLast: true),
           ]),
           const SizedBox(height: 16),
           _sectionTitle('PREFERENCES'),
           _card([
-            _tile(Icons.language_rounded, 'Dil',
+            _tile(Icons.language_rounded, 'Language',
                 trailing: Text(_language, style: const TextStyle(color: _textLight)),
                 onTap: _showLanguagePicker),
-            _tile(Icons.dark_mode_outlined, 'Dark Mode',
-                trailing: _switch(_darkMode, (v) => setState(() => _darkMode = v))),
             _tile(Icons.headphones_rounded, 'Audio Guide',
                 trailing: _switch(_audioGuide, (v) => setState(() => _audioGuide = v)),
                 isLast: true),
@@ -121,21 +113,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _sectionTitle('Permissions'),
           _card([
-            _accordionHeader(Icons.shield_outlined, 'Permissions', 'permissions'),
+            _accordionHeader(Icons.shield_outlined,'Permissions','permissions',),
             if (_openSection == 'permissions') ...[
-              const Divider(height: 1, indent: 20, endIndent: 20, color: _divider),
-              _permRow(Icons.location_on_outlined, 'Location', _locationPerm,
-                  (v) => setState(() => _locationPerm = v)),
-              _permRow(Icons.camera_alt_outlined, 'Camera', _cameraPerm,
-                  (v) => setState(() => _cameraPerm = v)),
-              _permRow(Icons.notifications_outlined, 'Notifications', _notifPerm,
-                  (v) => setState(() => _notifPerm = v), isLast: true),
+              const Divider(height: 1,indent: 20,endIndent: 20,color: _divider,),
+              _permRow(Icons.location_on_outlined, 'Location', _locationPerm, (
+                v,
+              ) async {
+                if (!v) {
+                  setState(() {
+                    _locationPerm = false;
+                  });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Redirecting to app settings to disable location... ',
+                      ),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  await Geolocator.openAppSettings();
+                } else {
+                  LocationPermission permission =await Geolocator.checkPermission();
+
+                  if (permission == LocationPermission.denied) {permission = await Geolocator.requestPermission(); }
+
+                  if (permission == LocationPermission.deniedForever) { await Geolocator.openAppSettings();}
+
+                  setState(() {
+                    _locationPerm =
+                        (permission == LocationPermission.always ||
+                        permission == LocationPermission.whileInUse);
+                  });
+
+                  if (_locationPerm && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Location permission received successfully! ',
+                        ),
+                        backgroundColor: Color(0xFF00BFA5),
+                      ),
+                    );
+                  }
+                }
+              }),
             ],
           ]),
           const SizedBox(height: 16),
+//Guide Applciation---------------------------------
           _sectionTitle('Guide'),
           _card([
-            // 1. DURUM: Kullanıcı zaten rehberse (Başvuru butonuna ihtiyacı yok)
             if (_userModel?.isGuide == true)
               _tile(
                 Icons.verified_user_outlined, 
@@ -147,8 +175,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                    );
                 },
               )
-            
-            // 2. DURUM: Başvuru yapmış ama Admin onayı bekliyor
             else if (_userModel?.isPending == true)
               _tile(
                 Icons.hourglass_empty_rounded, 
@@ -160,8 +186,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 },
               )
-            
-            // 3. DURUM: Standart kullanıcı (Başvuru yapabilir)
             else
               _tile(
                 Icons.tour_outlined, 
@@ -173,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 },
               ),
-
+//---------------------------------------------------
             _tile(Icons.info_outline_rounded, 'Version',
                 trailing: const Text('v1.0.0', style: TextStyle(color: _textLight)),
                 isLast: true),
@@ -470,13 +494,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
   void _showLanguagePicker() {
-    final langs = ['Türkçe', 'English'];
+    final langs = ['English'];
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
+      builder: (_) => SafeArea(
+      child:Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -496,6 +521,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 )),
           ],
         ),
+      ),
       ),
     );
   }

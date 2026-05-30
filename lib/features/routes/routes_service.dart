@@ -14,65 +14,60 @@ class RoutesService {
   CollectionReference<Map<String, dynamic>> get _tripsRef =>
       _db.collection('users').doc(_uid).collection('saved_trips');
 
-  // ── 1. Planı kaydet 
-  Future<String> saveTrip({
-    required TripResult result,
-    required String title,
-    DateTime? tripDate,
-    DateTime? startDate,
-  }) async {
-    if (_uid == null) throw Exception('User is not logged in');
+Future<String> saveTrip({
+  required TripResult result,
+  required String title,
+  DateTime? tripDate,
+  DateTime? startDate,
+}) async {
+  if (_uid == null) throw Exception('User is not logged in');
 
-    //Aynı şehir ve gün sayısına sahip aktif bir plan var mı?
-    final existing = await _tripsRef
-        .where('city', isEqualTo: result.city)
-        .where('title', isEqualTo: title)
-        .limit(1)
-        .get();
+  final now = DateTime.now();
+  final dynamicTitle = "$title"; 
+  final summary = await _generateSummary(result);
+  final imageUrl = await _fetchCityImage(result.city);
+  final dayPlansMap = result.dayPlans.map((day) => {
+    'day': day.dayNumber,
+    'places': day.places.map((p) => {
+      'name': p.name,
+      'description': p.description,
+      'timeSlot': p.timeSlot,
+      'duration': p.duration,
+      'crowdLevel': p.crowdLevel,
+      'lat': p.lat,
+      'lng': p.lng,
+      'photoUrl': p.photoUrl, 
+      'placeId': p.placeId,  
+    }).toList(),
+  }).toList();
+  
+  final resolvedStart = startDate ?? tripDate;
+  final resolvedEnd = resolvedStart != null
+      ? resolvedStart.add(Duration(days: result.days - 1))
+      : null;
 
-    if (existing.docs.isNotEmpty) {
-      throw Exception('DUPLICATE');
-    }
+  final docRef = _tripsRef.doc();
+  final trip = SavedTrip(
+    id: docRef.id,
+    title: dynamicTitle, 
+    city: result.city,
+    days: result.days,
+    budget: result.budget,
+    preferences: [], 
+    summary: summary,
+    imageUrl: imageUrl,
+    tripDate: tripDate,
+    startDate: resolvedStart,
+    endDate: resolvedEnd,
+    completionRate: 0.0,
+    dayPlans: dayPlansMap,
+    createdAt: DateTime.now(),
+  );
 
-    // Gemini 
-    final summary = await _generateSummary(result);
+  await docRef.set(trip.toMap());
+  return docRef.id;
+}
 
-    // Places API görsel
-    final imageUrl = await _fetchCityImage(result.city);
-
-    // DayPlan'ları Map'e çevir
-    final dayPlansMap = result.dayPlans.map((day) => {
-      'day': day.dayNumber,
-      'places': day.places.map((p) => p.toJson()).toList(),
-    }).toList();
-    final resolvedStart = startDate ?? tripDate;
-    final resolvedEnd = resolvedStart != null
-        ? resolvedStart.add(Duration(days: result.days - 1))
-        : null;
-
-    final docRef = _tripsRef.doc();
-    final trip = SavedTrip(
-      id: docRef.id,
-      title: title,
-      city: result.city,
-      days: result.days,
-      budget: result.budget,
-      preferences: [], 
-      summary: summary,
-      imageUrl: imageUrl,
-      tripDate: tripDate,
-      startDate: resolvedStart,
-      endDate: resolvedEnd,
-      completionRate: 0.0,
-      dayPlans: dayPlansMap,
-      createdAt: DateTime.now(),
-    );
-
-    await docRef.set(trip.toMap());
-    return docRef.id;
-  }
-
-  //Tüm planları getir 
   Stream<List<SavedTrip>> getTrips() {
     if (_uid == null) return Stream.value([]);
     return _tripsRef
@@ -175,13 +170,26 @@ class RoutesService {
   }
 
   // özet
-  Future<String> _generateSummary(TripResult result) async {
+Future<String> _generateSummary(TripResult result) async {
     try {
       final key = dotenv.env['GEMINI_API_KEY'] ?? '';
       const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-      final places = result.dayPlans
-          .expand((d) => d.places).take(5).map((p) => p.name).join(', ');
+      String places = '';
+      try {
+        if (result.dayPlans != null && result.dayPlans.isNotEmpty) {
+          places = result.dayPlans
+              .where((d) => d != null && d.places != null)
+              .expand((d) => d.places)
+              .take(5)
+              .map((p) => p != null ? p.name.toString() : '')
+              .where((name) => name.isNotEmpty)
+              .join(', ');
+        }
+      } catch (innerError) {
+        print('⚠️ Voyixi Veri Hatası (places işlenemedi): $innerError'); // 💡 print yapıldı
+        places = result.city;
+      }
 
       final prompt =
           'A travel itinerary for a ${result.days}-day trip to ${result.city} '
@@ -192,18 +200,33 @@ class RoutesService {
         Uri.parse('$url?key=$key'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'contents': [ { 'parts': [{'text': prompt}]} ],
-          'generationConfig': {'temperature': 0.5, 'maxOutputTokens': 150},
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.4,
+            'maxOutputTokens': 200
+          }
         }),
       ).timeout(const Duration(seconds: 15));
 
+      print('🤖 VOYIXI AI STATUS: ${res.statusCode}'); // 💡 print yapıldı
+
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data['candidates'][0]['content']['parts'][0]['text'] as String;
+        final aiText = data['candidates'][0]['content']['parts'][0]['text'] as String;
+        return aiText.trim();
+      } else {
+        print('❌ VOYIXI AI REFUSAL: ${res.body}'); // 💡 print yapıldı
       }
-    } catch (_) {}
+    } catch (e) {
+      print('💥 VOYIXI SERVICE CRASHED: $e'); // 💡 print yapıldı
+    }
 
-    // 3. ÇEVİRİ: İnternet hatası durumunda dönecek fallback mesajı İngilizce yapıldı
     return 'A ${result.days}-day trip to ${result.city} planned with a budget of ${result.budget}.';
   }
 
