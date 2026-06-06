@@ -721,10 +721,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               );
             }
-            return Column(
-              children: trips.map((trip) => Padding(
+            return Column( //biten turlar
+              children: finishedTrips.map((trip) => Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-                child: GestureDetector( // Tıklama özelliği eklendi
+                child: GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,

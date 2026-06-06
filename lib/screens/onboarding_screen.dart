@@ -50,29 +50,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           // Text logo
           SafeArea(
-            child: Align(
-              alignment:Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(top:12,left:16),
-                child: Image.asset(
-                  "assets/images/text_logo.png",
-                  height:125,
-                  fit:BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8, right: 16),
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, "/login");
-                  },
-                  child: const Text("Skip"),
-                ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center, // aynı hizaya getirir
+                children: [
+                  Image.asset(
+                    "assets/images/text_logo.png",
+                    height: 125,
+                    fit: BoxFit.contain,
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, "/login");
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                    ),
+                    child: const Text("Skip"),
+                  ),
+                ],
               ),
             ),
           ),
