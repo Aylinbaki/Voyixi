@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 enum CrowdLevel { quiet, moderate, busy, veryBusy, closed }
 
 extension CrowdLevelExt on CrowdLevel {
-  // 1. ÇEVİRİ: Kalabalık durum etiketleri İngilizce yapıldı
+ // 1. ÇEVİRİ: Kalabalık durum etiketleri İngilizce yapıldı
   String get label => switch (this) {
     CrowdLevel.quiet => 'Calm',
     CrowdLevel.moderate => 'Moderate',
@@ -49,12 +49,9 @@ class CrowdService {
   CrowdService._();
 
   String get _key => dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
-
-  // Olay güdümlü bellek (Sadece mekan değişene kadar veriyi kilitler)
   final Map<String, (CrowdLevel, DateTime, String?)> _cache = {};
 
-  /// Belirli bir mekanın kalabalık seviyesini tek seferlik çeker.
-  /// Zaman kontrolü kaldırılmıştır. Sadece mekan değiştiğinde tetiklenip 1 kere update eder.
+  // Belirli bir mekanın kalabalık seviyesini tek seferlik çeker. Sadece mekan değiştiğinde tetiklenip 1 kere update eder.
   Future<(CrowdLevel, String?)> getCrowdLevel({
     required String placeName,
     required String city,
@@ -69,14 +66,13 @@ class CrowdService {
       return (cachedData.$1, cachedData.$3);
     }
 
-    // 2. KONTROL: Eğer placeId yoksa bütçeyi korumak için Google'a gitme, yerel heuristiği çalıştır.
+    // 2. KONTROL: Eğer placeId yoksa bütçeyi korumak için Google'a gitme, yerel tahmini çalıştır.
     if (placeId == null || placeId.isEmpty) {
-      debugPrint('⚠️ CrowdService: placeId eksik, yerel motor çalışıyor: $placeName');
+      debugPrint(' CrowdService: placeId eksik, yerel motor çalışıyor: $placeName');
       final localEstimate = _estimateLocalHeuristic(fallbackLevel);
       _cache[cacheKey] = (localEstimate, DateTime.now(), null);
       return (localEstimate, null);
     }
-
     // 3. KONTROL: Olay tetiklendiyse Google Places API'den tam 1 kere güncel durumu çek
     try {
       final result = await _fetchCrowdLevelFromGoogle(
@@ -85,7 +81,7 @@ class CrowdService {
       );
 
       
-      // Çekilen veriyi zamandan bağımsız olarak belleğe sabitle
+      // Çekilen veriyi belleğe sabitle
       _cache[cacheKey] = (result.$1, DateTime.now(), result.$2);
       return result;
     } catch (e) {
@@ -98,7 +94,6 @@ class CrowdService {
     required String placeId,
     String? fallbackLevel,
   }) async {
-    // Sadece açılış saatlerini ve iş durumunu isteyerek ağ maliyetini minimuma indirdik (FinOps)
     final res = await http.get(
       Uri.parse(
         'https://maps.googleapis.com/maps/api/place/details/json'
@@ -117,7 +112,7 @@ class CrowdService {
     final result = data['result'] as Map<String, dynamic>?;
     if (result == null) return (_parseFallback(fallbackLevel), null);
 
-    // İşletmenin kalıcı/geçici kapalılık kontrolü
+    // İşletmenin  kapalılık kontrolü
     final businessStatus = result['business_status'] as String?;
 
     if (businessStatus == 'CLOSED_TEMPORARILY' ||
@@ -136,7 +131,7 @@ class CrowdService {
         String nextOpenTime = 'Closed';
         try {
           final now = DateTime.now();
-          // Google Haritalar haftayı Pazar gününden başlatır (0 = Pazar, 1 = Pazartesi...)
+          // Google Haritalar haftayı Pazar gününden başlatır 
           final currentWeekday = now.weekday == 7 ? 0 : now.weekday;
           final periods = openingHours['periods'] as List?;
 
@@ -146,7 +141,6 @@ class CrowdService {
               if (open != null && open['day'] == currentWeekday) {
                 final timeStr = open['time'] as String?;
                 if (timeStr != null && timeStr.length == 4) {
-                  // 3. ÇEVİRİ: Gelecek açılış saati metin şablonu İngilizce yapıldı
                   nextOpenTime = 'Opens at ${timeStr.substring(0, 2)}:${timeStr.substring(2)}';
                   break;
                 }
@@ -158,31 +152,26 @@ class CrowdService {
       }
     }
 
-    // Mekan açıksa API kotasını korumak için yerel saat heuristiği kullan
+    // Mekan açıksa yerel saat heuristiği kullan
     return (_estimateLocalHeuristic(fallbackLevel), null);
   }
 
-  /// Gemini fallback + günün saati ile kalabalık tahmini (API kotası harcamaz).
+  /// Gemini fallback + günün saati ile kalabalık tahmini .
   CrowdLevel _estimateLocalHeuristic(String? fallbackLevel) {
     final now = DateTime.now();
     final hour = now.hour;
     final isWeekend = now.weekday >= 6;
-
     final base = _parseFallback(fallbackLevel);
     int index = base.index;
-
     if (hour >= 12 && hour <= 16) {
       index += 1;
     } else if (hour < 9 || hour > 21) {
       index -= 2;
     }
-
     if (isWeekend) index += 1;
-
     return CrowdLevel.values[index.clamp(0, 3)];
   }
 
-  // 4. ÇEVİRİ: Fallback metin ayrıştırıcısı yeni İngilizce veri standartlarına göre güncellendi
   CrowdLevel _parseFallback(String? level) => switch (level) {
     'Calm' => CrowdLevel.quiet,
     'Busy' => CrowdLevel.busy,
@@ -193,6 +182,6 @@ class CrowdService {
   /// Mekan değişim anlarında hafızayı sıfırlayıp yeni istek atılmasını tetikler.
   void clearCache() {
     _cache.clear();
-    debugPrint('🗑️ CrowdService önbelleği olay tetiklenmesiyle sıfırlandı.');
+    debugPrint(' CrowdService önbelleği olay tetiklenmesiyle sıfırlandı.');
   }
 }

@@ -255,7 +255,6 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                               fontSize: 16,
                               fontWeight: FontWeight.w800)),
                       const SizedBox(height: 3),
-                      // 1. ÇEVİRİ: Mekan tamamlandı yazısı İngilizce yapıldı
                       Text(
                           '$_completedCount / $_totalCount Places Completed',
                           style: const TextStyle(
@@ -268,11 +267,10 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // 2. ÇEVİRİ: İlerleme başlığı İngilizce yapıldı
                     const Text('Progress',
                         style: TextStyle(
                             color: Colors.white70, fontSize: 10)),
-                    Text('${(progress * 100).toInt()}%', // Yüzde işareti sona alındı (İngilizce formatı)
+                    Text('${(progress * 100).toInt()}%', 
                         style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
@@ -324,7 +322,6 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
           Icon(Icons.check_circle_rounded, color: Colors.white, size: 26),
           SizedBox(width: 12),
           Expanded(
-            // 3. ÇEVİRİ: Tebrik mesajı İngilizce yapıldı
             child: Text('Congratulations! You completed all places 🎉',
                 style: TextStyle(
                     color: Colors.white,
@@ -368,7 +365,6 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start,
 
             children: [
-              // 4. ÇEVİRİ: Şimdi neredesiniz başlığı İngilizce yapıldı
               const Text('Where are you now?',
                   style: TextStyle(color: Colors.white70, fontSize: 11)),
               Text(place.name,
@@ -387,7 +383,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
             placeName: place.name,
             city: widget.savedTrip.city,
             description: place.description,
-            compact: true, // küçük buton modu
+            compact: true, 
           ),
         ],
       ),
@@ -402,7 +398,6 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         const Row(children: [
           Icon(Icons.navigation_rounded, color: _teal, size: 18),
           SizedBox(width: 8),
-          // 5. ÇEVİRİ: Seyahat rotası başlığı İngilizce yapıldı
           Text('Your Travel Route',
               style: TextStyle(
                   fontSize: 15,
@@ -445,7 +440,6 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                 const Icon(Icons.calendar_today_rounded,
                     color: Colors.white, size: 16),
                 const SizedBox(width: 8),
-                // 6. ÇEVİRİ: Gün X başlığı İngilizce yapıldı
                 Text('Day ${dayIdx + 1}',
                     style: const TextStyle(color: Colors.white,fontWeight: FontWeight.w800,fontSize: 15)),
                 const SizedBox(width: 8),
@@ -456,7 +450,6 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                     color: Colors.white.withOpacity(0.25),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  // 7. ÇEVİRİ: Mekan sayısı İngilizce yapıldı
                   child: Text('${day.places.length} Places',
                       style: const TextStyle(
                           color: Colors.white,
@@ -474,7 +467,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                 number: placeIdx + 1,
                 state: _stateOf(dayIdx, placeIdx),
                 dayColor: dayColor,
-                city: widget.savedTrip.city, // bunu ekle
+                city: widget.savedTrip.city, 
                 onComplete: () => _completePlace(dayIdx, placeIdx),
                 onReview: (r, rev) => _saveReview(dayIdx, placeIdx, r, rev),
               );

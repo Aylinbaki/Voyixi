@@ -40,39 +40,29 @@ class AuthService {
   Future<User?> signIn(String email, String password) async {
     try {
       UserCredential user = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: email,password: password,
       );
       return user.user;
     } catch (e) {
-      print(e);
-      return null;
+      print(e); return null;
     }
   }
-
   // GOOGLE SIGN IN
   Future<User?> signInWithGoogle() async {
     try {
       await GoogleSignIn().signOut();
-      final GoogleSignInAccount? googleUser =
-          await GoogleSignIn().signIn();
-
+      final GoogleSignInAccount? googleUser =await GoogleSignIn().signIn();
       if (googleUser == null) return null;
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =await googleUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
-
+      UserCredential userCredential = await _auth.signInWithCredential(credential);
       return userCredential.user;
-    } catch (e) {
-      print(e);
+    } catch (e) {print(e);
       return null;
     }
   }

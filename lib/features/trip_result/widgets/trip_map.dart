@@ -259,7 +259,7 @@ class TripMapState extends State<TripMap> {
                       color: Color(0xFF00BFA5), size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    '$_visibleCount / ${all.length} mekan',
+                    '$_visibleCount / ${all.length} place',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

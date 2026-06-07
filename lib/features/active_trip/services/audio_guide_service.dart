@@ -9,7 +9,6 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 
 class AudioGuideService {
-  // Singleton
   static final AudioGuideService _instance = AudioGuideService._();
   factory AudioGuideService() => _instance;
   AudioGuideService._();
@@ -19,10 +18,9 @@ class AudioGuideService {
   bool get isPlaying => _isPlaying;
 
   String get _geminiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
-  String get _azureKey => dotenv.env['AZURE_TTS_KEY'] ?? '';
-  String get _azureRegion => dotenv.env['AZURE_TTS_REGION'] ?? 'eastus';
+  String get _googleApiKey => dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
 
-  // ── Ana metod ─────────────────────────────────────────────────────────────
+  // ── Ana Metod ────────────────────────────────────────────────────────────
   Future<void> playGuide({
     required String placeName,
     required String city,
@@ -40,39 +38,37 @@ class AudioGuideService {
       onStart?.call();
       _isPlaying = true;
 
-      // Cache key — şehir + mekan adından oluştur
+// Cachekey   --------------------------------------------------------------------------
       final cacheKey = _cacheKey(city, placeName);
       final cachedFile = await _getCachedFile(cacheKey);
 
       File audioFile;
 
       if (cachedFile != null) {
-        // Cache'de var — direkt kullan, API çağrısı yok
-        debugPrint(' Playing from cache: $placeName');
+        debugPrint('💾 Playing from cache: $placeName');
         audioFile = cachedFile;
       } else {
-        // Cache'de yok — üret ve kaydet
-        debugPrint('🔊 Generating new audio: $placeName');
+        debugPrint('🔊 Generating new audio via Google Cloud TTS: $placeName');
 
-        // 1. Gemini'den metin al
+// 1. Gemini'den metnini al  --------------------------------------------------------------------------
         final text = await _generateText(
           placeName: placeName,
           city: city,
           description: description,
         );
 
-        // 2. Azure TTS ile sese çevir
+// 2.TTS ile metni  sese dönüştür--------------------------------------------------------------------------
         final audioBytes = await _textToSpeech(text);
 
-        // 3. Dosyaya kaydet
+// 3. Gelen byte verisini .mp3 dosyası olarak diske kaydet -------------------------------------------------
         audioFile = await _saveToCache(cacheKey, audioBytes);
       }
 
-      // 4. Oynat
+// 4. Diskteki dosyayı oynat --------------------------------------------------------------------------
       await _player.setFilePath(audioFile.path);
       await _player.play();
 
-      // Bitince state güncelle
+// Bitince durumu güncelle --------------------------------------------------------------------------
       _player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
           _isPlaying = false;
@@ -95,9 +91,8 @@ class AudioGuideService {
     _player.dispose();
   }
 
-  // ── Cache yönetimi ────────────────────────────────────────────────────────
+  // ── Cache Yönetimi ─────────────────────────────────────────────
   String _cacheKey(String city, String placeName) {
-    // Güvenli dosya adı — boşluk ve özel karakter yok
     final safe = '${city}_$placeName'
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]'), '_');
@@ -122,7 +117,6 @@ class AudioGuideService {
     return file;
   }
 
-  // Tüm cache'i temizle
   Future<void> clearCache() async {
     try {
       final dir = await getTemporaryDirectory();
@@ -137,19 +131,16 @@ class AudioGuideService {
     } catch (_) {}
   }
 
-  // ── Gemini — metin üret ───────────────────────────────────────────────────
+  // ── Gemini — Metin Üretim Katmanı ─────────────────────────────────────────
   Future<String> _generateText({
     required String placeName,
     required String city,
     required String description,
   }) async {
-
     const url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-    // 1. ÇEVİRİ: Sesli rehber prompt kuralları tamamen İngilizceye çekildi
     final prompt =
-
         'You are a professional audio tour guide. '
         'Write a short, fluent, and engaging audio narration for tourists about "$placeName" in $city.\n\n'
         'Additional context: $description\n\n'
@@ -160,7 +151,6 @@ class AudioGuideService {
         '- Provide advice or tips on touring this specific place.\n'
         '- Include 1 or 2 interesting historical or cultural facts.\n'
         '- Do not start with any introduction like "Hello", "Welcome", or greeting phrases; dive directly into the facts.';
-
 
     final res = await http.post(
       Uri.parse('$url?key=$_geminiKey'),
@@ -183,68 +173,42 @@ class AudioGuideService {
     }
 
     final data = jsonDecode(res.body);
-    final finishReason = data['candidates'][0]['finishReason'];
-    debugPrint(' Gemini Stop Reason: $finishReason');
-    if (finishReason == 'SAFETY') {
-      debugPrint(' Flagged by safety filter');
-    } else if (finishReason == 'MAX_TOKENS') {
-      debugPrint(' Exceeded max tokens');
-    }
-
-    final text =
-    data['candidates'][0]['content']['parts'][0]['text'] as String;
-    debugPrint('🤖 Gemini Text: $text');
+    final text = data['candidates'][0]['content']['parts'][0]['text'] as String;
+    debugPrint(' Gemini Text: $text');
     return text.length > 300 ? '${text.substring(0, 297)}...' : text;
   }
 
-  // ── Azure TTS — metni sese çevir ──────────────────────────────────────────
+// ── Google Cloud TTS Katmanı ──────────────────────────────────────────────
   Future<List<int>> _textToSpeech(String text) async {
-    // Token al
-    final tokenRes = await http.post(
-      Uri.parse(
-          'https://$_azureRegion.api.cognitive.microsoft.com/sts/v1.0/issueToken'),
-      headers: {'Ocp-Apim-Subscription-Key': _azureKey},
-    ).timeout(const Duration(seconds: 10));
-
-    if (tokenRes.statusCode != 200) {
-      throw Exception('Azure token error: ${tokenRes.statusCode}');
+    if (_googleApiKey.isEmpty) {
+      throw Exception('Google API Key is missing from .env');
     }
 
-    final token = tokenRes.body;
+    const url = 'https://texttospeech.googleapis.com/v1/text:synthesize';
 
-    // 2. ÇEVİRİ & GÜNCELLEME: TTS ses dili ve yapısı Amerikan İngilizcesine (en-US-AvaNeural) geçirildi
-    final ssml = '''
-<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
-  <voice name="en-US-AvaNeural">
-    <prosody rate="-5%" pitch="0%">
-      ${_escapeXml(text)}
-    </prosody>
-  </voice>
-</speak>''';
-
-    final ttsRes = await http.post(
-      Uri.parse(
-          'https://$_azureRegion.tts.speech.microsoft.com/cognitiveservices/v1'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/ssml+xml',
-        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
-        'User-Agent': 'VoyixiApp',
-      },
-      body: ssml,
+    final response = await http.post(
+      Uri.parse('$url?key=$_googleApiKey'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'input': {'text': text},
+        'voice': {
+          'languageCode': 'en-US',
+          'name': 'en-US-Neural2-H', 
+        },
+        'audioConfig': {
+          'audioEncoding': 'MP3',
+          'speakingRate': 0.95,
+          'pitch': 0.0
+        }
+      }),
     ).timeout(const Duration(seconds: 30));
 
-    if (ttsRes.statusCode != 200) {
-      throw Exception('Azure TTS error: ${ttsRes.statusCode}');
+    if (response.statusCode != 200) {
+      throw Exception('Google TTS API error: ${response.statusCode} - ${response.body}');
     }
 
-    return ttsRes.bodyBytes;
+    final data = jsonDecode(response.body);
+    final String audioContent = data['audioContent'];
+    return base64Decode(audioContent);
   }
-
-  String _escapeXml(String text) => text
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&apos;');
 }
