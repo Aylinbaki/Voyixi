@@ -206,16 +206,12 @@ String _currentFact = "";
               if (user != null) ...[
                 if (user.isAdmin)
                   _buildRoleTile(
-                    title: "Admin Panel",
-                    icon: Icons.admin_panel_settings,
-                    color: Colors.redAccent,
+                    title: "Admin Panel",icon: Icons.admin_panel_settings,color: Colors.redAccent,
                     onTap: () => Navigator.pushNamed(context, '/adminPanel'),
                   ),
                 if (user.isGuide)
                   _buildRoleTile(
-                    title: "Guide Panel",
-                    icon: Icons.explore,
-                    color: const Color(0xFF00BFA5),
+                    title: "Guide Panel",icon: Icons.explore,color: const Color(0xFF00BFA5),
                     onTap: () => showGuidePanel(context),
                   ),
                 if (!user.isAdmin && !user.isGuide)
@@ -228,9 +224,7 @@ String _currentFact = "";
                           ),
                         )
                       : _buildRoleTile(
-                          title: "Become a Guide",
-                          icon: Icons.directions_walk,
-                          color: const Color(0xFF00BFA5),
+                          title: "Become a Guide",icon: Icons.directions_walk,color: const Color(0xFF00BFA5),
                           onTap: () =>
                               Navigator.pushNamed(context, '/guideApply'),
                         ),

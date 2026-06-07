@@ -119,7 +119,7 @@
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('The plan has been saved! ✅'),
+              content: Text('The plan has been saved! '),
               backgroundColor: Color(0xFF00BFA5),
               behavior: SnackBarBehavior.floating,
             ),

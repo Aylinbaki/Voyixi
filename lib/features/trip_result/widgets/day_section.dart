@@ -122,7 +122,7 @@ class _DaySectionState extends State<DaySection>
             child: Row(children: [
               const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 18),
               const SizedBox(width: 10),
-              Text('Gün ${widget.dayPlan.dayNumber}',
+              Text('Day ${widget.dayPlan.dayNumber}',
                   style: const TextStyle(
                       color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
               const SizedBox(width: 8),
@@ -133,7 +133,7 @@ class _DaySectionState extends State<DaySection>
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${widget.dayPlan.places.length} Mekan',
+                  '${widget.dayPlan.places.length} Place',
                   style: const TextStyle(
                       color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
                 ),

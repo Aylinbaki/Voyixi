@@ -95,109 +95,104 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.92),
-                borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               ),
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,left: 22,right: 22,top: 16,),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Add New Memory',
-                    style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: _T.gradientStart,),
-                  ),
-                  const SizedBox(height: 18),
-                  GestureDetector(
-                    onTap: () async {
-                      final img =
-                      await _picker.pickImage(source: ImageSource.gallery);
-                      if (img != null) setModal(() => selectedImage = img);
-                    },
-                    child: Container(
-                      height: 140,
-                      width: double.infinity,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24, // Klavye boşluğu
+                left: 22, right: 22, top: 16,
+              ),
+              child: SingleChildScrollView( // 🎯 1. ADIM: Taşmayı önlemek için ScrollView ekledik
+                physics: const BouncingScrollPhysics(), // Akıcı kaydırma hissi
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40, height: 4,
                       decoration: BoxDecoration(
-                        color: _T.gradientEnd.withOpacity(0.35),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: _T.gradientStart.withOpacity(0.35)),
-                      ),
-                      child: selectedImage == null
-                          ? const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_a_photo_outlined,
-                              color: _T.gradientStart, size: 36),
-                          SizedBox(height: 8),
-                          Text('Add Photo',
-                              style:
-                              TextStyle(color: _T.gradientStart)),
-                        ],
-                      )
-                          : ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(File(selectedImage!.path),
-                            fit: BoxFit.cover),
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  _sheetField(titleCtrl, 'Title (e.g.: Ayasofya Gezisi)'),
-                  const SizedBox(height: 10),
-                  _sheetField(noteCtrl, 'What are your memories?', maxLines: 3),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today_outlined,
-                          size: 15, color: _T.gradientStart),
-                      const SizedBox(width: 6),
-                      Text('Date: $formattedDate',
-                          style: const TextStyle(
-                              color: _T.gradientStart, fontSize: 13)),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  GestureDetector(
-                    onTap: () async {
-                      if (titleCtrl.text.isNotEmpty && user != null) {
-                        // Firebase'e kaydetme işlemi
-                        await UserService().addNote(
-                          uid: user!.uid,
-                          title: titleCtrl.text,
-                          note: noteCtrl.text,
-                          imageUrl: selectedImage?.path ?? '',
-                          isLocal: selectedImage != null,
-                        );
-                        if (mounted) Navigator.pop(ctx);
-                      }
-                    },
-                    child: Container(
-                      width: double.infinity, height: 52,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_T.accent, Color(0xFF2E7D32)],
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Add New Memory',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _T.gradientStart),
+                    ),
+                    const SizedBox(height: 18),
+                    GestureDetector(
+                      onTap: () async {
+                        final img = await _picker.pickImage(source: ImageSource.gallery);
+                        if (img != null) setModal(() => selectedImage = img);
+                      },
+                      child: Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: _T.gradientEnd.withOpacity(0.35),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: _T.gradientStart.withOpacity(0.35)),
                         ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(color: _T.accent.withOpacity(0.38),blurRadius: 14, offset: const Offset(0, 5),),
-                        ],
+                        child: selectedImage == null
+                            ? const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo_outlined, color: _T.gradientStart, size: 36),
+                            SizedBox(height: 8),
+                            Text('Add Photo', style: TextStyle(color: _T.gradientStart)),
+                          ],
+                        )
+                            : ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.file(File(selectedImage!.path), fit: BoxFit.cover),
+                        ),
                       ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Save Note',
-                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 14),
+                    _sheetField(titleCtrl, 'Title (e.g.: Ayasofya Gezisi)'),
+                    const SizedBox(height: 10),
+                    _sheetField(noteCtrl, 'What are your memories?', maxLines: 3),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today_outlined, size: 15, color: _T.gradientStart),
+                        const SizedBox(width: 6),
+                        Text('Date: $formattedDate', style: const TextStyle(color: _T.gradientStart, fontSize: 13)),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    GestureDetector(
+                      onTap: () async {
+                        if (titleCtrl.text.isNotEmpty && user != null) {
+                          await UserService().addNote(
+                            uid: user!.uid,
+                            title: titleCtrl.text,
+                            note: noteCtrl.text,
+                            imageUrl: selectedImage?.path ?? '',
+                            isLocal: selectedImage != null,
+                          );
+                          if (mounted) Navigator.pop(ctx);
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity, height: 52,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_T.accent, Color(0xFF2E7D32)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(color: _T.accent.withOpacity(0.38), blurRadius: 14, offset: const Offset(0, 5)),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'Save Note',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

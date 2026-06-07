@@ -249,20 +249,18 @@ class TourService {
       return null;
     }
   }
+  
   static Future<void> launchGoogleMaps(String placeId) async {
     if (placeId.isEmpty) return;
-
-    // Google'ın resmi ve evrensel harita yönlendirme şeması (Place ID ile nokta atışı açar)
     final Uri googleMapsUrl = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=Google&query_place_id=$placeId',
     );
 
     try {
-      // Önce telefonda harici bir uygulama (Google Maps) bu URL'i açabiliyor mu diye bakar
       if (await canLaunchUrl(googleMapsUrl)) {
         await launchUrl(
           googleMapsUrl,
-          mode: LaunchMode.externalApplication, // Uygulamayı harici olarak açmaya zorlar
+          mode: LaunchMode.externalApplication, 
         );
       } else {
         debugPrint('Could not launch Google Maps URL: $googleMapsUrl');

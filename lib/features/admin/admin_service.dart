@@ -48,12 +48,12 @@ class AdminService {
     await batch.commit();
   }
 
-  // Reddet → başvuruyu sil (tekrar başvurabilsin)
+  // Reddet → başvuruyu sil 
   Future<void> rejectApplication(String appId) async {
     await _db.collection('guide_applications').doc(appId).delete();
   }
 
-  // Rehberliği kaldır → başvurusunu da sil (tekrar başvurabilsin)
+  // Rehberliği kaldır → başvurusunu da sil 
   Future<void> removeGuide(String userId) async {
     final batch = _db.batch();
     batch.update(

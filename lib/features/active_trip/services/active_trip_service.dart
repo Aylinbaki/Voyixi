@@ -12,7 +12,7 @@ class ActiveTripService {
       .collection('saved_trips')
       .doc(tripId);
 
-  // Firebase'e kaydet
+  // Firebase'e kaydet ----------------------------------------------
   Future<void> saveProgress(
       String tripId, List<TripPlaceState> states) async {
         
@@ -22,7 +22,7 @@ class ActiveTripService {
     });
   }
 
-  // Firebase'den yükle
+  // Firebase'den yükle ----------------------------------------------
   Future<List<TripPlaceState>> loadProgress(String tripId) async {
     final doc = await _ref(tripId).get();
     final data = doc.data();
@@ -32,7 +32,7 @@ class ActiveTripService {
         .toList();
   }
 
-  // Tek mekan yorum güncelle
+  // Tek mekan yorum güncelle ----------------------------------------------
   Future<void> updateReview(
     String tripId,
     int dayIdx,

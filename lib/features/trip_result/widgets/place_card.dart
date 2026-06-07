@@ -239,7 +239,7 @@ class _PlaceCardState extends State<PlaceCard> {
                       Expanded(
                         child: _outlineButton(
                           icon: Icons.swap_horiz_rounded,
-                          label: 'Değiştir',
+                          label: 'Change',
                           color: widget.dayColor,
                           onTap: widget.onReplace,
                         ),
@@ -248,7 +248,7 @@ class _PlaceCardState extends State<PlaceCard> {
                       Expanded(
                         child: _fillButton(
                           icon: Icons.navigation_rounded,
-                          label: 'Nasıl Giderim?',
+                          label: 'How can I go?',
                           color: widget.dayColor,
                           onTap: () => _openMaps(widget.place),
                         ),
@@ -282,10 +282,10 @@ class _PlaceCardState extends State<PlaceCard> {
 
   Widget _crowdChip(String level) {
     final colors = {
-      'Sakin': (const Color(0xFFE8F5E9), const Color(0xFF4CAF50)),
-      'Orta': (const Color(0xFFFFF8E1), const Color(0xFFF9A825)),
-      'Yoğun': (const Color(0xFFFFF3E0), const Color(0xFFEF6C00)),
-      'Çok Yoğun': (const Color(0xFFFFEBEE), const Color(0xFFE53935)),
+      'Calm': (const Color(0xFFE8F5E9), const Color(0xFF4CAF50)),
+      'Normal': (const Color(0xFFFFF8E1), const Color(0xFFF9A825)),
+      'Busy': (const Color(0xFFFFF3E0), const Color(0xFFEF6C00)),
+      'Very Busy': (const Color(0xFFFFEBEE), const Color(0xFFE53935)),
     };
     final c = colors[level] ?? colors['Orta']!;
     return _chip(Icons.people_rounded, level, c.$1, c.$2);

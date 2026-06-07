@@ -16,7 +16,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
   late TabController _tab;
 
   static const _teal = Color(0xFF00BFA5);
-  static const _tealDark = Color(0xFF00897B);
   static const _bg = Color(0xFFF0FAFA);
   static const _textDark = Color(0xFF1A2E2E);
   static const _textMid = Color(0xFF4A6060);
@@ -73,7 +72,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
           unselectedLabelColor: _textMid,
           indicatorColor: _teal,
           tabs: const [
-            // 1. ÇEVİRİ: Sekme başlıkları İngilizce yapıldı
             Tab(text: 'Applications'),
             Tab(text: 'Guides'),
           ],
@@ -93,7 +91,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 // ── Başvurular Tab ────────────────────────────────────────────────────────
 class _ApplicationsTab extends StatelessWidget {
   static const _teal = Color(0xFF00BFA5);
-  static const _textDark = Color(0xFF1A2E2E);
   static const _textMid = Color(0xFF4A6060);
 
   @override
@@ -107,7 +104,6 @@ class _ApplicationsTab extends StatelessWidget {
         }
         final apps = snap.data ?? [];
         if (apps.isEmpty) {
-          // 2. ÇEVİRİ: Boş başvuru listesi mesajı İngilizce yapıldı
           return _empty('No applications found yet');
         }
         return ListView.builder(
@@ -146,7 +142,6 @@ class _AppCard extends StatelessWidget {
     _ => Colors.orange,
   };
 
-  // 3. ÇEVİRİ: Durum etiketleri İngilizce yapıldı
   String get _statusLabel => switch (app.status) {
     'approved' => 'Approved',
     'rejected' => 'Rejected',
@@ -193,7 +188,6 @@ class _AppCard extends StatelessWidget {
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: _textDark)),
-                    // 4. ÇEVİRİ: Yaş etiketi İngilizce yapıldı
                     Text('${app.city} • ${app.age} years old',
                         style: const TextStyle(
                             color: _textMid, fontSize: 12)),
@@ -216,7 +210,6 @@ class _AppCard extends StatelessWidget {
               ),
             ]),
             const SizedBox(height: 10),
-
             // Diller
             Wrap(
               spacing: 6, runSpacing: 4,
@@ -243,13 +236,10 @@ class _AppCard extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis),
             const SizedBox(height: 6),
-            // 5. ÇEVİRİ: İletişim ön eki İngilizce yapıldı
             Text('Contact: ${app.email} • ${app.phone}',
                 style: const TextStyle(
                     color: Color(0xFF8AABAB), fontSize: 11)),
             const SizedBox(height: 12),
-
-            // Butonlar — sadece bekleyenler için
             if (app.status == 'pending')
               Row(children: [
                 Expanded(
@@ -261,7 +251,6 @@ class _AppCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    // 6. ÇEVİRİ: Reddet butonu İngilizce yapıldı
                     child: const Text('Reject'),
                   ),
                 ),
@@ -277,7 +266,6 @@ class _AppCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    // 7. ÇEVİRİ: Onayla butonu İngilizce yapıldı
                     child: const Text('Approve'),
                   ),
                 ),
@@ -307,7 +295,6 @@ class _GuidesTab extends StatelessWidget {
         final guides = snap.data ?? [];
         if (guides.isEmpty) {
           return const Center(
-            // 8. ÇEVİRİ: Boş rehber listesi mesajı İngilizce yapıldı
             child: Text('No approved guides yet',
                 style: TextStyle(color: _textMid)),
           );
@@ -363,7 +350,6 @@ class _GuideCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 'Rehber' -> 'Guide'
               Text(guide['displayName'] ?? guide['email'] ?? 'Guide',
                   style: const TextStyle(
                       fontWeight: FontWeight.w700,
@@ -385,7 +371,6 @@ class _GuideCard extends StatelessWidget {
               color: Colors.red.withOpacity(0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            // 9. ÇEVİRİ: Kaldır butonu İngilizce yapıldı
             child: const Text('Remove',
                 style: TextStyle(
                     color: Colors.red,
@@ -403,7 +388,6 @@ class _GuideCard extends StatelessWidget {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),
-        // 10. ÇEVİRİ: Onay kutusu diyalog metinleri tamamen İngilizce yapıldı
         title: const Text('Remove Guide Status',
             style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text(
