@@ -103,7 +103,7 @@ class TourService {
 
         if (places.isNotEmpty) {
           debugPrint('📍 [Nearby] OK via $label (${places.length} places)');
-          return places.take(6).toList(); 
+          return places.take(4).toList();
         }
         errors.add('$label: no results');
       } on NearbyPlacesFetchException catch (e) {

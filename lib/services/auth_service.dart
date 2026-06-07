@@ -11,7 +11,7 @@ class AuthService {
     try {
       var doc = await _db.collection('users').doc(uid).get();
       if (doc.exists && doc.data() != null) {
-        // Ham veriyi modelimize gönderip tertemiz bir obje alıyoruz
+        //  veriyi modele gönderip temiz bir obje alıyoruz
         return UserModel.fromMap(doc.data()!, doc.id);
       }
     } catch (e) {

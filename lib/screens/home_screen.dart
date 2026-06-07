@@ -62,7 +62,7 @@ String _currentFact = "";
   }
 
   String? get _userPhotoUrl => _currentUser?.photoURL;
-  // init---------------------------------------------------------------------------------
+  // init
   @override
   void initState() {
     super.initState();
@@ -95,13 +95,13 @@ String _currentFact = "";
       }
     }
   }
-//dispose------------------------------------------------------------------------------------
+//dispose-----
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
   }
-//----------------------!!BUILD!!------------------------------------------------------------------
+//----!!BUILD!!-------
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
@@ -151,7 +151,7 @@ String _currentFact = "";
       ),
     );
   }
-// Build parts header------------------------------------------------------------------------
+// Build parts header
   Widget _buildHeader(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
     final user = _userModel;
@@ -839,11 +839,13 @@ String _currentFact = "";
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate:
                 const SliverGridDelegateWithFixedCrossAxisCount(
+                  //grid
                   crossAxisCount: 2,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
                   childAspectRatio: 1.0,
                 ),
+                //surroundings
                 itemCount: places.length > 4 ? 4 : places.length,
                 itemBuilder: (context, index) =>
                     _buildNearbyCard(places[index]),
@@ -978,7 +980,7 @@ String _currentFact = "";
   Widget _buildNearbyCard(Map<String, dynamic> place) {
     final rating = (place['rating'] as num?)?.toDouble() ?? 0.0;
 
-    // 🎯 MÜHENDİSLİK DOKUNUŞU: Kartın tamamını tıklanabilir yapmak için GestureDetector ile sarmaladık
+    //  Kartın tamamını tıklanabilir yapmak için GestureDetector ile sarmaladık
     return GestureDetector(
       onTap: () {
         final id = place['placeId'] as String? ?? '';
@@ -1277,7 +1279,7 @@ class _FavoriteButtonState extends State<FavoriteButton> {
   }
 }
 
-//  Fonksiyonun içine dışarıdan bilgiyi paslamak için (String fact) ekledik
+//  Fonksiyonun içine dışarıdan bilgiyi paslamak için (String fact)
 Widget _buildTravelTrivia(String fact) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
