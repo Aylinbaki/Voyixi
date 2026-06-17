@@ -8,6 +8,7 @@ class StepShell extends StatelessWidget {
   final VoidCallback onNext;
   final bool isLastStep;
   final bool isLoading;
+  final Color cardColor;  //color
 
   const StepShell({
     super.key,
@@ -18,6 +19,7 @@ class StepShell extends StatelessWidget {
     required this.onNext,
     this.isLastStep = false,
     this.isLoading = false,
+    this.cardColor = Colors.white, //color
   });
 
   @override
@@ -35,7 +37,7 @@ class StepShell extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardColor, //değiş
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -149,8 +151,8 @@ class _NextButtonState extends State<_NextButton>
                         _ctrl.value.clamp(0.0, 1.0),
                         (_ctrl.value + 0.5).clamp(0.0, 1.0),
                       ],
-                      begin: Alignment.centerRight,
-                      end: Alignment.centerLeft,
+                      end: Alignment.centerRight, //begin
+                      begin: Alignment.centerLeft, // end
                     )
                   : const LinearGradient(
                       colors: [Color(0xFFCCE8E5), Color(0xFFCCE8E5)]),

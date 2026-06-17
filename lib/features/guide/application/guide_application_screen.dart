@@ -313,6 +313,7 @@ class _GuideApplicationScreenState extends State<GuideApplicationScreen> {
           'Describe the tours you want to conduct...',
           hint: 'Which routes and what kind of tours are you planning to organize?',
           minLines: 3,
+          required: false,
         ),
         const SizedBox(height: 28),
 
@@ -390,6 +391,7 @@ class _GuideApplicationScreenState extends State<GuideApplicationScreen> {
       String label, {
         String? hint,
         int minLines = 3,
+        bool required = true, // ekle
       }) =>
       Padding(
         padding: const EdgeInsets.only(bottom: 12),
@@ -397,7 +399,9 @@ class _GuideApplicationScreenState extends State<GuideApplicationScreen> {
           controller: ctrl,
           maxLines: null,
           minLines: minLines,
-          validator: (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null,
+          validator: required
+            ? (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null
+            : null,
           decoration: InputDecoration(
             labelText: label,
             hintText: hint,

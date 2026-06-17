@@ -19,12 +19,13 @@ class _TripPlannerFlowState extends State<TripPlannerFlow> {
   }
 
   void _back() {
-    if (_step > 0) {
-      setState(() => _step--);
-    } else {
-      Navigator.pop(context);
+    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    //if (_step > 0) {
+    //  setState(() => _step--);
+    //} else {
+    //  Navigator.pop(context);
     }
-  }
+
 
   @override
   Widget build(BuildContext context) {

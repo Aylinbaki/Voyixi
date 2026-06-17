@@ -41,7 +41,9 @@ child: StreamBuilder<List<SavedTrip>>(
       return const Center(child: CircularProgressIndicator(color: _teal));
     }
     
-    final trips = snap.data ?? [];
+   final trips = snap.data ?? [];
+    //final trips = (snap.data ?? []).where((t)=>t.city == 'İstanbul').toList();
+
 
     debugPrint('🔎 DEBUG - Firestore\'dan Toplam ${trips.length} plan geldi.');
     for (var trip in trips) {

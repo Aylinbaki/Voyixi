@@ -164,7 +164,7 @@ class _Step2DurationState extends State<Step2Duration> {
   String _durationLabel(int d) {
     if (d == 1) return 'A day trip';
     if (d <= 3) return 'Short holiday';
-    if (d <= 7) return 'Week trip';
+    if (d <= 10) return 'Week trip';
     return 'Long holiday';
   }
 }

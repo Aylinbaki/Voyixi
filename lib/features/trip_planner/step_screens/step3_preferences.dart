@@ -16,6 +16,7 @@ const _budgets = [
   ('💰', 'Economical', 'Budget-friendly options', 'economical'),
   ('💵', 'Medium', 'Balanced budget', 'medium'),
   ('💎', 'Luxury', 'Premium experience', 'luxury'),
+  ('💰', 'Business', 'Business-oriented', 'business')
 ];
 
 class Step3Preferences extends StatefulWidget {
@@ -69,6 +70,7 @@ class _Step3PreferencesState extends State<Step3Preferences> {
       onNext: _generate,
       isLastStep: true,
       isLoading: _loading,
+      cardColor: const Color(0xFFF5F0EB),    // ← YENİ
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

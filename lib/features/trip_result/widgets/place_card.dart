@@ -287,7 +287,7 @@ class _PlaceCardState extends State<PlaceCard> {
       'Busy': (const Color(0xFFFFF3E0), const Color(0xFFEF6C00)),
       'Very Busy': (const Color(0xFFFFEBEE), const Color(0xFFE53935)),
     };
-    final c = colors[level] ?? colors['Orta']!;
+    final c = colors[level] ?? colors['Normal']!;
     return _chip(Icons.people_rounded, level, c.$1, c.$2);
   }
 

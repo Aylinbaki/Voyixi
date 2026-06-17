@@ -103,7 +103,7 @@ class TourService {
 
         if (places.isNotEmpty) {
           debugPrint('📍 [Nearby] OK via $label (${places.length} places)');
-          return places.take(4).toList();
+          return places.take(6).toList(); // 4->6
         }
         errors.add('$label: no results');
       } on NearbyPlacesFetchException catch (e) {
@@ -165,7 +165,7 @@ class TourService {
       'https://maps.googleapis.com/maps/api/place/textsearch/json'
       '?query=${Uri.encodeComponent('tourist attractions')}'
       '&location=$lat,$lng'
-      '&radius=5000' 
+      '&radius=10000' // 5000-10.000 KM
       '&key=$_placesKey',
     )).timeout(const Duration(seconds: 15));
 
@@ -180,7 +180,7 @@ class TourService {
     final res = await http.get(Uri.parse(
       'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
       '?location=$lat,$lng'
-      '&radius=5000' // 
+      '&radius=10000' // 5000 -> 10.000
       '&tourist_attraction'
       '&key=$_placesKey',
     )).timeout(const Duration(seconds: 15));

@@ -88,7 +88,7 @@ class ActivePlaceCard extends StatelessWidget {
                   Icon(Icons.location_on_rounded,
                       color: Colors.white, size: 14),
                   SizedBox(width: 6),
-                  // 1. ÇEVİRİ: Şu an buradasınız banner metinleri İngilizce yapıldı
+                  // 1. ÇEVİRİ: Şu an buradasınız banner metinleri
                   Text('YOU ARE HERE NOW',
                       style: TextStyle(
                           color: Colors.white,
@@ -209,7 +209,7 @@ class ActivePlaceCard extends StatelessWidget {
   CrowdIndicator(
     placeName: place.name,
     city: city,
-    placeId: place.placeId, // 🔴 İŞTE BURASI!
+    placeId: place.placeId,
     fallbackLevel: place.crowdLevel,
   )
                     else
@@ -232,7 +232,7 @@ class ActivePlaceCard extends StatelessWidget {
                             Icon(Icons.person_outline_rounded,
                                 color: Color(0xFFF9A825), size: 14),
                             SizedBox(width: 6),
-                            // 2. ÇEVİRİ: Yorum başlığı İngilizce yapıldı
+                            // 2. ÇEVİRİ: Yorum başlığı
                             Text('Your Review',
                                 style: TextStyle(
                                     color: Color(0xFFF9A825),
@@ -302,7 +302,7 @@ class ActivePlaceCard extends StatelessWidget {
                   if (!_isCurrent && !_isCompleted)
                     _outlineBtn(
                       icon: Icons.navigation_rounded,
-                      // 5. ÇEVİRİ: Navigasyon yönlendirme butonu İngilizce yapıldı
+                      // 5. ÇEVİRİ: Navigasyon yönlendirme butonu
                       label: 'How to Get There?',
                       color: dayColor,
                       onTap: () {},
@@ -335,7 +335,7 @@ class ActivePlaceCard extends StatelessWidget {
       );
 
   // Statik crowd chip (aktif olmayan kartlar için)
-  // ── FIX: Gemini veri yapısıyla tam uyumlu İngilizce Crowd eşleştirmesi ──
+  // ──  Gemini veri yapısıyla tam uyumlu Crowd eşleştirmesi ──
   Widget _staticCrowdChip(String level) {
     final map = {
       'Calm': (const Color(0xFFE8F5E9), const Color(0xFF4CAF50)),

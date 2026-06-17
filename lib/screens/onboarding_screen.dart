@@ -56,6 +56,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center, // aynı hizaya getirir
                 children: [
+                  //GERİ BUTONU
+                  _currentPage > 0
+                  ? IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: Colors.blue,
+                      size: 22,
+                    ),
+                    onPressed: () {
+                      _controller.previousPage(
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                  ):
+
                   Image.asset(
                     "assets/images/text_logo.png",
                     height: 125,
@@ -63,7 +78,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, "/login");
+                      //iki sayfa ileri gitme
+                      //bulunduğun sf bul
+                      int currentPage = _controller.page?.round() ??0;
+                      //üstüne iki ekle
+                      int targetPage=currentPage+2;
+                      if (targetPage>3){
+                        targetPage=3;
+                      }
+                      _controller.animateToPage(
+                        targetPage,
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeInOut,
+                      );
+                      //Navigator.pushReplacementNamed(context, "/login");
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.blue,
@@ -188,7 +216,7 @@ class OnboardPage extends StatelessWidget {
           ),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.end, //center
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(

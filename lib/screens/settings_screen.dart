@@ -174,7 +174,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                      const SnackBar(content: Text("You're doing a great job, guide! \nYou can access your panel from the main screen."))
                    );
                 },
+                isLast: true,
               )
+            else if (_userModel?.isRejected == true)
+              _tile(
+                Icons.hourglass_empty_rounded,
+                'Your guide application is not approved',
+                trailing: const Text('Rejected', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("You can review the req. \nYou can applied again!"))
+                  );
+                },
+                 isLast: true,
+              )
+
             else if (_userModel?.isPending == true)
               _tile(
                 Icons.hourglass_empty_rounded, 
@@ -185,6 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SnackBar(content: Text("Your application is being reviewed by our administrative team. \nWe will get back to you as soon as possible!"))
                   );
                 },
+                isLast: true,
               )
             else
               _tile(
@@ -196,11 +211,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     MaterialPageRoute(builder: (context) => const GuideApplicationScreen())
                   );
                 },
+                isLast: true,
               ),
 //---------------------------------------------------
-            _tile(Icons.info_outline_rounded, 'Version',
-                trailing: const Text('v1.0.0', style: TextStyle(color: _textLight)),
-                isLast: true),
+           // _tile(Icons.info_outline_rounded, 'Version',
+           //     trailing: const Text('v1.0.0', style: TextStyle(color: _textLight)),
+           //     isLast: true),
           ]),
           const SizedBox(height: 16),
           _sectionTitle('Support'),
@@ -213,7 +229,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Divider(height: 1, indent: 66, color: _divider),
             _accordionHeader(Icons.flag_outlined, 'Report a Problem', 'report'),
             if (_openSection == 'report') _reportContent(),
-          ]),
+            const Divider(height: 1, indent: 66, color: _divider),
+             _tile(Icons.info_outline_rounded, 'Version',
+              trailing: const Text('v1.0.0', style: TextStyle(color: _textLight)),
+              isLast: true),
+    ]),
           const SizedBox(height: 28),
           _logoutButton(),
           const SizedBox(height: 12),

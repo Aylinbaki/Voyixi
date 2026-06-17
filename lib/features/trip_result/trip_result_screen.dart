@@ -442,7 +442,7 @@
                       dayPlan: r.dayPlans[i],
                       city: r.city,
                       budget: r.budget,
-                      startExpanded: i == 0,
+                      startExpanded: i == 0 || i == 1,
                       onPlaceChanged: () => _mapKey.currentState?.refreshMap(),
                     ),
                   ),

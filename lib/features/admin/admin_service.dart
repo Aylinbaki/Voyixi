@@ -49,8 +49,20 @@ class AdminService {
   }
 
   // Reddet → başvuruyu sil 
-  Future<void> rejectApplication(String appId) async {
-    await _db.collection('guide_applications').doc(appId).delete();
+  Future<void> rejectApplication( GuideApplication app) async {
+    final batch = _db.batch();
+    batch.update(
+      _db.collection('guide_applications').doc(app.id),
+      {'status': 'rejected'},
+    );
+    batch.update(
+      _db.collection('users').doc(app.userId),
+      {
+      'isPending': false,
+      'isRejected': true,
+      },
+    );
+    await batch.commit();
   }
 
   // Rehberliği kaldır → başvurusunu da sil 

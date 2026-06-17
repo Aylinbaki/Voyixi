@@ -45,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
 ];
 
 String _currentFact = "";
+String _currentFact2 = "";
 
   late Future<List<Map<String, dynamic>>> _nearbyFuture;
   User? get _currentUser => FirebaseAuth.instance.currentUser;
@@ -76,7 +77,10 @@ String _currentFact = "";
 });
     _refreshNearbyPlaces();
     if (_travelFacts.isNotEmpty) {
-    _currentFact = _travelFacts[DateTime.now().microsecondsSinceEpoch % _travelFacts.length];
+      //  _currentFact = _travelFacts[DateTime.now().microsecondsSinceEpoch % _travelFacts.length];
+    final idx= DateTime.now().microsecondsSinceEpoch % _travelFacts.length;
+    _currentFact = _travelFacts[idx];
+    _currentFact2 = _travelFacts[(idx+1)%_travelFacts.length];
   }
   }
 
@@ -95,6 +99,14 @@ String _currentFact = "";
       }
     }
   }
+  bool _isMediumBudget(dynamic budgetValue) {
+    if (budgetValue == null) return false;
+    if (budgetValue.toString().toLowerCase() == 'medium') return true;
+    final num? price = num.tryParse(budgetValue.toString());
+    if (price != null) return price >= 100 && price <= 400;
+    return false;
+  }
+
 //dispose-----
   @override
   void dispose() {
@@ -140,7 +152,8 @@ String _currentFact = "";
                   _buildTourPlans(),
                   const SizedBox(height: 24),
                   _buildNearbySection(),
-                  _buildTravelTrivia(_currentFact),
+                  _buildTravelTrivia(_currentFact,_currentFact2),
+
                 ],
                 SizedBox(height: 100 + bottomPadding),
               ],
@@ -308,12 +321,14 @@ String _currentFact = "";
                       ),
                     ),
                     const Divider(),
-                    ...['All', 'Free'].map(
-                      (budget) => ListTile(
+                    ...['All', 'Free', 'Medium'].map(
+                          (budget) => ListTile(
                         title: Text(budget),
                         leading: Icon(
                           budget == 'Free'
                               ? Icons.money_off_rounded
+                              : budget == 'Medium'
+                              ? Icons.attach_money_rounded
                               : Icons.payments_outlined,
                           color: _selectedBudget == budget
                               ? const Color(0xFF00BFA5)
@@ -324,7 +339,6 @@ String _currentFact = "";
                             : null,
                         onTap: () {
                           setState(() => _selectedBudget = budget);
-                          
                           Navigator.pop(context);
                         },
                       ),
@@ -391,8 +405,11 @@ String _currentFact = "";
                     (tour['city'] ?? '').toString().toLowerCase().contains(_searchQuery,)
                      ||
                     (tour['title'] ?? '').toString().toLowerCase().contains(_searchQuery,);
+
                 final filterMatch = _selectedBudget == 'All' ||
-                    (tour['budget'] ?? '').toString().toLowerCase() == _selectedBudget.toLowerCase();
+                    (_selectedBudget == 'Free' && (tour['price'] ?? '').toString().toLowerCase() == 'free') ||
+                    (_selectedBudget == 'Medium' && _isMediumBudget(tour['price']));
+                    //(tour['budget'] ?? '').toString().toLowerCase() == _selectedBudget.toLowerCase();
 
                 return cityMatch && filterMatch; 
               }).toList();
@@ -553,6 +570,7 @@ String _currentFact = "";
               );
             }
             final trip = snapshot.data;
+
             if (trip == null) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -580,6 +598,7 @@ String _currentFact = "";
       ],
     );
   }
+
 
   Widget _buildUpcomingTripCard(SavedTrip trip) {
     final dateFormat = DateFormat('d MMMM yyyy', 'tr_TR');
@@ -846,7 +865,7 @@ String _currentFact = "";
                   childAspectRatio: 1.0,
                 ),
                 //surroundings
-                itemCount: places.length > 4 ? 4 : places.length,
+                itemCount: places.length > 6 ? 6 : places.length, // 4 -> 6
                 itemBuilder: (context, index) =>
                     _buildNearbyCard(places[index]),
               ),
@@ -1120,8 +1139,10 @@ String _currentFact = "";
                         _searchQuery,
                       );
               final matchesBudget = _selectedBudget == 'All' ||
-                  (tour['budget'] ?? '').toString().toLowerCase() ==
-                      _selectedBudget.toLowerCase();
+                  (_selectedBudget == 'Free' && (tour['price'] ?? '').toString().toLowerCase() == 'free') ||
+                  (_selectedBudget == 'Medium' && _isMediumBudget(tour['price']));
+
+                  //(tour['budget'] ?? '').toString().toLowerCase() == _selectedBudget.toLowerCase();
               return matchesSearch && matchesBudget;
             }).toList();
             if (results.isEmpty) {
@@ -1280,7 +1301,7 @@ class _FavoriteButtonState extends State<FavoriteButton> {
 }
 
 //  Fonksiyonun içine dışarıdan bilgiyi paslamak için (String fact)
-Widget _buildTravelTrivia(String fact) {
+Widget _buildTravelTrivia(String fact, String fact2) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
     child: CustomPaint(
@@ -1295,6 +1316,17 @@ Widget _buildTravelTrivia(String fact) {
             const SizedBox(height: 10),
             Text(
               fact.isNotEmpty ? fact : "Discover the world with Voyixi!",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            Text(
+              fact2.isNotEmpty ? fact2 : "Travel opens your mind",
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,

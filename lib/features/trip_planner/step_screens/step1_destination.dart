@@ -3,7 +3,7 @@ import '../trip_plan_model.dart';
 import '../step_shell.dart';
 
 const _popularCities = [
-  'Istanbul', 'Paris', 'Rome', 'Barcelona', 'Amsterdam',
+  'Istanbul','Izmir', 'Paris', 'Rome', 'Barcelona', 'Amsterdam',
 'Prague', 'Vienna', 'Budapest', 'Athens', 'Lisbon', 'Berlin', 'London',
 ];
 

@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl          = TextEditingController();
   final _passwordCtrl       = TextEditingController();
   
-  bool  _hidePassword       = true;
+  bool  _hidePassword       = true; // direkt açık gözükür
   bool  _rememberMe         = false;
   bool  _isLoading          = false;
   bool _googleLoading       = false;

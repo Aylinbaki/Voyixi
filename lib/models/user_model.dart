@@ -5,6 +5,7 @@ class UserModel {
   final bool isAdmin;
   final bool isGuide;
   final bool isPending; // Rehberlik başvurusu onay bekliyor mu?
+  final bool isRejected; // Rehberlik başvurusu reddedildi mi?
 
   UserModel({
     required this.uid,
@@ -13,6 +14,7 @@ class UserModel {
     this.isAdmin = false,
     this.isGuide = false,
     this.isPending = false,
+    this.isRejected = false,
   });
 
   // Firestore'dan gelen veriyi (Map) nesneye çevirir
@@ -24,6 +26,7 @@ class UserModel {
       isAdmin: map['isAdmin'] ?? false,
       isGuide: map['isGuide'] ?? false,
       isPending: map['isPending'] ?? false,
+      isRejected: map['isRejected'] ?? false,
     );
   }
 
@@ -35,6 +38,7 @@ class UserModel {
       'isAdmin': isAdmin,
       'isGuide': isGuide,
       'isPending': isPending,
+      'isRejected': isRejected,
     };
   }
 }

@@ -117,6 +117,7 @@ Future<String> saveTrip({
     await _tripsRef.doc(tripId).update({'completionRate': clamped});
   }
 
+
       // Planı sil
   Future<void> deleteTrip(String id) async {
     if (_uid == null) return;

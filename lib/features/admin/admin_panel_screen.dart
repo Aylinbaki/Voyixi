@@ -236,6 +236,14 @@ class _AppCard extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis),
             const SizedBox(height: 6),
+
+            Text(app.tourIdeas,
+                style: const TextStyle(
+                    color: _textMid, fontSize: 13, height: 1.4),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 6),
+
             Text('Contact: ${app.email} • ${app.phone}',
                 style: const TextStyle(
                     color: Color(0xFF8AABAB), fontSize: 11)),
@@ -244,7 +252,7 @@ class _AppCard extends StatelessWidget {
               Row(children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => AdminService().rejectApplication(app.id),
+                    onPressed: () => AdminService().rejectApplication(app),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
                       side: BorderSide(color: Colors.red.shade200),

@@ -104,7 +104,7 @@ class _ActiveTripMapState extends State<ActiveTripMap> {
           position: LatLng(place.lat!, place.lng!),
           icon: icon,
           zIndex: state.status == TripPlaceStatus.current ? 2 : 1,
-          // 1. ÇEVİRİ: Haritadaki pinlerin başlık pencereleri İngilizce yapıldı
+          // 1. ÇEVİRİ: Haritadaki pinlerin başlık pencereleri
           infoWindow: InfoWindow(
             title: state.status == TripPlaceStatus.current
                 ? '📍 Current: ${place.name}'
@@ -285,7 +285,7 @@ class _ActiveTripMapState extends State<ActiveTripMap> {
                       color: Colors.black.withOpacity(0.07), blurRadius: 8)],
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  // 2. ÇEVİRİ: Harita açıklama (Legend) metinleri İngilizce yapıldı
+                  // 2. ÇEVİRİ: Harita açıklama (Legend) metinleri
                   _dot(const Color(0xFF00BFA5).withOpacity(0.4), 'Completed'),
                   const SizedBox(width: 10),
                   _dot(const Color(0xFF0077B6), 'Current'),

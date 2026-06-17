@@ -26,6 +26,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl           = TextEditingController();
   final _passwordCtrl        = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+
+  String? _selectGender; // Cinsiyet seçimi için state değişkeni
+
   bool  _hidePassword        = true;
   bool  _hideConfirmPassword = true;
   bool  _acceptedTerms       = false;
@@ -62,6 +65,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _header(),
                   const SizedBox(height: 22),
                   _nameField(),
+                  const SizedBox(height: 12),
+                  _genderField(), // gender
                   const SizedBox(height: 12),
                   _emailField(),
                   const SizedBox(height: 12),
@@ -151,6 +156,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
       },
     );
   }
+  Widget _genderField() {
+    return DropdownButtonFormField<String>(
+      value: _selectGender,
+      dropdownColor: _fieldBg,
+      style: const TextStyle(color: _white, fontSize: 14),
+      icon: const Icon(Icons.arrow_drop_down_rounded, color: _muted, size: 24),
+      decoration: _decoration(
+        hint: 'Gender',
+        icon: Icons.person_outline_rounded,
+      ),
+      // Map yerine doğrudan liste içinde döngü kurduk:
+      items: [
+        for (final gender in ['Male', 'Female', 'Other'])
+          DropdownMenuItem(
+            value: gender,
+            child: Text(gender),
+          ),
+      ],
+      onChanged: (value) => setState(() => _selectGender = value),
+      validator: (v) => (v == null || v.isEmpty) ? 'Gender selection is required' : null,
+    );
+  }
 
   Widget _emailField() {
     return TextFormField(
@@ -195,15 +222,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       validator: (v) {
         if (v == null || v.isEmpty) return 'Password is required';
-        if (v.length < 6) return 'Minimum 6 characters';
+        if (v.length < 8) return 'Minimum 8 characters'; //6->8
         if (!RegExp(r'^(?=.*[A-Z])(?=.*\d).+$').hasMatch(v)) {
           return 'Must contain uppercase letter and number';
+        }
+        // en az bir rakam içermeli
+        if (!RegExp(r'[0-9]').hasMatch(v)) {
+          return 'Password must contain at least 1 number';
         }
         if(v.contains(_nameCtrl.text)){
           return 'password cannot contain name';
 
         }
-      
+
         return null;
       },
     );
@@ -392,7 +423,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // ── REGISTER İŞLEMİ ───────────────────────────────────────────────────────
   Future<void> _register() async {
-    if (!_acceptedTerms) {
+    if (!_acceptedTerms) { // bu if silinirse
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
