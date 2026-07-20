@@ -9,7 +9,7 @@
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
 [![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)]()
 
-**Aylin Baki · Semih Özkara** — Bachelor's Thesis, Işık University CS&E (Spring 2026)
+**Aylin Baki · Semih Özkara** — Bachelor's Project, Işık University CS&E (Spring 2026)
 
 
 </div>
