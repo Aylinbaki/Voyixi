@@ -1,4 +1,4 @@
-# Voyago – AI Travel Planner
+# VOYIXI – AI Travel Planner
 
 Voyago is an AI-powered mobile travel assistant designed to help tourists explore cities through personalized travel itineraries.
 
