@@ -63,7 +63,7 @@ The AI engine builds a structured prompt from onboarding inputs (`city`, `days`,
     <td><img src="screenshots/first-page.png" width="200"/></td>
     <td><img src="screenshots/home.png" width="200"/></td>
     <td><img src="screenshots/trip-planner.png" width="200"/></td>
-    <td><img src="screenshots/tip-maker.png" width="200"/></td>
+    <td><img src="screenshots/trip-maker.png" width="200"/></td>
   </tr>
 </table>
 
